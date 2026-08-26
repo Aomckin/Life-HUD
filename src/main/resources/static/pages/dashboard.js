@@ -1,0 +1,20 @@
+import { api } from "../api/client.js";
+import { empty, error, escapeHtml, toast } from "../components/ui.js";
+const formatDate = value => new Intl.DateTimeFormat("zh-CN", {month:"long", day:"numeric", weekday:"short", hour:"2-digit", minute:"2-digit"}).format(value ? new Date(value) : new Date());
+const progress = state => { const values = String(state.exp_text || "").match(/(\d+)\s*\/\s*(\d+)/); return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0; };
+export async function dashboard(root) {
+  root.innerHTML = `<div class="dashboard"><section class="panel hero"><div class="hero-copy"><div class="eyebrow" id="today-date">今天</div><h1>把今天过得清澈一点。</h1><p>这里保留正在发生的生活：你的能量、进度、待完成的事，以及最近留下的痕迹。</p></div><div class="hero-actions"><button class="button button-primary" data-go="/focus">开始一次专注</button><button class="button button-secondary" data-go="/tasks">看看今天的任务</button></div></section><section class="metric-grid" id="metrics"><div class="card metric">加载中…</div></section><section class="dashboard-grid"><section class="panel"><div class="section-head"><h2>今天的任务</h2><a href="/tasks" data-link>查看全部</a></div><div id="today-tasks"></div></section><section class="panel"><div class="section-head"><h2>最近发生</h2><span class="badge">LifeEvent</span></div><div id="recent-events"></div></section></section></div>`;
+  root.querySelector("#today-date").textContent = formatDate();
+  root.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => window.navigate(button.dataset.go)));
+  try { const [state, events] = await Promise.all([api.state(), api.events()]); renderMetrics(root, state); renderTasks(root, state); renderEvents(root, events); } catch (reason) { root.querySelector("#metrics").innerHTML = error(reason.message); root.querySelector("#today-tasks").innerHTML = error("任务暂时无法读取"); root.querySelector("#recent-events").innerHTML = error("事件暂时无法读取"); toast(reason.message, true); }
+}
+function renderMetrics(root, state) {
+  const metrics = [["能量 · Energy", state.energy_text || "—", state.title_text || "当前状态"], ["等级 · Level", state.level_text || "—", "持续积累中"], ["经验 · EXP", state.exp_text || "—", "成长正在发生"]];
+  root.querySelector("#metrics").innerHTML = metrics.map(([label, value, detail], index) => `<article class="card metric"><div class="metric-label">${label}</div><div class="metric-value">${escapeHtml(value)}</div>${index === 2 ? `<div class="progress"><span style="width:${progress(state)}%"></span></div>` : `<div class="metric-label">${escapeHtml(detail)}</div>`}</article>`).join("");
+}
+function renderTasks(root, state) {
+  const tasks = Array.isArray(state.active_task_views) ? state.active_task_views : [];
+  root.querySelector("#today-tasks").innerHTML = tasks.length ? `<div class="task-list">${tasks.slice(0, 4).map(task => `<div class="task-item"><div><strong>${escapeHtml(task.name || task.id || "任务")}</strong><div class="event-meta">${escapeHtml(task.detail_text || task.reward_text || "")}</div></div><button class="button button-secondary" data-task="${escapeHtml(JSON.stringify(task.command_payload || {}))}" ${task.button_state === "normal" ? "" : "disabled"}>${escapeHtml(task.button_text || "完成")}</button></div>`).join("")}</div>` : empty("今天还没有任务，留一点空白也很好。");
+  root.querySelectorAll("[data-task]").forEach(button => button.addEventListener("click", async () => { button.disabled = true; try { const result = await api.command("COMPLETE_DAILY_TASK", JSON.parse(button.dataset.task)); toast(result.message || "已完成"); window.navigate("/dashboard", true); } catch (reason) { toast(reason.message, true); button.disabled = false; } }));
+}
+function renderEvents(root, events) { root.querySelector("#recent-events").innerHTML = events.length ? `<div class="event-list">${events.map(event => `<div class="event-item"><span class="event-dot"></span><div class="event-main"><strong>${escapeHtml(event.title)}</strong><div class="event-meta">${escapeHtml(event.content || event.type)} · ${formatDate(event.occurredAt)}</div></div></div>`).join("")}</div>` : empty("今天还没有记录。完成一次任务或专注后，它会出现在这里。"); }

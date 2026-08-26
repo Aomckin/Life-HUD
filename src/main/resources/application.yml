@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: lifehud
+  jackson:
+    default-property-inclusion: always
+server:
+  port: 8025

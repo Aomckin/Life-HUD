@@ -1,0 +1,8 @@
+package io.github.aomckin.lifehud.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;import io.github.aomckin.lifehud.domain.Player;import org.junit.jupiter.api.Test;import java.util.*;import static org.assertj.core.api.Assertions.assertThat;
+class PlayerAndLevelServiceTest {
+ @Test void playerMutationsMatchPythonService(){Player p=new Player();p.energy=50;p.maxEnergy=180;var s=new PlayerService();s.addEnergy(p,200);assertThat(p.energy).isEqualTo(180);s.addEnergy(p,-500);assertThat(p.energy).isZero();s.addExp(p,5);s.addCoin(p,10);assertThat(s.spendCoin(p,11)).isFalse();assertThat(s.spendCoin(p,4)).isTrue();s.completeTimedAction(p,"学习",25,10,3);assertThat(p.action_counts).containsEntry("学习",1);assertThat(p.completed_timed_actions).isEqualTo(1);}
+ @Test void shopPurchaseStateHonorsStockTypes(){Player p=new Player();var s=new PlayerService();s.recordShopPurchase(p,new LinkedHashMap<>(Map.of("id","daily","stock_type","daily")),"2026-08-25");s.recordShopPurchase(p,new LinkedHashMap<>(Map.of("id","once","stock_type","permanent")),"2026-08-25");assertThat(p.shop_daily_purchases.get("2026-08-25")).containsEntry("daily",1);assertThat(p.shop_total_purchases).containsEntry("once",1);}
+ @Test void levelCurveAndMaxLevelMatchConfig()throws Exception{var config=new ObjectMapper().readTree("{\"initial_level\":1,\"max_level\":20,\"base_required_exp\":20,\"step_levels\":5,\"step_increase_exp\":10}");var levels=new LevelService(config);assertThat(levels.requiredExp(1)).isEqualTo(20);assertThat(levels.requiredExp(6)).isEqualTo(30);assertThat(levels.level(19)).isEqualTo(1);assertThat(levels.level(20)).isEqualTo(2);assertThat(levels.levelUpInfo(19,20)).containsEntry("after_level",2);assertThat(levels.expText(100000)).isEqualTo("经验：满级");}
+}

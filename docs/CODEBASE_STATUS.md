@@ -1,0 +1,94 @@
+# Life HUD 代码现状速览
+
+> 提交基线：`67cabcb v0.1.1: type achievement definitions`（当前 `HEAD`）；最后更新于 2026-08-26。本文只描述已落地代码，后续改造以此为对接基线。
+
+## 当前能力
+
+- Java 21 / Spring Boot 3.5.5 后端提供单页 Life HUD；浏览器通过 `GET /state` 读取状态、`POST /command` 执行命令、`GET /actions/{actionName}/duration-options` 获取受控时长选项。
+- 现有业务保持 Python 迁移版本的规则：行动、计时行动、能量/经验/等级、每日任务、特殊任务、成就、称号、商店和日志。
+- 默认数据首次启动后复制到工作目录 `data/`；支持 `lifehud.data-dir`、`LIFEHUD_DATA_DIR`，并兼容旧变量 `OTAKU_ENERGY_DATA_DIR`。
+- `PlayerRepository` 负责 `save.json` 兼容读取和归一化；旧存档缺失的可选字段会补充默认值。
+- `JsonFileStore` 是无业务含义的文件基础设施；玩家、日志等通过专用 repository 访问持久化文件。
+- v0.1.1 已完成成就子域的强类型收敛：`AchievementRepository` 将 `achievements.json` 映射为 `AchievementDefinition`，规则使用 `AchievementConditionType`、`TaskRequirement`、`TaskSource`，不再在成就判定中使用 unchecked cast。
+- `/state` 与命令事件的既有 JSON 结构由 `GameViewAssembler` 在响应边界组装；强类型领域对象不会直接改变前端契约。
+
+## 明确尚未完成
+
+- v0.1.1 的称号和商店子域仍保留部分 `Map<String, Object>`、JSON 字段字符串与旧的 `Manager/System` 历史结构；它们是下一轮强类型化的优先目标。
+- 任务管理器仍直接维护任务 JSON 的运行时状态；尚未拆为专用任务 repository。
+- `GameCore` 仅为旧直接调用方保留的弃用兼容别名；生产入口是 `GameCommandFacade`。
+- 当前没有数据库迁移、用户账户、多端同步、微服务、缓存或消息队列；这些均不属于现阶段范围。
+
+## 技术结构
+
+```text
+src/main/java/io/github/aomckin/lifehud/
+  controller/    HTTP API
+  core/          命令常量、配置、行动目录与兼容入口
+  service/       用例编排、游戏规则、查询和 ViewModel 组装
+  domain/        Player、任务、行动选项、成就定义与枚举
+  repository/    save/log/JSON 文件访问与领域 JSON 映射
+  config/        Spring 组合根
+  dto/           HTTP 命令、操作结果和事件
+src/main/resources/
+  static/        原生前端页面、脚本和样式
+  application.yml
+  data/          随包默认 JSON 数据
+src/test/        JUnit 5 + Spring MVC 测试
+```
+
+## 主要调用链
+
+```text
+浏览器
+  -> GameController
+  -> GameCommandFacade
+  -> ActionService / TaskService / ShopService / TitleService
+  -> ProgressionService
+  -> AchievementService / LevelService
+  -> GameQueryService
+  -> GameViewAssembler
+  -> 兼容的 OperationResult /state JSON
+```
+
+成就链路：
+
+```text
+achievements.json
+  -> AchievementRepository
+  -> AchievementDefinition + enum / record
+  -> AchievementSystem 判定
+  -> AchievementService 发放奖励
+  -> GameViewAssembler 组装旧事件与状态字段
+```
+
+## 主要 API
+
+- `GET /state`
+- `POST /command`
+- `GET /actions/{actionName}/duration-options`
+
+`/command` 的具体命令名由 `GameCommands` 集中定义；不要在前端或业务服务中新增未受控的字符串命令。
+
+## 数据与兼容性
+
+- `actions.json`、`achievements.json`、`level.json`、`tasks.json`、`special_tasks.json`、`titles.json`、`shop.json` 与 `save.json` 是当前 JSON 资产。
+- 变更 JSON 前必须保留现有字段与默认语义，优先在 repository 层添加映射兼容，而非让服务层解析文件路径、键名或 `JsonNode`。
+- `save.json` 是用户数据；不要在开发或测试期间覆写项目内真实 `data/` 存档。测试使用临时目录。
+
+## 启动与验证
+
+```powershell
+.\mvnw.cmd spring-boot:run
+.\mvnw.cmd test
+git diff --check
+```
+
+默认服务地址为 <http://localhost:8025>。当前基线测试：56 项通过。
+
+## 接手建议
+
+1. 先阅读本文件、[`ARCHITECTURE.md`](ARCHITECTURE.md) 和最新 Git 提交。
+2. 修改前执行 `git status --short --branch`，确认没有用户未提交的工作。
+3. 后续强类型化遵循成就子域的路径：JSON repository 映射 -> domain record / enum -> service 只处理领域类型 -> `GameViewAssembler` 保留 API 输出。
+4. 每个可验证切片都运行 `./mvnw.cmd test` 并更新本文的“当前能力/尚未完成/提交基线”。

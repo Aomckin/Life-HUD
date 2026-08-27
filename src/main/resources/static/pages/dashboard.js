@@ -25,7 +25,7 @@ export async function dashboard(root) {
     '<section class="panel hero">',
     '<div class="hero-copy"><div class="eyebrow" id="today-date">今天</div><div class="hero-time" id="today-time"></div><h1>把今天过得清澈一点。</h1><p>这里保留正在发生的生活：你的能量、进度、待完成的事，以及最近留下的痕迹。</p></div>',
     '<div class="hero-actions"><div class="hero-status"><span>此刻的状态</span><strong id="hero-energy">正在读取…</strong><span id="hero-title">Life HUD</span></div><button class="button button-primary" data-go="/focus">开始一次专注</button><button class="button button-secondary" data-go="/tasks">看看今天的任务</button></div>',
-    '<div class="hero-hud" aria-hidden="true"></div></section>',
+    '</section>',
     '<section class="metric-grid" id="metrics"><div class="card metric">正在同步今天的状态…</div></section>',
     '<section class="dashboard-grid">',
     '<section class="panel content-card"><div class="section-head"><h2>今天的任务</h2><a href="/tasks" data-link>查看全部</a></div><div id="today-tasks"></div></section>',

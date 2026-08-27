@@ -1,6 +1,6 @@
-# Life HUD v0.1.1
+# Life HUD v0.2.2
 
-宅宅能量条 v1.2 的 Java 21 / Spring Boot 3 行为保持型迁移版本。
+Life HUD 的 Java 21 / Spring Boot 3 版本。v0.2.2 “Wallpaper & Glass” 将 Summer Sky 默认壁纸与分层玻璃材质接入全局 App Shell；所有主要路由共享同一视觉环境。
 
 ## 运行
 

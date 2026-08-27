@@ -4,8 +4,8 @@
   <parent>
     <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>3.5.5</version><relativePath/>
   </parent>
-  <groupId>io.github.aomckin.lifehud</groupId><artifactId>lifehud</artifactId><version>0.1.1</version>
-  <name>Life HUD</name><description>宅宅能量条 v1.2 的 Java 等价实现</description>
+  <groupId>io.github.aomckin.lifehud</groupId><artifactId>lifehud</artifactId><version>0.2.2</version>
+  <name>Life HUD</name><description>Personal life HUD with Summer Sky wallpaper and glass shell</description>
   <properties><java.version>21</java.version><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding></properties>
   <dependencies>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>

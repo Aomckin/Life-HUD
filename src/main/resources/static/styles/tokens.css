@@ -43,13 +43,39 @@
   --danger: #ef7282;
   --overlay-backdrop: rgb(29 70 95 / 25%);
 
+  /* Wallpaper source plus route-aware UI composition */
+  --app-wallpaper: url("/static/assets/wallpapers/summer-sky-default.jpg");
+  --wallpaper-scale: 1.18;
+  --wallpaper-position: 66% 42%;
+  --wallpaper-brightness: 1.04;
+  --wallpaper-saturation: 0.8;
+  --wallpaper-contrast: 0.86;
+  --wallpaper-fallback: #b9ddf5;
+  --atmosphere-wash:
+    radial-gradient(circle at 72% 16%, rgb(255 255 255 / 18%), transparent 36%),
+    linear-gradient(108deg, rgb(240 249 255 / 72%) 0%, rgb(222 241 253 / 42%) 46%, rgb(143 197 231 / 18%) 100%),
+    linear-gradient(180deg, rgb(255 255 255 / 18%), transparent 48%, rgb(35 112 166 / 14%));
+
+  /* Glass material: opaque defaults are the backdrop-filter fallback. */
+  --glass-blur: 18px;
+  --glass-card-opacity: 0.92;
+  --glass-panel-opacity: 0.94;
+  --glass-sidebar-opacity: 0.92;
+  --glass-hero-opacity: 0.9;
+  --glass-instrument-opacity: 0.94;
+  --glass-content-opacity: 0.96;
+  --glass-highlight: rgb(255 255 255 / 68%);
+  --glass-border: rgb(255 255 255 / 58%);
+  --glass-border-blue: rgb(56 157 223 / 16%);
+
   /* Light and material */
   --sky-glow-soft: rgb(111 195 249 / 20%);
   --sky-glow-medium: rgb(145 210 255 / 28%);
   --sky-glow-low: rgb(190 228 255 / 18%);
   --page-sky: radial-gradient(circle at 85% 5%, var(--sky-glow-soft), transparent 34%),
     radial-gradient(circle at 10% 92%, var(--sky-glow-low), transparent 32%);
-  --hero-sky: linear-gradient(135deg, var(--surface-glass-strong), rgb(220 239 255 / 72%));
+  --hero-sky:
+    linear-gradient(128deg, rgb(255 255 255 / var(--glass-hero-opacity)) 0%, rgb(244 251 255 / calc(var(--glass-hero-opacity) - .04)) 52%, rgb(218 239 253 / calc(var(--glass-hero-opacity) - .12)) 100%);
   --accent-gradient: linear-gradient(135deg, var(--sky-400), var(--accent-primary));
   --progress-gradient: linear-gradient(90deg, var(--sky-400), var(--accent-primary));
 
@@ -60,6 +86,7 @@
   --font-size-md: 1rem;
   --font-size-lg: clamp(1.5rem, 2.5vw, 2rem);
   --font-size-xl: clamp(2rem, 4vw, 3.25rem);
+  --font-size-hero: clamp(2.75rem, 4.5vw, 4rem);
   --font-weight-normal: 450;
   --font-weight-medium: 600;
   --font-weight-bold: 750;
@@ -100,4 +127,9 @@
   --control-height-sm: 32px;
   --control-height-md: 42px;
   --control-height-lg: 44px;
+
+  /* Shared responsive canvas */
+  --app-canvas-max: 1400px;
+  --app-canvas-gap: clamp(20px, 1.4vw, 28px);
+  --app-canvas-row-gap: clamp(28px, 2vw, 40px);
 }

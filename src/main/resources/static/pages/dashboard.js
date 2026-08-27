@@ -1,20 +1,129 @@
 import { api } from "../api/client.js";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
-const formatDate = value => new Intl.DateTimeFormat("zh-CN", {month:"long", day:"numeric", weekday:"short", hour:"2-digit", minute:"2-digit"}).format(value ? new Date(value) : new Date());
-const progress = state => { const values = String(state.exp_text || "").match(/(\d+)\s*\/\s*(\d+)/); return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0; };
+
+const formatDate = value => new Intl.DateTimeFormat("zh-CN", {
+  month: "long",
+  day: "numeric",
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit"
+}).format(value ? new Date(value) : new Date());
+
+const progress = state => {
+  const values = String(state.exp_text || "").match(/(\d+)\s*\/\s*(\d+)/);
+  return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0;
+};
+
+const energyProgress = state => {
+  const values = String(state.energy_text || "").match(/(\d+)\s*\/\s*(\d+)/);
+  return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0;
+};
+
 export async function dashboard(root) {
-  root.innerHTML = `<div class="dashboard"><section class="panel hero"><div class="hero-copy"><div class="eyebrow" id="today-date">今天</div><h1>把今天过得清澈一点。</h1><p>这里保留正在发生的生活：你的能量、进度、待完成的事，以及最近留下的痕迹。</p></div><div class="hero-actions"><button class="button button-primary" data-go="/focus">开始一次专注</button><button class="button button-secondary" data-go="/tasks">看看今天的任务</button></div></section><section class="metric-grid" id="metrics"><div class="card metric">加载中…</div></section><section class="dashboard-grid"><section class="panel"><div class="section-head"><h2>今天的任务</h2><a href="/tasks" data-link>查看全部</a></div><div id="today-tasks"></div></section><section class="panel"><div class="section-head"><h2>最近发生</h2><span class="badge">LifeEvent</span></div><div id="recent-events"></div></section></section></div>`;
+  root.innerHTML = [
+    '<div class="dashboard">',
+    '<section class="panel hero">',
+    '<div class="hero-copy"><div class="eyebrow" id="today-date">今天</div><div class="hero-time" id="today-time"></div><h1>把今天过得清澈一点。</h1><p>这里保留正在发生的生活：你的能量、进度、待完成的事，以及最近留下的痕迹。</p></div>',
+    '<div class="hero-actions"><div class="hero-status"><span>此刻的状态</span><strong id="hero-energy">正在读取…</strong><span id="hero-title">Life HUD</span></div><button class="button button-primary" data-go="/focus">开始一次专注</button><button class="button button-secondary" data-go="/tasks">看看今天的任务</button></div>',
+    '<div class="hero-hud" aria-hidden="true"></div></section>',
+    '<section class="metric-grid" id="metrics"><div class="card metric">正在同步今天的状态…</div></section>',
+    '<section class="dashboard-grid">',
+    '<section class="panel content-card"><div class="section-head"><h2>今天的任务</h2><a href="/tasks" data-link>查看全部</a></div><div id="today-tasks"></div></section>',
+    '<section class="panel content-card"><div class="section-head"><h2>最近发生</h2><span class="badge">LifeEvent</span></div><div id="recent-events"></div></section>',
+    '</section></div>'
+  ].join("");
+
   root.querySelector("#today-date").textContent = formatDate();
-  root.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => window.navigate(button.dataset.go)));
-  try { const [state, events] = await Promise.all([api.state(), api.events()]); renderMetrics(root, state); renderTasks(root, state); renderEvents(root, events); } catch (reason) { root.querySelector("#metrics").innerHTML = error(reason.message); root.querySelector("#today-tasks").innerHTML = error("任务暂时无法读取"); root.querySelector("#recent-events").innerHTML = error("事件暂时无法读取"); toast(reason.message, true); }
+  root.querySelector("#today-time").textContent = new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date());
+
+  root.querySelectorAll("[data-go]").forEach(button => {
+    button.addEventListener("click", () => window.navigate(button.dataset.go));
+  });
+
+  try {
+    const [state, events] = await Promise.all([api.state(), api.events()]);
+    renderHero(root, state);
+    renderMetrics(root, state);
+    renderTasks(root, state);
+    renderEvents(root, events);
+  } catch (reason) {
+    root.querySelector("#metrics").innerHTML = error(reason.message);
+    root.querySelector("#today-tasks").innerHTML = error("任务暂时无法读取");
+    root.querySelector("#recent-events").innerHTML = error("事件暂时无法读取");
+    toast(reason.message, true);
+  }
 }
+
+function renderHero(root, state) {
+  root.querySelector("#hero-energy").textContent = state.energy_text || "当前状态";
+  root.querySelector("#hero-title").textContent = state.title_text || "今天由你决定";
+}
+
 function renderMetrics(root, state) {
-  const metrics = [["能量 · Energy", state.energy_text || "—", state.title_text || "当前状态"], ["等级 · Level", state.level_text || "—", "持续积累中"], ["经验 · EXP", state.exp_text || "—", "成长正在发生"]];
-  root.querySelector("#metrics").innerHTML = metrics.map(([label, value, detail], index) => `<article class="card metric"><div class="metric-label">${label}</div><div class="metric-value">${escapeHtml(value)}</div>${index === 2 ? `<div class="progress"><span style="width:${progress(state)}%"></span></div>` : `<div class="metric-label">${escapeHtml(detail)}</div>`}</article>`).join("");
+  const energy = escapeHtml(state.energy_text || "—");
+  const level = escapeHtml(state.level_text || "—");
+  const exp = escapeHtml(state.exp_text || "—");
+  const title = escapeHtml(state.title_text || "称号仍在积累");
+  const expProgress = progress(state);
+  const currentEnergy = energyProgress(state);
+
+  root.querySelector("#metrics").innerHTML = [
+    '<article class="card card-hover metric metric-energy"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">今天的能量状态</div></article>',
+    '<article class="card card-hover metric metric-level"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">' + title + '</div></article>',
+    '<article class="card card-hover metric metric-exp"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">一点一点，累积成新的阶段。</div></article>'
+  ].join("");
 }
+
 function renderTasks(root, state) {
   const tasks = Array.isArray(state.active_task_views) ? state.active_task_views : [];
-  root.querySelector("#today-tasks").innerHTML = tasks.length ? `<div class="task-list">${tasks.slice(0, 4).map(task => `<div class="task-item"><div><strong>${escapeHtml(task.name || task.id || "任务")}</strong><div class="event-meta">${escapeHtml(task.detail_text || task.reward_text || "")}</div></div><button class="button button-secondary" data-task="${escapeHtml(JSON.stringify(task.command_payload || {}))}" ${task.button_state === "normal" ? "" : "disabled"}>${escapeHtml(task.button_text || "完成")}</button></div>`).join("")}</div>` : empty("今天还没有任务，留一点空白也很好。");
-  root.querySelectorAll("[data-task]").forEach(button => button.addEventListener("click", async () => { button.disabled = true; try { const result = await api.command("COMPLETE_DAILY_TASK", JSON.parse(button.dataset.task)); toast(result.message || "已完成"); window.navigate("/dashboard", true); } catch (reason) { toast(reason.message, true); button.disabled = false; } }));
+  const taskList = tasks.slice(0, 4).map(task => [
+    '<div class="task-item"><div><strong>',
+    escapeHtml(task.name || task.id || "任务"),
+    '</strong><div class="event-meta">',
+    escapeHtml(task.detail_text || task.reward_text || ""),
+    '</div></div><button class="button button-secondary" data-task="',
+    escapeHtml(JSON.stringify(task.command_payload || {})),
+    '" ',
+    task.button_state === "normal" ? "" : "disabled",
+    '>',
+    escapeHtml(task.button_text || "完成"),
+    '</button></div>'
+  ].join("")).join("");
+
+  root.querySelector("#today-tasks").innerHTML = taskList
+    ? '<div class="task-list">' + taskList + '</div>'
+    : empty("今天还没有任务，留一点空白也很好。");
+
+  root.querySelectorAll("[data-task]").forEach(button => {
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        const result = await api.command("COMPLETE_DAILY_TASK", JSON.parse(button.dataset.task));
+        toast(result.message || "已完成");
+        window.navigate("/dashboard", true);
+      } catch (reason) {
+        toast(reason.message, true);
+        button.disabled = false;
+      }
+    });
+  });
 }
-function renderEvents(root, events) { root.querySelector("#recent-events").innerHTML = events.length ? `<div class="event-list">${events.map(event => `<div class="event-item"><span class="event-dot"></span><div class="event-main"><strong>${escapeHtml(event.title)}</strong><div class="event-meta">${escapeHtml(event.content || event.type)} · ${formatDate(event.occurredAt)}</div></div></div>`).join("")}</div>` : empty("今天还没有记录。完成一次任务或专注后，它会出现在这里。"); }
+
+function renderEvents(root, events) {
+  const eventList = events.map(event => [
+    '<div class="event-item"><span class="event-dot"></span><div class="event-main"><strong>',
+    escapeHtml(event.title),
+    '</strong><div class="event-meta">',
+    escapeHtml(event.content || event.type),
+    ' · ',
+    formatDate(event.occurredAt),
+    '</div></div></div>'
+  ].join("")).join("");
+
+  root.querySelector("#recent-events").innerHTML = eventList
+    ? '<div class="event-list">' + eventList + '</div>'
+    : empty("今天还没有记录。完成一次任务或专注后，它会出现在这里。");
+}

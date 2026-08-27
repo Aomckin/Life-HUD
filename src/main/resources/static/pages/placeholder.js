@@ -12,7 +12,33 @@ async function tasks(root) {
   catch (reason) { root.querySelector("#task-list").innerHTML = error(reason.message); }
 }
 async function focus(root) {
-  root.innerHTML = `<section class="panel"><div class="eyebrow">专注 · Focus</div><h1>从一件小事开始</h1><p>选择一个当前可用的行动；计时时长仍由后端控制。</p><div class="focus-actions" id="focus-actions">加载中…</div></section>`;
-  try { const state = await api.state(); const actions = state.action_views || []; root.querySelector("#focus-actions").innerHTML = actions.length ? actions.map(action => `<button class="button button-primary" data-action="${escapeHtml(action.name)}">${escapeHtml(action.button_text || action.name)}</button>`).join("") : empty("暂无可用行动。"); root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => toast("请使用旧版首页完成计时流程；Focus 专属流程将在 v0.3 提供。"))); }
-  catch (reason) { root.querySelector("#focus-actions").innerHTML = error(reason.message); }
+  root.innerHTML = [
+    '<div class="focus-page">',
+    '<section class="panel hero focus-hero">',
+    '<div class="hero-copy"><div class="eyebrow">专注 · Focus</div><h1>从一件小事开始</h1><p>把注意力留给当下。这里保留现有行动入口，并为 v0.3 的完整 Focus 体验准备好空间。</p><div class="focus-actions" id="focus-actions">正在读取可用行动…</div></div>',
+    '<div class="hero-actions"><div class="hero-status"><span>Focus Mode</span><strong>准备开始</strong><span>完整专注流程将在 v0.3 到来</span></div></div>',
+    '<div class="hero-hud" aria-hidden="true"></div></section>',
+    '<section class="focus-grid">',
+    '<section class="panel content-card focus-card"><div class="eyebrow">今日 Focus</div><h2>留一点安静给自己</h2><p>从一个现在就能做的小动作开始，剩下的交给时间。</p>',
+    empty("今天还没有开始专注。"),
+    '</section>',
+    '<section class="panel content-card focus-card focus-preview"><div class="focus-preview-mark" aria-hidden="true"></div><div class="eyebrow">Focus Mode Preview</div><strong>容器已经准备好</strong><p>铁幕与人性化番茄钟会在 v0.3 写进这里。现在不伪造任何专注数据。</p></section>',
+    '</section></div>'
+  ].join("");
+
+  try {
+    const state = await api.state();
+    const actions = Array.isArray(state.action_views) ? state.action_views : [];
+    root.querySelector("#focus-actions").innerHTML = actions.length
+      ? actions.map(action => '<button class="button quick-action" data-action="' + escapeHtml(action.name) + '">' + escapeHtml(action.button_text || action.name) + '</button>').join("")
+      : empty("暂无可用行动。");
+
+    root.querySelectorAll("[data-action]").forEach(button => {
+      button.addEventListener("click", () => {
+        toast("时长选择仍沿用现有流程；Focus 专属流程将在 v0.3 提供。");
+      });
+    });
+  } catch (reason) {
+    root.querySelector("#focus-actions").innerHTML = error(reason.message);
+  }
 }

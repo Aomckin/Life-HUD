@@ -46,7 +46,11 @@
   /* Wallpaper source plus route-aware UI composition */
   --app-wallpaper: url("/static/assets/wallpapers/summer-sky-default.jpg");
   --wallpaper-scale: 1.18;
-  --wallpaper-position: 66% 42%;
+  --wallpaper-position-x: 66%;
+  --wallpaper-position-y: 42%;
+  --wallpaper-position: var(--wallpaper-position-x) var(--wallpaper-position-y);
+  --wallpaper-overlay-opacity: 0.16;
+  --wallpaper-blur: 0px;
   --wallpaper-brightness: 1.04;
   --wallpaper-saturation: 0.8;
   --wallpaper-contrast: 0.86;
@@ -58,6 +62,7 @@
 
   /* Glass material: opaque defaults are the backdrop-filter fallback. */
   --glass-blur: 18px;
+  --glass-surface-opacity: 0.82;
   --glass-card-opacity: 0.92;
   --glass-panel-opacity: 0.94;
   --glass-sidebar-opacity: 0.92;

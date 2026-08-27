@@ -36,16 +36,19 @@ body::before {
   background-repeat: no-repeat;
   background-size: cover;
   filter:
+    blur(var(--wallpaper-blur))
     brightness(var(--wallpaper-brightness))
     saturate(var(--wallpaper-saturation))
     contrast(var(--wallpaper-contrast));
   transform: scale(var(--wallpaper-scale));
-  transform-origin: 66% 42%;
+  transform-origin: var(--wallpaper-position-x) var(--wallpaper-position-y);
 }
 
 body::after {
   z-index: 1;
-  background: var(--atmosphere-wash);
+  background:
+    linear-gradient(rgb(25 54 77 / var(--wallpaper-overlay-opacity)), rgb(25 54 77 / var(--wallpaper-overlay-opacity))),
+    var(--atmosphere-wash);
 }
 
 
@@ -169,13 +172,13 @@ a {
 .panel {
   border: var(--border-width) solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: rgb(255 255 255 / var(--glass-card-opacity));
+  background: rgb(255 255 255 / var(--glass-surface-opacity));
   box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 }
 
 .panel {
   padding: var(--space-5);
-  background: rgb(255 255 255 / var(--glass-panel-opacity));
+  background: rgb(255 255 255 / var(--glass-surface-opacity));
 }
 
 .content-card {

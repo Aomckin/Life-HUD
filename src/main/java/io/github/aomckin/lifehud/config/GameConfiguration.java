@@ -17,12 +17,14 @@ import io.github.aomckin.lifehud.service.PlayerService;
 import io.github.aomckin.lifehud.service.ShopManager;
 import io.github.aomckin.lifehud.service.SpecialTaskManager;
 import io.github.aomckin.lifehud.service.TitleSystem;
+import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /** Composition root for runtime state and read models. */
 @Configuration
 public class GameConfiguration {
+    @Bean public Clock clock() { return Clock.systemDefaultZone(); }
     @Bean public GameConfig gameConfig(JsonFileStore files) {
         return new GameConfig((com.fasterxml.jackson.databind.node.ObjectNode) files.read("config.json"));
     }

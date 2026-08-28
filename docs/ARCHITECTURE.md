@@ -116,6 +116,38 @@ flowchart TD
     View --> JSON[原有 /state 响应结构]
 ```
 
+## Focus 调用链
+
+```mermaid
+flowchart LR
+    Page[Focus 页面] -->|start / pause / resume / finish| Controller[FocusController]
+    Controller --> Service[FocusService 状态机]
+    Service --> Repository[FocusSessionRepository]
+    Repository --> FocusData[(focus-sessions.json)]
+    Service --> Events[LifeEventService]
+    Events --> Timeline[(life-events.json)]
+    Page -->|current / today / history| Controller
+```
+
+计时的业务事实保存在后端：运行态使用“已累计有效秒数 + 当前活动片段”，暂停时固化累计秒数并清空活动起点。前端只负责依据 API 快照显示时间，因此刷新页面或浏览器标签页降频不会重置 Session。
+
+```mermaid
+stateDiagram-v2
+    [*] --> RUNNING: start
+    RUNNING --> PAUSED: pause
+    PAUSED --> RUNNING: resume
+    RUNNING --> COMPLETED: complete
+    PAUSED --> COMPLETED: complete
+    RUNNING --> INTERRUPTED: interrupt
+    PAUSED --> INTERRUPTED: interrupt
+```
+
+同一时间只允许一个 `RUNNING` 或 `PAUSED` Session。Today Summary 采用“按 Session 开始日归属”的明确规则：跨日 Session 保存完整实际时长，但午夜后不会计入新一天，也不会被拆分或重复统计。
+
+铁幕视觉是前端对 `IRON_CURTAIN` 的表现层增强，不引入第二套业务状态机：开幕、壁纸铁幕态、暂停氛围与落幕提示都由同一个 Session 状态驱动。铁幕态只调整现有壁纸的滤镜与遮罩，因此兼容用户自定义壁纸，也为后续可配置视觉强度保留了独立 CSS 状态入口。
+
+`FocusSession` 是聚合根，内嵌按顺序且不重叠的 `FocusSegment`。Session 的实际时间排除暂停，有效时间由 FOCUS Segment 统一推导；BREAK 与 INTERRUPTION 只进入实际运行。暂停会关闭活动段，恢复创建续段，保证同一时刻至多一个活动 Segment。v0.3 跨日统计按 Session 开始日归属，Segment 保持完整且不重复。
+
 ## 关键类职责
 
 | 类 | 所属职责 | 说明 |
@@ -138,6 +170,8 @@ flowchart TD
 | `PlayerRepository` | 玩家持久化 | `save.json` 读取、保存和旧存档归一化 |
 | `LogRepository` | 日志持久化 | `log.txt` 追加和最近日志查询 |
 | `JsonFileStore` | 文件基础设施 | 通用 JSON、文本读写和原子替换 |
+| `FocusService` | Focus 用例 | 唯一 Session、状态切换、有效时长与 Today/History 查询 |
+| `FocusSessionRepository` | Focus 持久化 | `focus-sessions.json` 的兼容读取与原子保存 |
 | `GameCore` | 兼容别名 | 无状态，仅为旧直接调用方保留；生产入口是 `GameCommandFacade` |
 
 ## 依赖边界

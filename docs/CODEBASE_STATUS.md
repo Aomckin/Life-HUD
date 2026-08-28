@@ -1,6 +1,6 @@
 # Life HUD 代码现状速览
 
-> 提交基线：`67cabcb v0.1.1: type achievement definitions`（当前 `HEAD`）；最后更新于 2026-08-26。本文只描述已落地代码，后续改造以此为对接基线。
+> 工作区版本：v0.3.0；最后更新于 2026-08-28。本文只描述已落地代码，后续改造以此为对接基线。
 
 ## 当前能力
 
@@ -11,6 +11,14 @@
 - `JsonFileStore` 是无业务含义的文件基础设施；玩家、日志等通过专用 repository 访问持久化文件。
 - v0.1.1 已完成成就子域的强类型收敛：`AchievementRepository` 将 `achievements.json` 映射为 `AchievementDefinition`，规则使用 `AchievementConditionType`、`TaskRequirement`、`TaskSource`，不再在成就判定中使用 unchecked cast。
 - `/state` 与命令事件的既有 JSON 结构由 `GameViewAssembler` 在响应边界组装；强类型领域对象不会直接改变前端契约。
+- v0.3.0 已建立统一 Focus 领域：`IRON_CURTAIN`、`POMODORO` 与 `FREE` 共用 `FocusSession`，支持运行、暂停、恢复、完成与中断。
+- Focus 使用 `focus-sessions.json` 独立持久化；实际时长由后端累计有效秒数，暂停时间不计入，浏览器刷新后可恢复当前状态。
+- `/focus` 已提供开始/运行/结算工作台、番茄预设与自定义时长、到点继续、简单休息、今日摘要和基础历史；Dashboard 会显示当前 Focus 或今日累计。
+- Today Summary 按 Session 开始日归属；跨日 Session 保持完整，不按午夜拆分，也不会重复计入新一天。
+- v0.3 RC 已完成轻量状态动画、减少动态适配、长标题截断、超长计时布局、输入边界和 1920/1440/1366/1280/1024/768/390px 响应式回归。
+- `IRON_CURTAIN` 已具备专属开幕/落幕转场、壁纸铁幕态、独立运行与暂停语言，以及对导航、统计和 History 的克制弱化；其业务数据仍与其他模式共用统一 FocusSession。
+- `FocusSegment` 已覆盖专注、休息与中断，支持实时切换、暂停续段、刷新恢复、有效时间、历史展开、落幕明细、多任务汇总和单段补录。
+- Focus 生命周期及过程切换写入 `LifeEvent`，可直接作为未来 Timeline 数据源；Focus Service 不直接修改成长数值。
 
 ## 明确尚未完成
 
@@ -67,12 +75,18 @@ achievements.json
 - `GET /state`
 - `POST /command`
 - `GET /actions/{actionName}/duration-options`
+- `POST /api/focus/start`
+- `POST /api/focus/{id}/pause|resume|complete|interrupt`
+- `POST /api/focus/{id}/segments/switch`
+- `PATCH /api/focus/{id}/segments/{segmentId}`
+- `POST /api/focus/manual`
+- `GET /api/focus/current|today|history`
 
 `/command` 的具体命令名由 `GameCommands` 集中定义；不要在前端或业务服务中新增未受控的字符串命令。
 
 ## 数据与兼容性
 
-- `actions.json`、`achievements.json`、`level.json`、`tasks.json`、`special_tasks.json`、`titles.json`、`shop.json` 与 `save.json` 是当前 JSON 资产。
+- `actions.json`、`achievements.json`、`level.json`、`tasks.json`、`special_tasks.json`、`titles.json`、`shop.json`、`save.json`、`focus-sessions.json` 与 `life-events.json` 是当前 JSON 资产。
 - 变更 JSON 前必须保留现有字段与默认语义，优先在 repository 层添加映射兼容，而非让服务层解析文件路径、键名或 `JsonNode`。
 - `save.json` 是用户数据；不要在开发或测试期间覆写项目内真实 `data/` 存档。测试使用临时目录。
 
@@ -84,7 +98,7 @@ achievements.json
 git diff --check
 ```
 
-默认服务地址为 <http://localhost:8025>。当前基线测试：56 项通过。
+默认服务地址为 <http://localhost:8025>。当前基线测试：68 项通过；Focus 另经桌面端与 390px 小屏浏览器闭环验证，覆盖 Segment 切换、刷新恢复、休息续段、落幕总结、History 展开和番茄时间栏排版，Console 为 0 error / 0 warning。
 
 ## 接手建议
 

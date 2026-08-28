@@ -4,6 +4,9 @@ package io.github.aomckin.lifehud.domain;
 public enum LifeEventType {
     TASK_COMPLETED,
     FOCUS_STARTED,
+    FOCUS_PAUSED,
+    FOCUS_RESUMED,
+    FOCUS_SEGMENT_CHANGED,
     FOCUS_FINISHED,
     RITUAL_COMPLETED,
     ENERGY_CHANGED,

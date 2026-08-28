@@ -1,4 +1,4 @@
-import { api } from "../api/client.js";
+import { api } from "../api/client.js?v=0.3.0-r5";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const formatDate = value => new Intl.DateTimeFormat("zh-CN", {
@@ -44,9 +44,11 @@ export async function dashboard(root) {
   });
 
   try {
-    const [state, events] = await Promise.all([api.state(), api.events()]);
-    renderHero(root, state);
-    renderMetrics(root, state);
+    const [state, events, currentFocus, focusToday] = await Promise.all([
+      api.state(), api.events(), api.focus.current(), api.focus.today()
+    ]);
+    renderHero(root, state, currentFocus);
+    renderMetrics(root, state, currentFocus, focusToday);
     renderTasks(root, state);
     renderEvents(root, events);
   } catch (reason) {
@@ -57,12 +59,26 @@ export async function dashboard(root) {
   }
 }
 
-function renderHero(root, state) {
-  root.querySelector("#hero-energy").textContent = state.energy_text || "当前状态";
-  root.querySelector("#hero-title").textContent = state.title_text || "今天由你决定";
+const MODE_LABELS = {IRON_CURTAIN: "铁幕", POMODORO: "番茄", FREE: "自由专注"};
+const formatFocusTime = seconds => {
+  const total = Math.max(0, Math.floor(seconds || 0));
+  if (total > 0 && total < 60) return "<1min";
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor(total % 3600 / 60);
+  return hours ? `${hours}h ${minutes}min` : `${minutes}min`;
+};
+
+function renderHero(root, state, currentFocus) {
+  root.querySelector("#hero-energy").textContent = currentFocus
+    ? `${MODE_LABELS[currentFocus.mode]} · ${currentFocus.title}`
+    : (state.energy_text || "当前状态");
+  root.querySelector("#hero-title").textContent = currentFocus
+    ? `${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`
+    : (state.title_text || "今天由你决定");
+  if (currentFocus) root.querySelector('[data-go="/focus"]').textContent = "返回当前 Focus";
 }
 
-function renderMetrics(root, state) {
+function renderMetrics(root, state, currentFocus, focusToday) {
   const energy = escapeHtml(state.energy_text || "—");
   const level = escapeHtml(state.level_text || "—");
   const exp = escapeHtml(state.exp_text || "—");
@@ -73,8 +89,12 @@ function renderMetrics(root, state) {
   root.querySelector("#metrics").innerHTML = [
     '<article class="card card-hover metric metric-energy"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">今天的能量状态</div></article>',
     '<article class="card card-hover metric metric-level"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">' + title + '</div></article>',
-    '<article class="card card-hover metric metric-exp"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">一点一点，累积成新的阶段。</div></article>'
+    '<article class="card card-hover metric metric-exp"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">一点一点，累积成新的阶段。</div></article>',
+    currentFocus
+      ? '<article class="card card-hover metric metric-focus is-active"><div class="metric-label">正在 Focus</div><div class="metric-value metric-focus-title" title="' + escapeHtml(currentFocus.title) + '">' + escapeHtml(currentFocus.title) + '</div><div class="metric-note">' + escapeHtml(`${MODE_LABELS[currentFocus.mode]} · ${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`) + '</div><button class="metric-focus-action" type="button">返回 Focus →</button></article>'
+      : '<article class="card card-hover metric metric-focus"><div class="metric-label">专注 · Focus</div><div class="metric-value">' + formatFocusTime(focusToday.totalSeconds) + '</div><div class="metric-note">' + (focusToday.sessionCount ? `今日 ${focusToday.sessionCount} 次 Session` : "今天还没有留下专注时间") + '</div><button class="metric-focus-action" type="button">开始 Focus →</button></article>'
   ].join("");
+  root.querySelector(".metric-focus-action").addEventListener("click", () => window.navigate("/focus"));
 }
 
 function renderTasks(root, state) {

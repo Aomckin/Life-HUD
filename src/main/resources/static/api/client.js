@@ -94,6 +94,17 @@ export const api = {
     unlink: (source, taskId) => remove(`/api/task-directions/${source}/${taskId}`),
     complete: (source, taskId) => post(`/api/task-directions/${source}/${taskId}/complete`)
   },
+  taskPool: {
+    all: () => request("/api/task-pool"),
+    createDaily: body => post("/api/task-pool/daily", body),
+    updateDaily: (id, body) => put(`/api/task-pool/daily/${id}`, body),
+    deleteDaily: id => remove(`/api/task-pool/daily/${id}`),
+    setDailyEnabled: (id, enabled) => post(`/api/task-pool/daily/${id}/enabled`, {enabled}),
+    createSpecial: body => post("/api/task-pool/special", body),
+    updateSpecial: (id, body) => put(`/api/task-pool/special/${id}`, body),
+    deleteSpecial: id => remove(`/api/task-pool/special/${id}`),
+    setSpecialEnabled: (id, enabled) => post(`/api/task-pool/special/${id}/enabled`, {enabled})
+  },
   uploadImage: formData => request("/api/images", {method: "POST", body: formData}),
   achievements: () => request("/api/achievements"),
   milestones: {

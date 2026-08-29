@@ -25,14 +25,15 @@ public final class DirectionLinkController {
 
     public record LinkRequest(String dreamId, String goalId, String dreamMilestoneId) { }
 
+    /** Today's active instances only — the full definition pool lives at /api/task-pool. */
     @GetMapping
     public Map<String,Object> all() {
         Map<String,Object> map = new LinkedHashMap<>();
         List<Map<String,Object>> daily = new ArrayList<>();
-        dailyTasks.allTasks().forEach(task -> daily.add(view("daily", task.id, task.name, task.done,
+        dailyTasks.tasks().forEach(task -> daily.add(view("daily", task.id, task.name, task.done,
                 links.infoOf("daily", task.id))));
         List<Map<String,Object>> special = new ArrayList<>();
-        specialTasks.allTasks().forEach(task -> special.add(view("special", task.id, task.name, task.done,
+        specialTasks.tasks().forEach(task -> special.add(view("special", task.id, task.name, task.done,
                 links.infoOf("special", task.id))));
         map.put("daily", daily);
         map.put("special", special);

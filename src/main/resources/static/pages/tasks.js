@@ -3,15 +3,24 @@ import { taskCopy as c } from "../content/copy.js?v=0.5.3";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 let dreamsCache = [];
-let tasksData = null; // {daily: [...], special: [...]}
+let tasksData = null; // {daily: [...], special: [...]} — today's active instances only
+let poolData = null;  // {daily: [...], special: [...]} — full definition pool
+let view = "today";   // "today" | "pool"
 
 export async function tasks(root) {
   root.innerHTML = '<section class="panel">正在读取任务…</section>';
   try {
-    const [directions, dreams] = await Promise.all([api.taskDirections.all(), api.dreams.all()]);
-    dreamsCache = dreams;
-    tasksData = directions;
-    render(root);
+    if (view === "pool") {
+      const [pool, dreams] = await Promise.all([api.taskPool.all(), api.dreams.all()]);
+      poolData = pool;
+      dreamsCache = dreams;
+      renderPool(root);
+    } else {
+      const [directions, dreams] = await Promise.all([api.taskDirections.all(), api.dreams.all()]);
+      dreamsCache = dreams;
+      tasksData = directions;
+      render(root);
+    }
   } catch (reason) { root.innerHTML = error(reason.message); }
 }
 
@@ -23,7 +32,7 @@ const directionText = d => [d.dreamTitle, d.goalTitle, d.dreamMilestoneTitle].fi
 const directionPath = d => ["梦想: " + (d.dreamTitle || "—"), "方向: " + (d.goalTitle || "—"),
   "里程碑: " + (d.dreamMilestoneTitle || "—")].join("  ·  ");
 
-/* ---------- page ---------- */
+/* ---------- today view ---------- */
 
 function render(root) {
   const total = all().length, completed = done().length;
@@ -38,14 +47,17 @@ function render(root) {
       <div class="tasks-progress">
         <small>${completed} / ${total} 已完成</small>
         <div class="progress"><span style="width:${pct}%"></span></div>
+        <button class="text-link" id="open-pool">${c.poolEntry}</button>
       </div>
     </section>
 
     <section class="panel"><div class="section-head"><h2>${c.dailyTitle}</h2></div>
-      <div class="daily-grid">${cards(tasksData.daily)}</div></section>
+      <div class="daily-grid">${cards(tasksData.daily, "grid")}</div>
+      <div class="completed-wrap">${fold(tasksData.daily)}</div></section>
 
     <section class="panel"><div class="section-head"><h2>${c.specialTitle}</h2></div>
-      <div class="special-grid">${cards(tasksData.special)}</div></section>
+      <div class="special-grid">${cards(tasksData.special, "grid")}</div>
+      <div class="completed-wrap">${fold(tasksData.special)}</div></section>
 
     <form class="milestone-form" id="link-form" hidden>
       <h3>${c.linkTitle}</h3><small>${c.linkHint}</small>
@@ -64,11 +76,17 @@ function cards(list) {
   const pendingCards = list.filter(t => !t.done);
   const doneCards = list.filter(t => t.done);
   const pendingHtml = pendingCards.map(pendingCard).join("")
-    || (doneCards.length ? "" : (source === "daily" ? empty(c.dailyEmpty) : empty(c.specialEmpty)));
-  const fold = doneCards.length ? `
-    <details class="completed-fold"><summary>${c.completedFoldLabel} · ${doneCards.length}</summary>
-      <div class="completed-list">${doneCards.map(doneCard).join("")}</div></details>` : "";
-  return pendingHtml + fold;
+    || (doneCards.length ? `<div class="all-done-hint">${c.allDoneInPool}</div>` : emptyFor(source));
+  return pendingHtml;
+}
+function fold(list) {
+  const doneCards = list.filter(t => t.done);
+  if (!doneCards.length) return "";
+  return `<details class="completed-fold"><summary>${c.completedFoldLabel} · ${doneCards.length}</summary>
+    <div class="completed-list">${doneCards.map(doneCard).join("")}</div></details>`;
+}
+function emptyFor(source) {
+  return source === "daily" ? empty(c.dailyEmpty) : empty(c.specialEmpty);
 }
 
 function pendingCard(t) {
@@ -100,9 +118,90 @@ function directionChip(d) {
   return `<span class="direction-chip" title="${escapeHtml(full)}">✦ ${escapeHtml(short)}</span>`;
 }
 
-/* ---------- bindings ---------- */
+/* ---------- pool view ---------- */
+
+function renderPool(root) {
+  const defRow = t => {
+    const dir = t.direction;
+    const chip = (dir.dreamTitle || dir.goalTitle || dir.dreamMilestoneTitle)
+      ? `<span class="direction-chip" title="${escapeHtml(directionPath(dir))}">✦ ${escapeHtml(directionText(dir))}</span>` : "";
+    return `<div class="pool-row" data-source="${t.source}" data-task="${t.taskId}">
+      <div class="pool-main"><strong>${escapeHtml(t.name)}</strong>
+        <small>${t.energy ? `Energy +${t.energy} · ` : ""}Energy 产出 +${t.exp}${chip ? " · " + chip : ""}</small></div>
+      <div class="row-actions pool-actions">
+        <span class="badge">${t.enabled ? c.poolEnabled : c.poolDisabled}</span>
+        <button class="text-link" data-pool-edit="${t.source}|${t.taskId}|${t.enabled ? 1 : 0}">${c.poolEdit}</button>
+        <button class="text-link" data-pool-toggle="${t.source}|${t.taskId}|${t.enabled ? 0 : 1}">${t.enabled ? c.poolDisable || "停用" : c.poolEnabled}</button>
+        <button class="text-link danger-link" data-pool-delete="${t.source}|${t.taskId}">${"删除"}</button>
+      </div></div>`;
+  };
+  root.innerHTML = `<div class="direction-page">
+    <section class="panel"><div class="section-head"><div><div class="eyebrow">${c.poolTitle}</div>
+      <h2>${c.poolTitle}</h2><p class="muted">${c.poolHint}</p></div>
+      <button class="text-link" id="back-tasks">${c.backToTasks}</button></div>
+      <section class="pool-group"><h3>${c.poolDailyTitle}</h3>
+        <form class="inline-form pool-add-form" data-pool-add="daily"><input name="name" placeholder="${c.nameLabel}" maxlength="60" required>
+          <input name="energy" type="number" min="0" placeholder="${c.energyLabel}" style="max-width:110px">
+          <input name="exp" type="number" min="0" placeholder="${c.expLabel}" style="max-width:110px">
+          <button class="button button-secondary" type="submit">${c.poolAdd}</button></form>
+        ${poolData.daily.map(defRow).join("") || empty("任务池是空的。")}
+      </section>
+      <section class="pool-group"><h3>${c.poolSpecialTitle}</h3>
+        <form class="inline-form pool-add-form" data-pool-add="special"><input name="name" placeholder="${c.nameLabel}" maxlength="60" required>
+          <input name="exp" type="number" min="0" placeholder="${c.expLabel}" style="max-width:140px">
+          <button class="button button-secondary" type="submit">${c.poolAdd}</button></form>
+        ${poolData.special.map(defRow).join("") || empty("还没有特殊行动模板。")}
+      </section>
+    </section></div>`;
+  bindPool(root);
+}
+
+function bindPool(root) {
+  root.querySelector("#back-tasks").addEventListener("click", () => { view = "today"; tasks(root); });
+  root.querySelectorAll(".pool-add-form").forEach(form => form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const type = form.dataset.poolAdd;
+    const body = {name: form.name.value.trim(), energy: Number(form.energy?.value) || 0, exp: Number(form.exp?.value) || 0};
+    try {
+      if (type === "daily") await api.taskPool.createDaily(body); else await api.taskPool.createSpecial(body);
+      toast("已加入任务池"); tasks(root);
+    } catch (reason) { toast(reason.message, true); }
+  }));
+  root.querySelectorAll("[data-pool-edit]").forEach(button => button.addEventListener("click", () => {
+    const [source, taskId, enabledFlag] = button.dataset.poolEdit.split("|");
+    const list = source === "daily" ? poolData.daily : poolData.special;
+    const t = list.find(x => x.taskId === taskId);
+    if (!t) return;
+    const name = prompt("任务名称", t.name);
+    if (name === null || !name.trim()) return;
+    const exp = Number(prompt("Energy 产出", t.exp));
+    const body = {name: name.trim(), exp: Number.isFinite(exp) ? Math.max(0, exp) : t.exp};
+    const callApi = source === "daily" ? api.taskPool.updateDaily(taskId, body) : api.taskPool.updateSpecial(taskId, body);
+    callApi.then(() => { toast("已更新"); tasks(root); }).catch(r => toast(r.message, true));
+  }));
+  root.querySelectorAll("[data-pool-toggle]").forEach(button => button.addEventListener("click", async () => {
+    const [source, taskId, enabled] = button.dataset.poolToggle.split("|");
+    try {
+      if (source === "daily") await api.taskPool.setDailyEnabled(taskId, enabled === "1");
+      else await api.taskPool.setSpecialEnabled(taskId, enabled === "1");
+      tasks(root);
+    } catch (reason) { toast(reason.message, true); }
+  }));
+  root.querySelectorAll("[data-pool-delete]").forEach(button => button.addEventListener("click", async () => {
+    if (!confirm("删除这条任务定义？今日实例与历史记录不受影响。")) return;
+    const [source, taskId] = button.dataset.poolDelete.split("|");
+    try {
+      if (source === "daily") await api.taskPool.deleteDaily(taskId); else await api.taskPool.deleteSpecial(taskId);
+      tasks(root);
+    } catch (reason) { toast(reason.message, true); }
+  }));
+}
+
+/* ---------- bindings (today view) ---------- */
 
 function bind(root) {
+  root.querySelector("#open-pool").addEventListener("click", () => { view = "pool"; tasks(root); });
+
   root.querySelectorAll("[data-complete]").forEach(button => button.addEventListener("click", async () => {
     button.disabled = true;
     const [source, taskId] = button.dataset.complete.split("|");

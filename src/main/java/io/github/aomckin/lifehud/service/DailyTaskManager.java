@@ -21,8 +21,32 @@ public final class DailyTaskManager {
     /** Completes any daily task by id (action-desk page); finishing a done task is a no-op. */
     public int[] finishById(String id){DailyTask t=allTasks.stream().filter(v->v.id.equals(id)).findFirst().orElse(null);if(t==null||t.done)return new int[]{0,0};t.done=true;t.completedCount++;save();return new int[]{t.reward,t.exp};}
     public void redraw(){draw();save();setActive();}
+    /** Task pool management (v0.5.3.1): definitions are the pool; the daily draw is today's instances. */
+    public DailyTask addDefinition(String name,int reward,int exp){
+        String base=DailyTask.makeId(name);
+        String id=base;int suffix=2;
+        java.util.Set<String> existing=new java.util.HashSet<>();
+        allTasks.forEach(v->existing.add(v.id));
+        while(existing.contains(id)){id=base+"_"+suffix;suffix++;}
+        DailyTask t=new DailyTask();t.id=id;t.name=name;t.reward=reward;t.exp=exp;
+        t.createdTime=java.time.LocalDateTime.now();t.done=false;t.enabled=true;
+        allTasks.add(t);save();draw();setActive();return t;
+    }
+    public DailyTask updateDefinition(String id,String name,int reward,int exp){
+        DailyTask t=allTasks.stream().filter(v->v.id.equals(id)).findFirst().orElseThrow();
+        t.name=name;t.reward=reward;t.exp=exp;save();setActive();return t;
+    }
+    public void removeDefinition(String id){
+        allTasks.removeIf(v->v.id.equals(id));
+        data.putArray("active_task_ids").removeAll();
+        save();draw();setActive();
+    }
+    public void setEnabled(String id,boolean enabled){
+        DailyTask t=allTasks.stream().filter(v->v.id.equals(id)).findFirst().orElse(null);
+        if(t==null)return;t.enabled=enabled;save();draw();setActive();
+    }
     public void save(){data.set("tasks",repoNode(allTasks.stream().map(DailyTask::toMap).toList()));repo.write("tasks.json",data);}
-    private List<String> unfinishedTaskIds(){return allTasks.stream().filter(t->!t.done).map(t->t.id).collect(java.util.stream.Collectors.toCollection(ArrayList::new));}
+    private List<String> unfinishedTaskIds(){return allTasks.stream().filter(t->!t.done&&t.enabled).map(t->t.id).collect(java.util.stream.Collectors.toCollection(ArrayList::new));}
     private com.fasterxml.jackson.databind.node.ArrayNode repoNode(Object o){return (com.fasterxml.jackson.databind.node.ArrayNode)new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(o);}
     public List<DailyTask> allTasks(){return Collections.unmodifiableList(allTasks);}public List<DailyTask> tasks(){return Collections.unmodifiableList(tasks);}public DailyTask task(){return tasks.isEmpty()?null:tasks.getFirst();}
 }

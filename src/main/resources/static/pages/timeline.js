@@ -1,4 +1,4 @@
-import { api } from "../api/client.js?v=0.5.2";
+import { api } from "../api/client.js?v=0.5.3";
 import { empty, error, escapeHtml } from "../components/ui.js";
 
 const IMPORTANT = new Set(["LEVEL_UP","ACHIEVEMENT_UNLOCKED","MILESTONE_CREATED","TITLE_UNLOCKED","TITLE_EQUIPPED"]);

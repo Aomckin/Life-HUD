@@ -1,99 +1,119 @@
-import { api } from "../api/client.js?v=0.5.2";
-import { taskCopy as c } from "../content/copy.js?v=0.5.2";
+import { api } from "../api/client.js?v=0.5.3";
+import { taskCopy as c } from "../content/copy.js?v=0.5.3";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 let dreamsCache = [];
+let tasksData = null; // {daily: [...], special: [...]}
 
 export async function tasks(root) {
   root.innerHTML = '<section class="panel">正在读取任务…</section>';
   try {
     const [directions, dreams] = await Promise.all([api.taskDirections.all(), api.dreams.all()]);
     dreamsCache = dreams;
-    render(root, directions);
+    tasksData = directions;
+    render(root);
   } catch (reason) { root.innerHTML = error(reason.message); }
 }
 
-function render(root, directions) {
-  const row = task => `
-    <div class="task-direction-row" data-source="${task.source}" data-task="${task.taskId}">
-      <div><strong>${escapeHtml(task.name)}</strong>
-        <small>${task.done ? c.doneBadge : c.pendingBadge}</small></div>
-      <div class="task-direction-side">
-        <span class="direction-text">${directionText(task.direction) || `<em>${c.noDirection}</em>`}</span>
-        <button class="text-link" data-link="${task.source}|${task.taskId}">${c.editLink}</button>
-        ${hasDirection(task.direction)?`<button class="text-link danger-link" data-unlink="${task.source}|${task.taskId}">${c.unlinkLabel}</button>`:""}
-      </div></div>`;
+/* ---------- helpers ---------- */
+
+const all = () => [...tasksData.daily, ...tasksData.special];
+const done = () => all().filter(t => t.done);
+const directionText = d => [d.dreamTitle, d.goalTitle, d.dreamMilestoneTitle].filter(Boolean).join(" › ");
+const directionPath = d => ["梦想: " + (d.dreamTitle || "—"), "方向: " + (d.goalTitle || "—"),
+  "里程碑: " + (d.dreamMilestoneTitle || "—")].join("  ·  ");
+
+/* ---------- page ---------- */
+
+function render(root) {
+  const total = all().length, completed = done().length;
+  const remaining = total - completed;
+  const pct = total ? Math.round(completed / total * 100) : 0;
+
   root.innerHTML = `<div class="direction-page">
-    <section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Direction</div><h2>${c.dailyTitle}</h2></div></div>
-      ${directions.daily.map(row).join("")||empty(c.emptyTasks)}</section>
+    <section class="panel tasks-header">
+      <div class="tasks-head-text"><div class="eyebrow">v0.5 · Action Desk</div>
+        <h2>${c.title}</h2>
+        <p>${total ? (remaining > 0 ? `今天还有 <strong>${remaining}</strong> 件事` : c.allDoneToday) : c.emptyTasks}</p></div>
+      <div class="tasks-progress">
+        <small>${completed} / ${total} 已完成</small>
+        <div class="progress"><span style="width:${pct}%"></span></div>
+      </div>
+    </section>
+
+    <section class="panel"><div class="section-head"><h2>${c.dailyTitle}</h2></div>
+      <div class="daily-grid">${cards(tasksData.daily)}</div></section>
+
     <section class="panel"><div class="section-head"><h2>${c.specialTitle}</h2></div>
-      ${directions.special.map(row).join("")||empty(c.emptyTasks)}</section>
+      <div class="special-grid">${cards(tasksData.special)}</div></section>
+
     <form class="milestone-form" id="link-form" hidden>
-      <h3>${c.linkTitle}</h3>
-      <small>${c.linkHint}</small>
-      <input type="hidden" id="link-source"><input type="hidden" id="link-task">
+      <h3>${c.linkTitle}</h3><small>${c.linkHint}</small>
       <label class="field"><span>${c.dreamLabel}</span><select id="link-dream"><option value="">—</option></select></label>
       <label class="field"><span>${c.goalLabel}</span><select id="link-goal" disabled><option value="">—</option></select></label>
       <label class="field"><span>${c.milestoneLabel}</span><select id="link-milestone" disabled><option value="">—</option></select></label>
       <div><button class="button button-primary" type="submit">${c.save}</button>
-      <button class="button button-ghost" type="button" id="cancel-link">${"取消"}</button></div>
-    </form></div>`;
+      <button class="button button-ghost" type="button" id="cancel-link">${c.cancel}</button></div>
+    </form>
+  </div>`;
+  bind(root);
+}
 
-  root.querySelectorAll("[data-link]").forEach(button => button.addEventListener("click", () => openLink(button.dataset.link)));
-  root.querySelectorAll("[data-unlink]").forEach(button => button.addEventListener("click", async () => {
-    const [source, taskId] = button.dataset.unlink.split("|");
-    try { await api.taskDirections.unlink(source, taskId); toast("已取消关联"); tasks(root); }
-    catch (reason) { toast(reason.message, true); }
+function cards(list) {
+  const source = list[0]?.source;
+  const pendingCards = list.filter(t => !t.done);
+  const doneCards = list.filter(t => t.done);
+  const pendingHtml = pendingCards.map(pendingCard).join("")
+    || (doneCards.length ? "" : (source === "daily" ? empty(c.dailyEmpty) : empty(c.specialEmpty)));
+  const fold = doneCards.length ? `
+    <details class="completed-fold"><summary>${c.completedFoldLabel} · ${doneCards.length}</summary>
+      <div class="completed-list">${doneCards.map(doneCard).join("")}</div></details>` : "";
+  return pendingHtml + fold;
+}
+
+function pendingCard(t) {
+  const mark = t.source === "daily" ? "○" : "◇";
+  return `<article class="card task-card pending ${t.source === "special" ? "special" : ""}">
+    <div class="task-main">
+      <span class="task-mark">${mark}</span>
+      <div class="task-text"><strong>${escapeHtml(t.name)}</strong>
+        <small>${t.source === "daily" ? c.dailyTag : c.specialTag}</small>
+        ${directionChip(t.direction)}
+      </div>
+    </div>
+    <div class="row-actions task-actions">
+      <button class="button button-secondary" data-complete="${t.source}|${t.taskId}">${c.completeLabel}</button>
+      <button class="text-link" data-edit="${t.source}|${t.taskId}" title="${c.linkEdit}">⋯</button>
+    </div></article>`;
+}
+function doneCard(t) {
+  return `<article class="card task-card done">
+    <div class="task-main"><span class="task-mark checked">✓</span>
+      <div class="task-text"><strong>${escapeHtml(t.name)}</strong>
+        <small>${c.doneBadge}</small></div></div></article>`;
+}
+function directionChip(d) {
+  const short = d.dreamTitle || d.goalTitle || d.dreamMilestoneTitle;
+  if (!short) return "";
+  const full = [d.dreamTitle && "梦想 · " + d.dreamTitle, d.goalTitle && "方向 · " + d.goalTitle,
+    d.dreamMilestoneTitle && "里程碑 · " + d.dreamMilestoneTitle].filter(Boolean).join("  ·  ");
+  return `<span class="direction-chip" title="${escapeHtml(full)}">✦ ${escapeHtml(short)}</span>`;
+}
+
+/* ---------- bindings ---------- */
+
+function bind(root) {
+  root.querySelectorAll("[data-complete]").forEach(button => button.addEventListener("click", async () => {
+    button.disabled = true;
+    const [source, taskId] = button.dataset.complete.split("|");
+    try {
+      await api.taskDirections.complete(source, taskId);
+      toast(c.completedToast);
+      tasks(root);
+    } catch (reason) { toast(reason.message, true); button.disabled = false; }
   }));
 
-  function directionText(d) {
-    return [d.dreamTitle, d.goalTitle, d.dreamMilestoneTitle].filter(Boolean).join(" › ");
-  }
-  function hasDirection(d) { return Boolean(d.dreamId || d.goalId || d.dreamMilestoneId); }
-
-  function openLink(key) {
-    const [source, taskId] = key.split("|");
-    const form = root.querySelector("#link-form");
-    form.dataset.source = source;
-    form.dataset.task = taskId;
-    const dreamSelect = root.querySelector("#link-dream");
-    const goalSelect = root.querySelector("#link-goal");
-    const milestoneSelect = root.querySelector("#link-milestone");
-    dreamSelect.innerHTML = '<option value="">—</option>' + dreamsCache.map(d =>
-      `<option value="${d.id}">${escapeHtml(d.title)}</option>`).join("");
-    goalSelect.innerHTML = '<option value="">—</option>';
-    milestoneSelect.innerHTML = '<option value="">—</option>';
-    goalSelect.disabled = true;
-    milestoneSelect.disabled = true;
-    const taskRow = [...root.querySelectorAll(".task-direction-row")]
-      .find(row => row.dataset.task === taskId && row.dataset.source === source);
-    const current = taskRow ? taskRow.querySelector(".direction-text") : null;
-    dreamSelect.value = "";
-    form.hidden = false;
-    form.scrollIntoView({behavior: "smooth"});
-
-    dreamSelect.onchange = async () => {
-      goalSelect.innerHTML = '<option value="">—</option>';
-      milestoneSelect.innerHTML = '<option value="">—</option>';
-      goalSelect.disabled = true;
-      milestoneSelect.disabled = true;
-      if (!dreamSelect.value) return;
-      const detail = await api.dreams.detail(dreamSelect.value);
-      goalSelect.disabled = false;
-      detail.goals.forEach(({goal}) => goalSelect.insertAdjacentHTML("beforeend",
-        `<option value="${goal.id}">${escapeHtml(goal.title)}</option>`));
-      goalSelect.onchange = () => {
-        milestoneSelect.innerHTML = '<option value="">—</option>';
-        const selected = detail.goals.find(g => g.goal.id === goalSelect.value);
-        if (selected && selected.milestones.length) {
-          milestoneSelect.disabled = false;
-          selected.milestones.forEach(m => milestoneSelect.insertAdjacentHTML("beforeend",
-            `<option value="${m.id}">${escapeHtml(m.title)}</option>`));
-        } else milestoneSelect.disabled = true;
-      };
-    };
-  }
-
+  root.querySelectorAll("[data-edit]").forEach(button => button.addEventListener("click", () => openLinkEditor(root, button.dataset.edit)));
   root.querySelector("#cancel-link").addEventListener("click", () => root.querySelector("#link-form").hidden = true);
   root.querySelector("#link-form").addEventListener("submit", async event => {
     event.preventDefault();
@@ -108,4 +128,46 @@ function render(root, directions) {
       tasks(root);
     } catch (reason) { toast(reason.message, true); }
   });
+}
+
+function openLinkEditor(root, key) {
+  const [source, taskId] = key.split("|");
+  const form = root.querySelector("#link-form");
+  form.dataset.source = source;
+  form.dataset.task = taskId;
+  const dreamSelect = root.querySelector("#link-dream");
+  const goalSelect = root.querySelector("#link-goal");
+  const milestoneSelect = root.querySelector("#link-milestone");
+  const taskRow = all().find(t => t.taskId === taskId && t.source === source);
+  dreamSelect.innerHTML = '<option value="">—</option>' + dreamsCache.map(d =>
+    `<option value="${d.id}">${escapeHtml(d.title)}</option>`).join("");
+  goalSelect.innerHTML = '<option value="">—</option>';
+  milestoneSelect.innerHTML = '<option value="">—</option>';
+  goalSelect.disabled = true;
+  milestoneSelect.disabled = true;
+  dreamSelect.value = taskRow?.direction.dreamId || "";
+  const loadGoals = async () => {
+    goalSelect.innerHTML = '<option value="">—</option>';
+    milestoneSelect.innerHTML = '<option value="">—</option>';
+    if (!dreamSelect.value) { goalSelect.disabled = true; milestoneSelect.disabled = true; return; }
+    const detail = await api.dreams.detail(dreamSelect.value);
+    goalSelect.disabled = false;
+    detail.goals.forEach(({goal}) => goalSelect.insertAdjacentHTML("beforeend",
+      `<option value="${goal.id}">${escapeHtml(goal.title)}</option>`));
+    goalSelect.value = taskRow?.direction.goalId || "";
+    goalSelect.onchange = () => {
+      milestoneSelect.innerHTML = '<option value="">—</option>';
+      const selected = detail.goals.find(g => g.goal.id === goalSelect.value);
+      if (selected && selected.milestones.length) {
+        milestoneSelect.disabled = false;
+        selected.milestones.forEach(m => milestoneSelect.insertAdjacentHTML("beforeend",
+          `<option value="${m.id}">${escapeHtml(m.title)}</option>`));
+        milestoneSelect.value = taskRow?.direction.dreamMilestoneId || "";
+      } else milestoneSelect.disabled = true;
+    };
+    goalSelect.onchange();
+  };
+  loadGoals();
+  form.hidden = false;
+  form.scrollIntoView({behavior: "smooth"});
 }

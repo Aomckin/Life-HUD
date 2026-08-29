@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.5.2";
-import { nowCopy as c } from "../content/copy.js?v=0.5.2";
+import { api } from "../api/client.js?v=0.5.3";
+import { nowCopy as c } from "../content/copy.js?v=0.5.3";
 import { empty, escapeHtml, toast } from "../components/ui.js";
 
 /**

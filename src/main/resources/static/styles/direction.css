@@ -183,3 +183,31 @@
   .board-modal-body { grid-template-columns:1fr; }
   .now-three-grid { grid-template-columns:1fr; }
 }
+
+/* ---------- v0.5.3 tasks action desk ---------- */
+.tasks-header { display:flex; align-items:center; justify-content:space-between; gap:var(--space-5); flex-wrap:wrap; }
+.tasks-head-text h2 { margin:var(--space-1) 0; }
+.tasks-head-text p { margin:0; color:var(--text-secondary); }
+.tasks-head-text strong { color:var(--sky-800); }
+.tasks-progress { display:grid; gap:var(--space-1); justify-items:end; min-width:200px; }
+.tasks-progress small { color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.tasks-progress .progress { width:200px; }
+
+.daily-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:var(--space-3); }
+.special-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:var(--space-4); }
+.task-card { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-4); }
+.task-card.special { padding:var(--space-5); }
+.task-card.done { opacity:.55; box-shadow:none; }
+.task-card.done .task-text strong { text-decoration:line-through; font-weight:var(--font-weight-normal); }
+.task-main { display:flex; align-items:flex-start; gap:var(--space-3); min-width:0; }
+.task-mark { flex:0 0 auto; display:grid; place-items:center; width:26px; height:26px; border:1px solid var(--border-default); border-radius:50%; color:var(--sky-700); font-size:.85rem; }
+.task-mark.checked { background:var(--sky-500); border-color:var(--sky-500); color:#fff; }
+.task-text { display:grid; gap:2px; min-width:0; }
+.task-text strong { font-size:1rem; }
+.task-text small { color:var(--text-muted); }
+.direction-chip { color:var(--sky-700); font-size:.85rem; cursor:help; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.task-actions { flex:0 0 auto; }
+.completed-fold { margin-top:var(--space-4); }
+.completed-fold summary { cursor:pointer; color:var(--text-muted); padding:var(--space-2) 0; }
+.completed-list { display:grid; gap:var(--space-2); padding-top:var(--space-2); }
+@media (max-width:700px){ .daily-grid,.special-grid { grid-template-columns:1fr; } .task-card { flex-direction:column; align-items:flex-start; } .tasks-progress { justify-items:start; } }

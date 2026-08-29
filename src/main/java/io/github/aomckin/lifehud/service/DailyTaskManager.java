@@ -18,6 +18,8 @@ public final class DailyTaskManager {
     public boolean hasValidActiveTasks(){JsonNode ids=data.path("active_task_ids");List<String> unfinished=unfinishedTaskIds();if(!ids.isArray()||ids.size()!=Math.min(3,unfinished.size()))return false;Set<String> valid=new HashSet<>(unfinished);Set<String> active=new HashSet<>();for(JsonNode id:ids)if(!valid.contains(id.asText())||!active.add(id.asText()))return false;return true;}
     public void setActive(){tasks.clear();Map<String,DailyTask> by=new LinkedHashMap<>();allTasks.forEach(t->by.put(t.id,t));for(JsonNode id:data.path("active_task_ids"))if(by.containsKey(id.asText()))tasks.add(by.get(id.asText()));}
     public int[] finish(int index){if(index<0||index>=tasks.size())throw new IndexOutOfBoundsException(index);DailyTask t=tasks.get(index);if(t.done)return new int[]{0,0};t.done=true;t.completedCount++;save();return new int[]{t.reward,t.exp};}
+    /** Completes any daily task by id (action-desk page); finishing a done task is a no-op. */
+    public int[] finishById(String id){DailyTask t=allTasks.stream().filter(v->v.id.equals(id)).findFirst().orElse(null);if(t==null||t.done)return new int[]{0,0};t.done=true;t.completedCount++;save();return new int[]{t.reward,t.exp};}
     public void redraw(){draw();save();setActive();}
     public void save(){data.set("tasks",repoNode(allTasks.stream().map(DailyTask::toMap).toList()));repo.write("tasks.json",data);}
     private List<String> unfinishedTaskIds(){return allTasks.stream().filter(t->!t.done).map(t->t.id).collect(java.util.stream.Collectors.toCollection(ArrayList::new));}

@@ -262,3 +262,7 @@ flowchart LR
 ## v0.5.2：「现在。」歌单沉浸墙
 
 `NowSong` 扩展 `playCount`（手动填写，驱动视觉尺寸分级 small/medium/large/xl/featured）、`note`（纸条形态的阶段备注，装饰按 slot 稳定分配 tape/pin/clip）与 `posX/posY/rotationDeg/zIndex`（归一化挂点布局，持久化后刷新不乱跳）。`NowState`/`NowSnapshot` 增加 `playlistBackgroundImage/playlistTitle/playlistSubtitle`；快照冻结整条歌曲记录（含布局），音频/封面/背景文件共享路径且不覆盖写。布局由前端 `now-playlist.js` 的确定性锚带算法生成（按 playCount 降序分配锚点 + slot 种子抖动），仅对无坐标的歌曲补布局。背景经 `POST|DELETE /api/now/background`（复用统一图片存储）。
+
+## v0.5.3：/tasks 行动台
+
+`/tasks` 从行式列表重构为卡片行动台：Daily 紧凑卡（2~4 列）、Special 舒展卡（1~2 列）、已完成折叠弱化。Direction 以 `DirectionInfo` 聚合字段展示为「✦ 梦想 › 方向 › 里程碑」意义 chip（tooltip 完整路径），关联编辑只存在于 Task Modal。完成走新增的 `POST /api/task-directions/{source}/{taskId}/complete`（`TaskService.completeDailyById/completeSpecialById`，基于 `DailyTaskManager/SpecialTaskManager.finishById`，done 任务重复完成为 no-op，不重复发 TASK_COMPLETED）。事件边界不变：Task → LifeEvent → GrowthEngine。

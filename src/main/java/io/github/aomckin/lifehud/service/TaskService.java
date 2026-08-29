@@ -28,8 +28,19 @@ public final class TaskService {
 
     public OperationResult completeDaily(int index) {
         if (index < 0 || index >= dailyTasks.tasks().size()) return queries.error("任务不存在");
-        DailyTask task = dailyTasks.tasks().get(index);
-        int[] reward = dailyTasks.finish(index);
+        return finishDaily(dailyTasks.tasks().get(index));
+    }
+
+    /** Action-desk completion by task id; works for any daily task and is idempotent. */
+    public OperationResult completeDailyById(String id) {
+        DailyTask task = dailyTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst().orElse(null);
+        if (task == null) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND, "任务不存在");
+        return finishDaily(task);
+    }
+
+    private OperationResult finishDaily(DailyTask task) {
+        int[] reward = dailyTasks.finishById(task.id);
         if (reward[0] > 0 || reward[1] > 0) {
             // baseExp is deprecated: GrowthRules only reads baseEnergy, EXP comes solely from Energy SPEND.
             events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成每日任务",List.of("task"),
@@ -37,14 +48,26 @@ public final class TaskService {
                             "dreamId",task.dreamId,"goalId",task.goalId,"dreamMilestoneId",task.dreamMilestoneId));
             logs.action(copy.taskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
-        return new OperationResult(true,"任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
-                GameViewAssembler.map("task",task.toMap(),"source","daily"))),queries.state());
+        return new OperationResult(true, task.done ? "任务完成" : "任务已完成", List.of(new GameEvent(GameEvents.TASK_COMPLETE,
+                GameViewAssembler.map("task",task.toMap(),"source","daily"))),
+                queries == null ? Map.of() : queries.state());
     }
 
     public OperationResult completeSpecial(int index) {
         if (index < 0 || index >= specialTasks.tasks().size()) return queries.error("特殊任务不存在");
-        SpecialTask task = specialTasks.tasks().get(index);
-        int[] reward = specialTasks.finish(index);
+        return finishSpecial(specialTasks.tasks().get(index));
+    }
+
+    /** Action-desk completion by task id; works for any special task and is idempotent. */
+    public OperationResult completeSpecialById(String id) {
+        SpecialTask task = specialTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst().orElse(null);
+        if (task == null) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND, "特殊任务不存在");
+        return finishSpecial(task);
+    }
+
+    private OperationResult finishSpecial(SpecialTask task) {
+        int[] reward = specialTasks.finishById(task.id);
         if (reward[0] > 0 || reward[1] > 0) {
             // Special tasks had no Energy field; their legacy exp value becomes the Energy reward (capped by growth.json).
             events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
@@ -53,7 +76,8 @@ public final class TaskService {
             logs.action(copy.specialTaskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
         return new OperationResult(true,"特殊任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
-                GameViewAssembler.map("task",task.toMap(),"source","special"))),queries.state());
+                GameViewAssembler.map("task",task.toMap(),"source","special"))),
+                queries == null ? Map.of() : queries.state());
     }
 
     public OperationResult refresh() {

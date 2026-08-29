@@ -91,7 +91,8 @@ export const api = {
   taskDirections: {
     all: () => request("/api/task-directions"),
     link: (source, taskId, body) => put(`/api/task-directions/${source}/${taskId}`, body),
-    unlink: (source, taskId) => remove(`/api/task-directions/${source}/${taskId}`)
+    unlink: (source, taskId) => remove(`/api/task-directions/${source}/${taskId}`),
+    complete: (source, taskId) => post(`/api/task-directions/${source}/${taskId}/complete`)
   },
   uploadImage: formData => request("/api/images", {method: "POST", body: formData}),
   achievements: () => request("/api/achievements"),

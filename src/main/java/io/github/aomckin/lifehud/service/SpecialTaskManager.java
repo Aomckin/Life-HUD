@@ -19,6 +19,8 @@ public final class SpecialTaskManager {
     public boolean hasValidActiveTasks(){JsonNode ids=data.path("active_task_ids");if(!ids.isArray()||ids.size()!=Math.min(slotCount,allTasks.size()))return false;Set<String> valid=new HashSet<>();allTasks.forEach(t->valid.add(t.id));for(JsonNode id:ids)if(!valid.contains(id.asText()))return false;return true;}
     public void setActive(){tasks.clear();Map<String,SpecialTask> by=new LinkedHashMap<>();allTasks.forEach(t->by.put(t.id,t));for(JsonNode id:data.path("active_task_ids"))if(by.containsKey(id.asText()))tasks.add(by.get(id.asText()));}
     public int[] finish(int index){if(index<0||index>=tasks.size())return new int[]{0,0};SpecialTask t=tasks.get(index);if(t.done)return new int[]{0,0};t.done=true;t.completedCount++;save();return new int[]{t.coin,t.exp};}
+    /** Completes any special task by id; finishing a done task is a no-op. */
+    public int[] finishById(String id){SpecialTask t=allTasks.stream().filter(v->v.id.equals(id)).findFirst().orElse(null);if(t==null||t.done)return new int[]{0,0};t.done=true;t.completedCount++;save();return new int[]{0,t.exp};}
     public void setSlotCount(int slots){slotCount=Math.max(1,slots);if(!hasValidActiveTasks()){fill();save();}setActive();}
     public void save(){data.set("tasks",new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(allTasks.stream().map(SpecialTask::toMap).toList()));repo.write("special_tasks.json",data);}
     public List<SpecialTask> allTasks(){return Collections.unmodifiableList(allTasks);}public List<SpecialTask> tasks(){return Collections.unmodifiableList(tasks);}public SpecialTask task(){return tasks.isEmpty()?null:tasks.getFirst();}public int slotCount(){return slotCount;}

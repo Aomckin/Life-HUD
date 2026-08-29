@@ -1,9 +1,11 @@
 package io.github.aomckin.lifehud.controller;
 
 import io.github.aomckin.lifehud.domain.DirectionInfo;
+import io.github.aomckin.lifehud.dto.OperationResult;
 import io.github.aomckin.lifehud.service.DailyTaskManager;
 import io.github.aomckin.lifehud.service.DirectionLinkService;
 import io.github.aomckin.lifehud.service.SpecialTaskManager;
+import io.github.aomckin.lifehud.service.TaskService;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +15,12 @@ public final class DirectionLinkController {
     private final DirectionLinkService links;
     private final DailyTaskManager dailyTasks;
     private final SpecialTaskManager specialTasks;
+    private final TaskService taskService;
 
-    public DirectionLinkController(DirectionLinkService links, DailyTaskManager dailyTasks, SpecialTaskManager specialTasks) {
+    public DirectionLinkController(DirectionLinkService links, DailyTaskManager dailyTasks,
+                                   SpecialTaskManager specialTasks, TaskService taskService) {
         this.links = links; this.dailyTasks = dailyTasks; this.specialTasks = specialTasks;
+        this.taskService = taskService;
     }
 
     public record LinkRequest(String dreamId, String goalId, String dreamMilestoneId) { }
@@ -32,6 +37,12 @@ public final class DirectionLinkController {
         map.put("daily", daily);
         map.put("special", special);
         return map;
+    }
+
+    /** Action-desk completion from the card; idempotent through the task managers. */
+    @PostMapping("/{source}/{taskId}/complete")
+    public OperationResult complete(@PathVariable String source, @PathVariable String taskId) {
+        return "daily".equalsIgnoreCase(source) ? taskService.completeDailyById(taskId) : taskService.completeSpecialById(taskId);
     }
 
     @PutMapping("/{source}/{taskId}")

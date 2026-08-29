@@ -3,5 +3,9 @@ spring:
     name: lifehud
   jackson:
     default-property-inclusion: always
+  servlet:
+    multipart:
+      max-file-size: 64MB
+      max-request-size: 128MB
 server:
   port: 8025

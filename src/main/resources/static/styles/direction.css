@@ -79,3 +79,47 @@
 
 @media(max-width:900px){ .step-row { grid-template-columns:110px minmax(0,1fr) minmax(0,1fr); } .step-row .step-url,.step-row .step-duration { grid-column:auto; } .dream-detail-head { flex-direction:column; } }
 @media(max-width:640px){ .step-row { grid-template-columns:1fr 1fr; } .now-item { grid-template-columns:1fr; } .task-direction-row { flex-direction:column; align-items:flex-start; } .dream-cover.big { width:100%; height:180px; } }
+
+/* ---------- v0.5.1 「现在。」 stage display page ---------- */
+.now-hero { padding:var(--space-6); }
+.now-hero-display { display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); flex-wrap:wrap; }
+.now-hero-text h1 { margin:0 0 var(--space-1); font-size:2rem; letter-spacing:.04em; }
+.now-hero-text p { margin:0; color:var(--text-secondary); letter-spacing:.12em; }
+.now-hero-edit { display:grid; gap:var(--space-3); }
+.song-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:var(--space-4); }
+.song-card { position:relative; display:grid; gap:var(--space-2); padding:var(--space-4); }
+.song-cover { width:100%; height:130px; object-fit:cover; border-radius:var(--radius-md); }
+.song-cover-empty { display:grid; place-items:center; font-size:2.4rem; color:var(--sky-400); background:var(--accent-soft); }
+.song-info { display:grid; gap:2px; }
+.song-info strong { font-size:1rem; }
+.song-info small { color:var(--text-muted); }
+.song-slot { position:absolute; top:var(--space-3); right:var(--space-3); color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:.85rem; }
+.song-audio { width:100%; height:32px; }
+.song-actions { justify-content:flex-end; }
+.song-slot-empty { display:grid; place-items:center; gap:var(--space-2); min-height:210px; border:1px dashed var(--border-default); border-radius:var(--radius-lg); background:transparent; color:var(--text-muted); cursor:pointer; font-size:.95rem; }
+.song-slot-empty:hover { border-color:var(--sky-400); color:var(--sky-700); }
+.song-slot-empty .song-slot { position:static; font-size:1.1rem; }
+.song-card.readonly .song-actions { display:none; }
+
+.now-three-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:var(--space-4); }
+.now-item-cards { display:grid; gap:var(--space-3); }
+.now-item-card { display:grid; gap:2px; padding:var(--space-3) var(--space-4); border:1px solid var(--border-soft); border-radius:var(--radius-md); background:var(--surface-elevated); cursor:pointer; transition:border-color 140ms ease; }
+.now-item-card:hover { border-color:var(--sky-400); }
+.now-item-card small { color:var(--sky-700); }
+.now-item-card .muted { color:var(--text-muted); }
+.now-item-editor { display:grid; gap:var(--space-2); padding:var(--space-3); border:1px solid var(--sky-300); border-radius:var(--radius-md); background:var(--surface-glass); }
+.now-item-editor input { min-height:34px; }
+
+.dream-chip { padding:var(--space-4); display:grid; gap:var(--space-1); }
+.dream-chip small { color:var(--text-muted); }
+.goal-chip small { color:var(--text-muted); }
+#direction-picker h3 { margin:var(--space-3) 0 var(--space-2); font-size:.95rem; color:var(--sky-800); }
+
+.now-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:var(--space-3); }
+.gallery-item { position:relative; display:grid; }
+.gallery-item img { width:100%; height:130px; object-fit:cover; border-radius:var(--radius-md); }
+.gallery-item .text-link { margin-top:var(--space-1); }
+.gallery-add { place-items:center; min-height:130px; border:1px dashed var(--border-default); border-radius:var(--radius-md); color:var(--text-muted); cursor:pointer; text-align:center; }
+.gallery-add:hover { border-color:var(--sky-400); color:var(--sky-700); }
+.gallery-item.pending { opacity:.85; }
+.snapshot-thumb { width:54px; height:40px; object-fit:cover; border-radius:var(--radius-sm); }

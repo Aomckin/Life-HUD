@@ -21,16 +21,19 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public final class NowService {
+    /** The 歌单 is exactly ten slots by product definition, not by technical limit. */
+    public static final int SONG_SLOTS = 10;
     private final NowRepository repository;
     private final DreamRepository dreams;
     private final GoalRepository goals;
     private final LifeEventService events;
     private final GrowthCopy copy;
+    private final AudioStorageService audio;
 
     public NowService(NowRepository repository, DreamRepository dreams, GoalRepository goals,
-                      LifeEventService events, GrowthCopy copy) {
+                      LifeEventService events, GrowthCopy copy, AudioStorageService audio) {
         this.repository = repository; this.dreams = dreams; this.goals = goals;
-        this.events = events; this.copy = copy;
+        this.events = events; this.copy = copy; this.audio = audio;
     }
 
     public NowState current() { return repository.state().orElseGet(NowService::emptyState); }
@@ -41,11 +44,53 @@ public final class NowService {
 
     public synchronized NowState update(NowState request) {
         NowState value = new NowState(clean(request.stageTitle()), clean(request.theme()),
-                request.favoriteSongs(), request.currentGames(), request.currentAnime(), request.currentBooks(),
-                request.currentDreamIds(), request.currentGoalIds(), clean(request.favoriteQuote()),
-                request.images(), request.content(), Instant.now());
+                validSongs(request.favoriteSongs()), request.currentGames(), request.currentAnime(),
+                request.currentBooks(), request.currentDreamIds(), request.currentGoalIds(),
+                clean(request.favoriteQuote()), request.images(), request.content(), Instant.now());
         repository.saveState(value);
         return value;
+    }
+
+    /** Stores a real audio upload into one of the ten slots, replacing whatever occupied it. */
+    public synchronized NowState uploadSong(int slot, org.springframework.web.multipart.MultipartFile file) {
+        validateSlot(slot);
+        NowState state = current();
+        if (state.favoriteSongs().stream().anyMatch(song -> song.slot() == slot))
+            state = replaceSong(state, slot, null);
+        NowSong song = audio.store(file, slot);
+        NowState value = replaceSong(state, slot, song);
+        repository.saveState(value);
+        return value;
+    }
+
+    public synchronized NowState removeSong(int slot) {
+        validateSlot(slot);
+        NowState value = replaceSong(current(), slot, null);
+        repository.saveState(value);
+        return value;
+    }
+
+    private NowState replaceSong(NowState state, int slot, NowSong song) {
+        List<NowSong> songs = state.favoriteSongs().stream().filter(s -> s.slot() != slot).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        if (song != null) songs.add(song);
+        songs.sort(Comparator.comparingInt(NowSong::slot));
+        return new NowState(state.stageTitle(), state.theme(), songs, state.currentGames(), state.currentAnime(),
+                state.currentBooks(), state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(),
+                state.images(), state.content(), Instant.now());
+    }
+
+    private void validateSlot(int slot) {
+        if (slot < 1 || slot > SONG_SLOTS) throw bad("歌单位置必须在 1 ~ " + SONG_SLOTS + " 之间");
+    }
+
+    private List<NowSong> validSongs(List<NowSong> songs) {
+        if (songs == null) return List.of();
+        Set<Integer> seen = new HashSet<>();
+        for (NowSong song : songs) {
+            if (song.slot() < 1 || song.slot() > SONG_SLOTS) throw bad("歌单位置必须在 1 ~ " + SONG_SLOTS + " 之间");
+            if (!seen.add(song.slot())) throw bad("歌单位置 " + song.slot() + " 重复");
+        }
+        return songs;
     }
 
     /** Deep-copies the current state; dream/goal references freeze id + title at this moment. */
@@ -77,5 +122,6 @@ public final class NowService {
         return goals.find(id).map(g -> new NowSnapshot.NowRef(g.id(), g.title()));
     }
     private String clean(String value) { return value == null ? "" : value.trim(); }
+    private ResponseStatusException bad(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
     private ResponseStatusException missingSnapshot() { return new ResponseStatusException(HttpStatus.NOT_FOUND, "「现在。」快照不存在"); }
 }

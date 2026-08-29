@@ -78,6 +78,8 @@ export const api = {
   now: {
     current: () => request("/api/now"),
     update: body => put("/api/now", body),
+    uploadSong: (slot, formData) => request(`/api/now/songs?slot=${slot}`, {method: "POST", body: formData}),
+    removeSong: slot => remove(`/api/now/songs/${slot}`),
     snapshots: () => request("/api/now/snapshots"),
     snapshot: id => request(`/api/now/snapshots/${id}`),
     createSnapshot: () => post("/api/now/snapshots"),

@@ -31,13 +31,11 @@ public final class ImageStorageService {
         if (upload == null || upload.isEmpty()) throw bad("没有收到文件");
         if (upload.getSize() > MAX_BYTES) throw bad("图片不能超过 8MB");
         String contentType = upload.getContentType() == null ? "" : upload.getContentType().toLowerCase(Locale.ROOT);
-        if (!ALLOWED.contains(contentType)) throw bad("只支持 PNG / JPG / WebP / GIF 图片");
-        String extension = switch (contentType) {
-            case "image/png" -> ".png";
-            case "image/jpeg" -> ".jpg";
-            case "image/webp" -> ".webp";
-            default -> ".gif";
-        };
+        String name = upload.getOriginalFilename() == null ? "" : upload.getOriginalFilename().toLowerCase(Locale.ROOT);
+        // Browsers send real image MIME types, but some clients only send octet-stream — fall back to the extension.
+        if (!ALLOWED.contains(contentType) && !BY_EXTENSION.contains(extensionOf(name)))
+            throw bad("只支持 PNG / JPG / WebP / GIF 图片");
+        String extension = ALLOWED.contains(contentType) ? extensionFromMime(contentType) : extensionOf(name);
         try {
             Path directory = files.resolve("uploads");
             Files.createDirectories(directory);
@@ -52,5 +50,18 @@ public final class ImageStorageService {
         }
     }
 
+    private static final Set<String> BY_EXTENSION = Set.of(".png", ".jpg", ".jpeg", ".webp", ".gif");
+    private String extensionOf(String name) {
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? "" : name.substring(dot);
+    }
+    private String extensionFromMime(String contentType) {
+        return switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/jpeg" -> ".jpg";
+            case "image/webp" -> ".webp";
+            default -> ".gif";
+        };
+    }
     private ResponseStatusException bad(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
 }

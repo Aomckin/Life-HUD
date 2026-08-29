@@ -1,14 +1,14 @@
 import { sidebar, routes } from './modules/navigation.js';
-import { dashboard } from './pages/dashboard.js?v=0.5.0';
+import { dashboard } from './pages/dashboard.js?v=0.5.1';
 import { placeholder } from './pages/placeholder.js';
 import { settings } from './pages/settings.js';
-import { focus } from './pages/focus.js?v=0.5.0';
-import { growth } from './pages/growth.js?v=0.5.0';
-import { timeline } from './pages/timeline.js?v=0.5.0';
-import { dreams } from './pages/dreams.js?v=0.5.0';
-import { rituals } from './pages/rituals.js?v=0.5.0';
-import { now } from './pages/now.js?v=0.5.0';
-import { tasks } from './pages/tasks.js?v=0.5.0';
+import { focus } from './pages/focus.js?v=0.5.1';
+import { growth } from './pages/growth.js?v=0.5.1';
+import { timeline } from './pages/timeline.js?v=0.5.1';
+import { dreams } from './pages/dreams.js?v=0.5.1';
+import { rituals } from './pages/rituals.js?v=0.5.1';
+import { now } from './pages/now.js?v=0.5.1';
+import { tasks } from './pages/tasks.js?v=0.5.1';
 import { appearance } from './modules/appearance.js';
 import { toast } from './components/ui.js';
 

@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 /** The continuously editable "现在。" state for the current life stage. */
-public record NowState(String stageTitle, String theme, List<NowItem> favoriteSongs, List<NowItem> currentGames,
+public record NowState(String stageTitle, String theme, List<NowSong> favoriteSongs, List<NowItem> currentGames,
                        List<NowItem> currentAnime, List<NowItem> currentBooks, List<String> currentDreamIds,
                        List<String> currentGoalIds, String favoriteQuote, List<String> images, String content,
                        Instant updatedAt) {

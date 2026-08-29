@@ -85,7 +85,7 @@ public final class V05TestWiring {
         var executionRepo = new RitualExecutionRepository(data.json, data.mapper);
         var rituals = new RitualService(ritualRepo, stepRepo, executionRepo, events, copy);
         var nowRepo = new NowRepository(data.json, data.mapper);
-        var now = new NowService(nowRepo, dreamRepo, goalRepo, events, copy);
+        var now = new NowService(nowRepo, dreamRepo, goalRepo, events, copy, new AudioStorageService(data.json));
         return new V05TestWiring(data, player, events, lifeRepo, engine, records, dreamService, links, rituals, now,
                 dreamRepo, goalRepo, milestoneRepo, ritualRepo, stepRepo, executionRepo, nowRepo, dailyTasks, specialTasks);
     }

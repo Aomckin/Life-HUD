@@ -1,4 +1,4 @@
-import { api } from "../api/client.js?v=0.5.0";
+import { api } from "../api/client.js?v=0.5.1";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const MODE_LABELS = {IRON_CURTAIN: "铁幕", POMODORO: "番茄", FREE: "自由专注"};

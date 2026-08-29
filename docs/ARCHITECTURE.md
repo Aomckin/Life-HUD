@@ -255,5 +255,6 @@ flowchart LR
 - `DirectionLinkService` 负责任务↔方向的可选关联：选最深层自动向上推导，人工指定与推导冲突时拒绝；与 `DreamService` 的循环依赖用 `ObjectProvider` 打破。
 - `RitualService`：Ritual + RitualStep（TEXT/CHECK/TIMER/LINK/MUSIC_HINT/NOTE，存 `ritual-steps.json`）+ RitualExecution（启动时冻结步骤快照，完成/取消各一次）。
 - `NowService`：NowState 持续可编辑；NowSnapshot 保存时深拷贝全部内容（Dream/Goal 冻结 id + 当时标题），后续编辑不污染历史。
-- 图片统一走 `ImageStorageService`（`POST /api/images`，类型/大小限制，UUID 文件名，存 `data/uploads/` 由 `/uploads/**` 静态映射提供）。
+- 图片统一走 `ImageStorageService`（`POST /api/images`，类型/大小限制，UUID 文件名，存 `data/uploads/` 由 `/uploads/**` 静态映射提供；MIME 缺失或 octet-stream 时按扩展名兜底）。
+- v0.5.1：`AudioStorageService` + `NowSong`（10 槽位「现在。」歌单）——`POST /api/now/songs?slot=n` 上传 MP3/FLAC，jaudiotagger 读取标题/艺术家/专辑/时长/内嵌封面（封面落盘为图片文件），缺标签回退文件名与「未知艺术家」；`NowSnapshot` 冻结整条歌曲记录，音频文件不覆盖写，旧快照可长期展示。
 - 这些模块全部只产生事实 LifeEvent，不直接修改 Energy / EXP；v0.5 不新增 Growth 数值规则。

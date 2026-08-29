@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.5.1";
-import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.5.1";
+import { api } from "../api/client.js?v=0.5.2";
+import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.5.2";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";

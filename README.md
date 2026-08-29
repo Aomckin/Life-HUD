@@ -1,6 +1,6 @@
-# Life HUD v0.5.1 · Direction
+# Life HUD v0.5.2 · Direction
 
-Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 完成了成长循环：Focus / Task 赚取 Energy（每 3 有效分钟 +1），娱乐消费（SPEND）按实际消耗沉淀 EXP（每 10 点 +1）并推进 Level。v0.5「Direction」让 Life HUD 开始知道你为什么往前走：`/dreams` 承载 Dream → Goal → DreamMilestone 三层方向并可关联到具体任务；`/rituals` 用"仪式 + 步骤 + 执行记录"进入一种状态；`/now` 是陈列页——「现在。」歌单支持上传真实 MP3 / FLAC（自动读取标题、艺术家、专辑、时长与内嵌封面），当前游戏 / 番剧 / 书以卡片展示，Dream / Goal 用真实数据，图片即时预览上传，阶段快照完整封存当时的一切。这些模块只产生事实 LifeEvent，成长结算仍由 GrowthEngine 唯一负责。
+Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 完成了成长循环：Focus / Task 赚取 Energy（每 3 有效分钟 +1），娱乐消费（SPEND）按实际消耗沉淀 EXP（每 10 点 +1）并推进 Level。v0.5「Direction」让 Life HUD 开始知道你为什么往前走：`/dreams` 承载 Dream → Goal → DreamMilestone 三层方向并可关联到具体任务；`/rituals` 用"仪式 + 步骤 + 执行记录"进入一种状态；`/now` 是陈列页——「现在。」歌单是一面横板沉浸记忆墙：真实 MP3 / FLAC 上传（自动读取元数据与内嵌封面），十首歌以不等大的卡片挂在可设背景的舞台上，听歌次数决定卡片大小，每首歌挂着一句阶段备注，布局持久化、刷新不乱跳；阶段快照把背景、歌曲、次数、备注与布局完整封存。这些模块只产生事实 LifeEvent，成长结算仍由 GrowthEngine 唯一负责。
 
 ## 运行
 

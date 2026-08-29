@@ -16,8 +16,7 @@ class NowServiceTest {
     @BeforeEach void setup() throws Exception { data=new TestDataSupport(temp);data.baseline(100,0,0);w=V05TestWiring.create(data); }
 
     private NowState state(String stage,String dreamId){
-        return new NowState(stage,"热烈、开发、独居",
-                w.now.current().favoriteSongs(),
+        return new NowState(stage,"热烈、开发、独居","","","",w.now.current().favoriteSongs(),
                 List.of(new NowItem("舞萌","","")),List.of(new NowItem("幼女战记","","")),
                 List.of(new NowItem("没有黄笑话的小说","","")),
                 dreamId==null?List.of():List.of(dreamId),List.of(),
@@ -92,8 +91,43 @@ class NowServiceTest {
     }
 
     private NowState stateWithDuplicateSlots(){
-        NowSong a=new NowSong(1,"/uploads/a.mp3","a.mp3","A","", "",0,"","MP3",null);
-        NowSong b=new NowSong(1,"/uploads/b.mp3","b.mp3","B","", "",0,"","MP3",null);
-        return new NowState("","",List.of(a,b),List.of(),List.of(),List.of(),List.of(),List.of(),"",List.of(),"",null);
+        NowSong a=new NowSong(1,"/uploads/a.mp3","a.mp3","A","", "",0,"","MP3",0,"",null,null,null,0,null,null);
+        NowSong b=new NowSong(1,"/uploads/b.mp3","b.mp3","B","", "",0,"","MP3",0,"",null,null,null,0,null,null);
+        return new NowState("","","","","",List.of(a,b),List.of(),List.of(),List.of(),List.of(),List.of(),"",List.of(),"",null);
+    }
+
+    /** playCount / note / wall layout persist through the edit endpoint. */
+    @Test void songEditPersistsPlayCountNoteAndLayout(){
+        w.now.uploadSong(1,song("晴天.mp3"));
+        NowState state=w.now.updateSong(1,new NowSongUpdate(null,null,null,42,"八月末的落幕感",0.32,0.44,-2.5,7));
+        NowSong placed=state.favoriteSongs().getFirst();
+        assertThat(placed.playCount()).isEqualTo(42);
+        assertThat(placed.note()).isEqualTo("八月末的落幕感");
+        assertThat(placed.posX()).isEqualTo(0.32);assertThat(placed.posY()).isEqualTo(0.44);
+        assertThat(placed.rotationDeg()).isEqualTo(-2.5);assertThat(placed.zIndex()).isEqualTo(7);
+        assertThat(placed.title()).isEqualTo("晴天");
+        NowState reloaded=w.now.current();
+        assertThat(reloaded.favoriteSongs().getFirst().playCount()).isEqualTo(42);
+    }
+
+    /** Playlist background set / clear persists through its own field. */
+    @Test void playlistBackgroundPersists(){
+        NowState state=w.now.setBackground(new MockMultipartFile("file","bg.png","image/png",new byte[] {1}));
+        assertThat(state.playlistBackgroundImage()).startsWith("/uploads/");
+        assertThat(w.now.current().playlistBackgroundImage()).isEqualTo(state.playlistBackgroundImage());
+        assertThat(w.now.clearBackground().playlistBackgroundImage()).isEmpty();
+    }
+
+    /** Snapshot freezes playCount, note and wall layout together with everything else. */
+    @Test void snapshotFreezesLayoutAndPlayCounts(){
+        w.now.uploadSong(1,song("晴天.mp3"));
+        w.now.updateSong(1,new NowSongUpdate(null,null,null,42,"八月末的落幕感",0.32,0.44,-2.0,7));
+        NowSnapshot snapshot=w.now.createSnapshot();
+        w.now.updateSong(1,new NowSongUpdate(null,null,null,3,"改了备注",0.7,0.2,3.0,1));
+        NowSnapshot reloaded=w.now.snapshot(snapshot.id());
+        NowSong frozen=reloaded.favoriteSongs().getFirst();
+        assertThat(frozen.playCount()).isEqualTo(42);assertThat(frozen.note()).isEqualTo("八月末的落幕感");
+        assertThat(frozen.posX()).isEqualTo(0.32);assertThat(frozen.rotationDeg()).isEqualTo(-2.0);
+        assertThat(frozen.zIndex()).isEqualTo(7);
     }
 }

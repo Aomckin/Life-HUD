@@ -1,5 +1,6 @@
-import { api } from "../api/client.js?v=0.5.1";
-import { nowCopy as c } from "../content/copy.js?v=0.5.1";
+import { api } from "../api/client.js?v=0.5.2";
+import { nowCopy as c } from "../content/copy.js?v=0.5.2";
+import { renderBoard } from "./now-playlist.js?v=0.5.2";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
@@ -31,24 +32,6 @@ export async function now(root) {
 /* ---------- stage display page ---------- */
 
 function renderStage(root) {
-  const song = slot => current.favoriteSongs.find(s => s.slot === slot);
-  const songCard = (song, slot) => song ? `
-    <article class="song-card" style="--i:${slot}">
-      ${song.coverPath?`<img class="song-cover" src="${escapeHtml(song.coverPath)}" alt="">`
-        :`<div class="song-cover song-cover-empty">♫</div>`}
-      <div class="song-info"><strong>${escapeHtml(song.title)}</strong>
-        <small>${escapeHtml(song.artist)}</small>
-        <small>${minutes(song.durationSeconds)}</small></div>
-      ${song.filePath?`<audio class="song-audio" controls preload="none" src="${escapeHtml(song.filePath)}"></audio>`:""}
-      <span class="song-slot">${String(slot).padStart(2,"0")}</span>
-      <div class="row-actions song-actions">
-        <button class="text-link" data-song-replace="${slot}">${c.songReplace}</button>
-        <button class="text-link danger-link" data-song-remove="${slot}">${c.songRemove}</button>
-      </div>
-    </article>`
-    : `<button class="song-card song-slot-empty" style="--i:${slot}" data-song-add="${slot}">
-        <span class="song-slot">${String(slot).padStart(2,"0")}</span>${c.addSong}</button>`;
-
   const itemEditor = (key, index, item) => `
     <form class="now-item-editor" data-item-editor="${key}|${index}">
       <input name="title" placeholder="${c.itemTitle}" maxlength="60" value="${escapeHtml(item.title)}" required>
@@ -97,10 +80,7 @@ function renderStage(root) {
         </div>`}
     </section>
 
-    <section class="panel"><div class="section-head"><div><div class="eyebrow">Playlist</div><h2>${c.playlistTitle}</h2></div><small>${c.playlistHint}</small></div>
-      <div class="song-grid">${Array.from({length: 10}, (_, i) => songCard(song(i + 1), i + 1)).join("")}</div>
-    </section>
-
+    <section class="panel board-panel"><div id="playlist-board"></div></section>
     <section class="now-three-grid">
       ${listKeys.map(key => `<section class="panel"><div class="section-head"><h2>${c.lists[key]}</h2></div>
         <div class="now-item-cards">${itemCards(key)}</div></section>`).join("")}
@@ -150,7 +130,19 @@ function renderStage(root) {
     </section>
   </div>`;
   bind(root);
+  renderPlaylist(root);
   renderSnapshots(root);
+}
+
+function renderPlaylist(root) {
+  const el = root.querySelector("#playlist-board");
+  if (!el) return;
+  renderBoard(el, {
+    state: current,
+    editable: true,
+    onSongsChange: (songs, meta) => { current = {...current, favoriteSongs: songs, ...meta}; renderStage(root); },
+    onBackgroundChange: state => { current = state; renderStage(root); }
+  });
 }
 
 function collectState() {
@@ -179,32 +171,6 @@ function bind(root) {
   root.querySelector("#save-stage")?.addEventListener("click", () => saveText(root, {
     stageTitle: root.querySelector("#edit-stage-title").value.trim(),
     theme: root.querySelector("#edit-stage-theme").value.trim()
-  }));
-
-  /* playlist: add / replace / remove upload immediately */
-  const slotInput = () => {
-    const input = document.createElement("input");
-    input.type = "file"; input.accept = ".mp3,.flac,audio/mpeg,audio/flac"; input.hidden = true;
-    return input;
-  };
-  root.querySelectorAll("[data-song-add],[data-song-replace]").forEach(button => button.addEventListener("click", () => {
-    const slot = Number(button.dataset.songAdd || button.dataset.songReplace);
-    const input = slotInput();
-    document.body.append(input);
-    input.addEventListener("change", async () => {
-      input.remove();
-      if (!input.files[0]) return;
-      const data = new FormData();
-      data.append("file", input.files[0]);
-      data.append("slot", String(slot));
-      try { current = await api.now.uploadSong(slot, data); toast("歌曲已放入歌单"); renderStage(root); }
-      catch (reason) { toast(reason.message, true); }
-    });
-    input.click();
-  }));
-  root.querySelectorAll("[data-song-remove]").forEach(button => button.addEventListener("click", async () => {
-    try { current = await api.now.removeSong(Number(button.dataset.songRemove)); renderStage(root); }
-    catch (reason) { toast(reason.message, true); }
   }));
 
   /* games / anime / books cards */
@@ -335,18 +301,13 @@ function renderSnapshots(root) {
 }
 
 function renderSnapshot(root, snapshot) {
-  const songCard = song => song ? `<div class="song-card readonly">
-      ${song.coverPath?`<img class="song-cover" src="${escapeHtml(song.coverPath)}" alt="">`:`<div class="song-cover song-cover-empty">♫</div>`}
-      <div class="song-info"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(song.artist)}</small>
-      <small>${minutes(song.durationSeconds)}</small></div>
-      ${song.filePath?`<audio class="song-audio" controls preload="none" src="${escapeHtml(song.filePath)}"></audio>`:""}
-      <span class="song-slot">${String(song.slot).padStart(2,"0")}</span></div>` : "";
+
   const itemList = items => items.map(item => `<li>${escapeHtml(item.title)}${item.subtitle?`<small> · ${escapeHtml(item.subtitle)}</small>`:""}</li>`).join("");
   root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">${c.readonlyTitle}</div>
     <h1>${escapeHtml(snapshot.stageTitle || "现在。")}</h1><p>${escapeHtml(snapshot.theme || "")}</p></div>
     <button class="text-link" id="back-now">${c.backToCurrent}</button></div>
     <small>${date(snapshot.createdAt)}</small>
-    ${snapshot.favoriteSongs.length?`<h2>${c.playlistTitle}</h2><div class="song-grid">${snapshot.favoriteSongs.map(songCard).join("")}</div>`:""}
+    ${snapshot.favoriteSongs.length?`<div id="snapshot-playlist-board"></div>`:""}
     ${snapshot.favoriteQuote?`<p class="snapshot-quote big">“${escapeHtml(snapshot.favoriteQuote)}”</p>`:""}
     <div class="snapshot-grid">
       ${[["currentGames",snapshot.currentGames],["currentAnime",snapshot.currentAnime],["currentBooks",snapshot.currentBooks]]
@@ -357,5 +318,10 @@ function renderSnapshot(root, snapshot) {
     ${snapshot.content?`<p class="snapshot-content">${escapeHtml(snapshot.content)}</p>`:""}
     ${snapshot.images.length?`<div class="now-gallery">${snapshot.images.map(img=>`<div class="gallery-item"><img src="${escapeHtml(img)}" alt=""></div>`).join("")}</div>`:""}
   </section></div>`;
+  const boardEl = root.querySelector("#snapshot-playlist-board");
+  if (boardEl) renderBoard(boardEl, {
+    state: snapshot, editable: false,
+    onSongsChange: () => {}, onBackgroundChange: () => {}
+  });
   root.querySelector("#back-now").addEventListener("click", () => { viewingSnapshot = null; now(root); });
 }

@@ -5,14 +5,19 @@ import java.util.List;
 
 /**
  * An immutable copy of the Now state at a moment worth keeping. Dream/Goal references store
- * id + snapshot title and songs are frozen whole, so later edits never rewrite history.
- * Audio/cover files are shared by path and intentionally never overwritten in place.
+ * id + snapshot title and songs are frozen whole (playCount, note, wall layout included),
+ * so later edits never rewrite history. Audio/cover/background files are shared by path
+ * and intentionally never overwritten in place.
  */
-public record NowSnapshot(String id, String stageTitle, String theme, List<NowSong> favoriteSongs,
+public record NowSnapshot(String id, String stageTitle, String theme, String playlistBackgroundImage,
+                          String playlistTitle, String playlistSubtitle, List<NowSong> favoriteSongs,
                           List<NowItem> currentGames, List<NowItem> currentAnime, List<NowItem> currentBooks,
                           List<NowRef> currentDreams, List<NowRef> currentGoals, String favoriteQuote,
                           List<String> images, String content, Instant createdAt) {
     public NowSnapshot {
+        playlistBackgroundImage = playlistBackgroundImage == null ? "" : playlistBackgroundImage;
+        playlistTitle = playlistTitle == null ? "" : playlistTitle;
+        playlistSubtitle = playlistSubtitle == null ? "" : playlistSubtitle;
         favoriteSongs = favoriteSongs == null ? List.of() : List.copyOf(favoriteSongs);
         currentGames = currentGames == null ? List.of() : List.copyOf(currentGames);
         currentAnime = currentAnime == null ? List.of() : List.copyOf(currentAnime);

@@ -258,3 +258,7 @@ flowchart LR
 - 图片统一走 `ImageStorageService`（`POST /api/images`，类型/大小限制，UUID 文件名，存 `data/uploads/` 由 `/uploads/**` 静态映射提供；MIME 缺失或 octet-stream 时按扩展名兜底）。
 - v0.5.1：`AudioStorageService` + `NowSong`（10 槽位「现在。」歌单）——`POST /api/now/songs?slot=n` 上传 MP3/FLAC，jaudiotagger 读取标题/艺术家/专辑/时长/内嵌封面（封面落盘为图片文件），缺标签回退文件名与「未知艺术家」；`NowSnapshot` 冻结整条歌曲记录，音频文件不覆盖写，旧快照可长期展示。
 - 这些模块全部只产生事实 LifeEvent，不直接修改 Energy / EXP；v0.5 不新增 Growth 数值规则。
+
+## v0.5.2：「现在。」歌单沉浸墙
+
+`NowSong` 扩展 `playCount`（手动填写，驱动视觉尺寸分级 small/medium/large/xl/featured）、`note`（纸条形态的阶段备注，装饰按 slot 稳定分配 tape/pin/clip）与 `posX/posY/rotationDeg/zIndex`（归一化挂点布局，持久化后刷新不乱跳）。`NowState`/`NowSnapshot` 增加 `playlistBackgroundImage/playlistTitle/playlistSubtitle`；快照冻结整条歌曲记录（含布局），音频/封面/背景文件共享路径且不覆盖写。布局由前端 `now-playlist.js` 的确定性锚带算法生成（按 playCount 降序分配锚点 + slot 种子抖动），仅对无坐标的歌曲补布局。背景经 `POST|DELETE /api/now/background`（复用统一图片存储）。

@@ -2,6 +2,7 @@ package io.github.aomckin.lifehud.controller;
 
 import io.github.aomckin.lifehud.domain.NowSnapshot;
 import io.github.aomckin.lifehud.domain.NowState;
+import io.github.aomckin.lifehud.domain.NowSongUpdate;
 import io.github.aomckin.lifehud.service.NowService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,11 @@ public final class NowController {
     @PutMapping public NowState update(@RequestBody NowState state){return now.update(state);}
     @PostMapping(value="/songs",consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     public NowState uploadSong(@RequestParam("file") MultipartFile file,@RequestParam("slot") int slot){return now.uploadSong(slot,file);}
+    @PutMapping("/songs/{slot}") public NowState updateSong(@PathVariable int slot,@RequestBody NowSongUpdate request){return now.updateSong(slot,request);}
     @DeleteMapping("/songs/{slot}") public NowState removeSong(@PathVariable int slot){return now.removeSong(slot);}
+    @PostMapping(value="/background",consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
+    public NowState setBackground(@RequestParam("file") MultipartFile file){return now.setBackground(file);}
+    @DeleteMapping("/background") public NowState clearBackground(){return now.clearBackground();}
     @PostMapping("/snapshots") @ResponseStatus(HttpStatus.CREATED) public NowSnapshot createSnapshot(){return now.createSnapshot();}
     @GetMapping("/snapshots") public List<NowSnapshot> snapshots(){return now.snapshots();}
     @GetMapping("/snapshots/{id}") public NowSnapshot snapshot(@PathVariable String id){return now.snapshot(id);}

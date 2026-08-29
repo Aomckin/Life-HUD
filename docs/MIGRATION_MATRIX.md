@@ -146,3 +146,10 @@
 | Ritual / Step / Execution | `rituals.json` / `ritual-steps.json` / `ritual-executions.json` |
 | 「现在。」 | `now-state.json`（当前，可变）+ `now-snapshots.json`（快照，不可变） |
 | 图片 | `data/uploads/`（UUID 文件名），`/uploads/**` 静态映射 |
+
+## v0.5.2 歌单扩展补充
+
+| 旧数据 | 处理 |
+|---|---|
+| v0.5.1 的 `favoriteSongs`（无 playCount / note / 布局） | 反序列化缺省：playCount=0、note=""、posX/posY=null；首次进入新版 `/now` 由前端自动生成锚带布局并保存，之后稳定 |
+| 歌单背景 / 标题 | `NowState` 新增 `playlistBackgroundImage` / `playlistTitle` / `playlistSubtitle`，旧数据缺省空串，前端回退默认文案 |

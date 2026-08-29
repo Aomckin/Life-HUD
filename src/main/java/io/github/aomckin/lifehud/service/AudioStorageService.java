@@ -52,7 +52,7 @@ public final class AudioStorageService {
             Metadata metadata = readMetadata(target, baseName(original));
             return new NowSong(slot, "/uploads/" + storedName, original, metadata.title(), metadata.artist(),
                     metadata.album(), metadata.durationSeconds(), metadata.coverPath(), extension.toUpperCase(Locale.ROOT),
-                    Instant.now());
+                    0, "", null, null, null, 0, Instant.now(), Instant.now());
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "音频保存失败", e);
         }

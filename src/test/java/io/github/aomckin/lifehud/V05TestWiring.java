@@ -26,6 +26,7 @@ public final class V05TestWiring {
     public final RitualStepRepository stepRepo;
     public final RitualExecutionRepository executionRepo;
     public final NowRepository nowRepo;
+    public final ImageStorageService images;
     public final DailyTaskManager dailyTasks;
     public final SpecialTaskManager specialTasks;
 
@@ -34,12 +35,12 @@ public final class V05TestWiring {
                           DirectionLinkService links, RitualService rituals, NowService now, DreamRepository dreamRepo,
                           GoalRepository goalRepo, DreamMilestoneRepository milestoneRepo, RitualRepository ritualRepo,
                           RitualStepRepository stepRepo, RitualExecutionRepository executionRepo, NowRepository nowRepo,
-                          DailyTaskManager dailyTasks, SpecialTaskManager specialTasks) {
+                          ImageStorageService images, DailyTaskManager dailyTasks, SpecialTaskManager specialTasks) {
         this.data = data; this.player = player; this.events = events; this.lifeEvents = lifeEvents;
         this.engine = engine; this.records = records; this.dreams = dreams; this.links = links;
         this.rituals = rituals; this.now = now; this.dreamRepo = dreamRepo; this.goalRepo = goalRepo;
         this.milestoneRepo = milestoneRepo; this.ritualRepo = ritualRepo; this.stepRepo = stepRepo;
-        this.executionRepo = executionRepo; this.nowRepo = nowRepo;
+        this.executionRepo = executionRepo; this.nowRepo = nowRepo; this.images = images;
         this.dailyTasks = dailyTasks; this.specialTasks = specialTasks;
     }
 
@@ -85,8 +86,9 @@ public final class V05TestWiring {
         var executionRepo = new RitualExecutionRepository(data.json, data.mapper);
         var rituals = new RitualService(ritualRepo, stepRepo, executionRepo, events, copy);
         var nowRepo = new NowRepository(data.json, data.mapper);
-        var now = new NowService(nowRepo, dreamRepo, goalRepo, events, copy, new AudioStorageService(data.json));
+        var images = new ImageStorageService(data.json);
+        var now = new NowService(nowRepo, dreamRepo, goalRepo, events, copy, new AudioStorageService(data.json), images);
         return new V05TestWiring(data, player, events, lifeRepo, engine, records, dreamService, links, rituals, now,
-                dreamRepo, goalRepo, milestoneRepo, ritualRepo, stepRepo, executionRepo, nowRepo, dailyTasks, specialTasks);
+                dreamRepo, goalRepo, milestoneRepo, ritualRepo, stepRepo, executionRepo, nowRepo, images, dailyTasks, specialTasks);
     }
 }

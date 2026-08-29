@@ -8,7 +8,7 @@ export const routes = [
   {path:"/life",name:"生活 · Life",icon:"life"},
   {path:"/media",name:"媒体 · Media",icon:"media"},
   {path:"/journal",name:"日记 · Journal",icon:"journal"},
-  {path:"/now",name:"此刻 · Now",icon:"now"},
+  {path:"/now",name:"「现在。」 · Now",icon:"now"},
   {path:"/growth",name:"成长 · Growth",icon:"growth"}
 ];
 export function sidebar(active) {

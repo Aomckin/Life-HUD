@@ -31,7 +31,7 @@ function renderCurrent(root) {
     <div class="now-checks" data-checks="${key}">
       ${items.map(item => `<label class="check-field"><input type="checkbox" data-${key}="${item.id}" ${current[key].includes(item.id)?"checked":""}> ${escapeHtml(item.title)}${item.dreamTitle?`<small> · ${escapeHtml(item.dreamTitle)}</small>`:""}</label>`).join("")||empty("还没有可关联的条目。")}
     </div>`;
-  root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Now</div><h2>此刻的我</h2></div>
+  root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Now</div><h2>「现在。」</h2></div>
     <button class="button button-primary" id="save-now">${c.save}</button></div>
     <form id="now-form">
       <div class="milestone-form-grid">

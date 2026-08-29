@@ -182,7 +182,8 @@
   #page > .dashboard,
   #page > .focus-page,
   #page > .growth-page,
-  #page > .timeline-page {
+  #page > .timeline-page,
+  #page > .direction-page {
     grid-column: 1 / -1;
   }
 

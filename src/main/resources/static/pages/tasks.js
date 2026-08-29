@@ -125,9 +125,10 @@ function renderPool(root) {
     const dir = t.direction;
     const chip = (dir.dreamTitle || dir.goalTitle || dir.dreamMilestoneTitle)
       ? `<span class="direction-chip" title="${escapeHtml(directionPath(dir))}">✦ ${escapeHtml(directionText(dir))}</span>` : "";
+    const energyText = t.source === "daily" ? `Energy +${t.energy}` : `Energy +${t.exp}`;
     return `<div class="pool-row" data-source="${t.source}" data-task="${t.taskId}">
       <div class="pool-main"><strong>${escapeHtml(t.name)}</strong>
-        <small>${t.energy ? `Energy +${t.energy} · ` : ""}Energy 产出 +${t.exp}${chip ? " · " + chip : ""}</small></div>
+        <small>${energyText}${chip ? " · " + chip : ""}</small></div>
       <div class="row-actions pool-actions">
         <span class="badge">${t.enabled ? c.poolEnabled : c.poolDisabled}</span>
         <button class="text-link" data-pool-edit="${t.source}|${t.taskId}|${t.enabled ? 1 : 0}">${c.poolEdit}</button>
@@ -141,14 +142,13 @@ function renderPool(root) {
       <button class="text-link" id="back-tasks">${c.backToTasks}</button></div>
       <section class="pool-group"><h3>${c.poolDailyTitle}</h3>
         <form class="inline-form pool-add-form" data-pool-add="daily"><input name="name" placeholder="${c.nameLabel}" maxlength="60" required>
-          <input name="energy" type="number" min="0" placeholder="${c.energyLabel}" style="max-width:110px">
-          <input name="exp" type="number" min="0" placeholder="${c.expLabel}" style="max-width:110px">
+          <input name="energy" type="number" min="0" placeholder="${c.energyLabel}" style="max-width:140px">
           <button class="button button-secondary" type="submit">${c.poolAdd}</button></form>
         ${poolData.daily.map(defRow).join("") || empty("任务池是空的。")}
       </section>
       <section class="pool-group"><h3>${c.poolSpecialTitle}</h3>
         <form class="inline-form pool-add-form" data-pool-add="special"><input name="name" placeholder="${c.nameLabel}" maxlength="60" required>
-          <input name="exp" type="number" min="0" placeholder="${c.expLabel}" style="max-width:140px">
+          <input name="exp" type="number" min="0" placeholder="${c.specialEnergyLabel}" style="max-width:140px">
           <button class="button button-secondary" type="submit">${c.poolAdd}</button></form>
         ${poolData.special.map(defRow).join("") || empty("还没有特殊行动模板。")}
       </section>
@@ -174,7 +174,7 @@ function bindPool(root) {
     if (!t) return;
     const name = prompt("任务名称", t.name);
     if (name === null || !name.trim()) return;
-    const exp = Number(prompt("Energy 产出", t.exp));
+    const exp = Number(prompt("Energy 奖励", t.exp));
     const body = {name: name.trim(), exp: Number.isFinite(exp) ? Math.max(0, exp) : t.exp};
     const callApi = source === "daily" ? api.taskPool.updateDaily(taskId, body) : api.taskPool.updateSpecial(taskId, body);
     callApi.then(() => { toast("已更新"); tasks(root); }).catch(r => toast(r.message, true));

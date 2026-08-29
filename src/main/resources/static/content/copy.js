@@ -226,7 +226,7 @@ export const taskCopy = {
   backToTasks: "← 返回行动台",
   nameLabel: "任务名称",
   energyLabel: "Energy 奖励",
-  expLabel: "Energy 产出（特殊任务）",
+  specialEnergyLabel: "Energy 奖励",
   linkTitle: "关联方向",
   linkHint: "选择最深层即可，上层自动推导；全部留空则保持独立行动。",
   dreamLabel: "梦想",

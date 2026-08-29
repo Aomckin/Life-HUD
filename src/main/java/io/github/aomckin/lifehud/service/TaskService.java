@@ -2,70 +2,60 @@ package io.github.aomckin.lifehud.service;
 
 import io.github.aomckin.lifehud.core.GameEvents;
 import io.github.aomckin.lifehud.domain.DailyTask;
-import io.github.aomckin.lifehud.domain.Player;
+import io.github.aomckin.lifehud.domain.LifeEventType;
 import io.github.aomckin.lifehud.domain.SpecialTask;
-import io.github.aomckin.lifehud.domain.TaskSource;
 import io.github.aomckin.lifehud.dto.GameEvent;
 import io.github.aomckin.lifehud.dto.OperationResult;
 import io.github.aomckin.lifehud.repository.LogRepository;
-import io.github.aomckin.lifehud.repository.PlayerRepository;
+import java.util.Map;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
 public final class TaskService {
-    private final Player player;
     private final DailyTaskManager dailyTasks;
     private final SpecialTaskManager specialTasks;
-    private final PlayerService playerService;
-    private final PlayerRepository playerRepository;
-    private final TitleSystem titles;
-    private final ShopManager shop;
     private final LogRepository logs;
-    private final ProgressionService progression;
     private final GameQueryService queries;
+    private final LifeEventService events;
+    private final GrowthEngine growth;
 
-    public TaskService(Player player, DailyTaskManager dailyTasks, SpecialTaskManager specialTasks,
-                       PlayerService playerService, PlayerRepository playerRepository, TitleSystem titles,
-                       ShopManager shop, LogRepository logs, ProgressionService progression,
-                       GameQueryService queries) {
-        this.player = player; this.dailyTasks = dailyTasks; this.specialTasks = specialTasks;
-        this.playerService = playerService; this.playerRepository = playerRepository; this.titles = titles;
-        this.shop = shop; this.logs = logs; this.progression = progression; this.queries = queries;
+    public TaskService(DailyTaskManager dailyTasks, SpecialTaskManager specialTasks,
+                       LogRepository logs, GameQueryService queries, LifeEventService events, GrowthEngine growth) {
+        this.dailyTasks = dailyTasks; this.specialTasks = specialTasks;
+        this.logs = logs; this.queries = queries; this.events = events; this.growth = growth;
     }
 
     public OperationResult completeDaily(int index) {
         if (index < 0 || index >= dailyTasks.tasks().size()) return queries.error("任务不存在");
-        DailyTask task = dailyTasks.tasks().get(index); int before = player.exp;
+        DailyTask task = dailyTasks.tasks().get(index);
         int[] reward = dailyTasks.finish(index);
         if (reward[0] > 0 || reward[1] > 0) {
-            int energy = titles.applyEnergyBonus(reward[0]);
-            int exp = applyExp(reward[1], task.id, TaskSource.DAILY);
-            playerService.addDailyTaskReward(player, energy, exp); playerRepository.save(player);
-            logs.action("完成任务：" + task.name, "能量+" + energy + " 经验+" + exp, player.energy);
+            var event=events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成每日任务",List.of("task"),
+                    Map.of("taskId",task.id,"taskSource","daily","baseEnergy",reward[0],"baseExp",reward[1]));
+            growth.process(event);
+            logs.action("完成任务：" + task.name, "成长记录已同步", 0);
         }
-        return progression.result(true, "任务完成", before, List.of(new GameEvent(
-                GameEvents.TASK_COMPLETE, GameViewAssembler.map("task", task.toMap(), "source", "daily"))));
+        return new OperationResult(true,"任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
+                GameViewAssembler.map("task",task.toMap(),"source","daily"))),queries.state());
     }
 
     public OperationResult completeSpecial(int index) {
         if (index < 0 || index >= specialTasks.tasks().size()) return queries.error("特殊任务不存在");
-        SpecialTask task = specialTasks.tasks().get(index); int before = player.exp;
+        SpecialTask task = specialTasks.tasks().get(index);
         int[] reward = specialTasks.finish(index);
         if (reward[0] > 0 || reward[1] > 0) {
-            int exp = applyExp(reward[1], task.id, TaskSource.SPECIAL);
-            playerService.addSpecialTaskReward(player, reward[0], exp); playerRepository.save(player);
-            logs.action("完成特殊任务：" + task.name, "金币+" + reward[0] + " 经验+" + exp, player.energy);
+            var event=events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
+                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",0,"baseExp",reward[1]));
+            growth.process(event);
+            logs.action("完成特殊任务：" + task.name, "成长记录已同步", 0);
         }
-        return progression.result(true, "特殊任务完成", before, List.of(new GameEvent(
-                GameEvents.TASK_COMPLETE, GameViewAssembler.map("task", task.toMap(), "source", "special"))));
+        return new OperationResult(true,"特殊任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
+                GameViewAssembler.map("task",task.toMap(),"source","special"))),queries.state());
     }
 
     public OperationResult refresh() {
         dailyTasks.redraw(); return new OperationResult(true, "每日任务已刷新", List.of(), queries.state());
     }
 
-    public int applyExp(int exp, String id, TaskSource source) {
-        return titles.applyTaskExpBonus(exp, id, source) * shop.taskExpMultiplier();
-    }
 }

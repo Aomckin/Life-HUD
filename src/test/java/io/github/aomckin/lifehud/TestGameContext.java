@@ -8,6 +8,11 @@ import io.github.aomckin.lifehud.core.GameCore;
 import io.github.aomckin.lifehud.domain.Player;
 import io.github.aomckin.lifehud.repository.JsonRepository;
 import io.github.aomckin.lifehud.repository.LogRepository;
+import io.github.aomckin.lifehud.repository.LifeEventRepository;
+import io.github.aomckin.lifehud.repository.GrowthRecordRepository;
+import io.github.aomckin.lifehud.repository.GrowthStatsRepository;
+import io.github.aomckin.lifehud.repository.FocusSessionRepository;
+import io.github.aomckin.lifehud.repository.MilestoneRepository;
 import io.github.aomckin.lifehud.repository.PlayerRepository;
 import io.github.aomckin.lifehud.service.*;
 import java.util.List;
@@ -47,7 +52,16 @@ public final class TestGameContext extends GameCore {
         AchievementService achievementService = new AchievementService(player, achievements, titles, daily, playerService, players, views);
         ProgressionService progression = new ProgressionService(achievementService, levels, queries, views);
         ActionService action = new ActionService(player, actions, players, playerService, titles, progression, logs, queries);
-        TaskService task = new TaskService(player, daily, special, playerService, players, titles, shop, logs, progression, queries);
+        LifeEventRepository lifeEventRepository = new LifeEventRepository(json, mapper);
+        LifeEventService lifeEvents = new LifeEventService(lifeEventRepository);
+        GrowthRecordRepository growthRecords = new GrowthRecordRepository(json, mapper);
+        FocusSessionRepository focusSessions = new FocusSessionRepository(json, mapper);
+        MilestoneRepository milestones = new MilestoneRepository(json, mapper);
+        GrowthStatsService growthStats = new GrowthStatsService(new GrowthStatsRepository(json, mapper), focusSessions,
+                lifeEventRepository, milestones);
+        GrowthEngine growth = new GrowthEngine(new GrowthRules(), growthRecords, player, playerService, players,
+                levels, lifeEvents, growthStats);
+        TaskService task = new TaskService(daily, special, logs, queries, lifeEvents, growth);
         ShopService shopService = new ShopService(shop, daily, special, logs, queries); TitleService title = new TitleService(titles, queries);
         return new TestGameContext(json, players, logs, mapper, config, actions, player, daily, special, levels, titles,
                 achievements, shop, views, queries, achievementService, action, task, shopService, title, progression);

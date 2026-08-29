@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 
 public final class TestDataSupport {
-    public final ObjectMapper mapper=new ObjectMapper();public final JsonRepository json;public final PlayerRepository players;public final LogRepository logs;
+    public final ObjectMapper mapper=new ObjectMapper().findAndRegisterModules();public final JsonRepository json;public final PlayerRepository players;public final LogRepository logs;
     public TestDataSupport(Path root) throws Exception {json=new JsonRepository(mapper,root.toString());json.initialize();players=new PlayerRepository(json,mapper);logs=new LogRepository(json);normalizeDates();}
     public void normalizeDates(){for(String file:new String[]{"tasks.json","special_tasks.json"}){ObjectNode data=(ObjectNode)json.read(file);data.put("last_update_date",LocalDate.now().toString());json.write(file,data);}}
     public ObjectNode save(){return(ObjectNode)json.read("save.json");}public void writeSave(ObjectNode save){json.write("save.json",save);}public TestGameContext core(){return TestGameContext.create(json,players,logs,mapper);}

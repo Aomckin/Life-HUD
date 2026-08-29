@@ -74,10 +74,12 @@ async function renderBreak(root, completed) {
   });
 }
 
-async function showCompletion(root, completed) {
+async function showCompletion(root, completed, growthChange = null) {
   const ironCurtain = completed.mode === "IRON_CURTAIN";
   const details = ironCurtain ? `<div class="complete-metrics"><span>实际铁幕 <strong>${compactDuration(completed.actualSeconds)}</strong></span><span>有效专注 <strong>${compactDuration(completed.effectiveSeconds)}</strong></span></div><ul class="complete-segments">${(completed.segments || []).map(item => `<li><span>${escapeHtml(item.title)} · ${SEGMENT_LABELS[item.type]}</span><small>${compactDuration(item.actualSeconds)}</small></li>`).join("")}</ul>` : "";
-  root.innerHTML = `<div class="focus-page"><section class="panel focus-complete-flash ${ironCurtain ? "iron-complete-flash" : ""}"><div class="complete-mark" aria-hidden="true">✓</div><div class="eyebrow">${ironCurtain ? "铁幕落幕" : "Focus 完成"}</div><strong>${duration(completed.actualSeconds)}</strong>${details}<p>${ironCurtain ? "世界重新展开，这段过程已经留下来了。" : "这段时间留下来了。"}</p></section></div>`;
+  const feedback = growthChange && (growthChange.exp || growthChange.energy || growthChange.levelUp || growthChange.achievements)
+    ? `<div class="growth-feedback ${growthChange.levelUp ? "level-up" : ""}">${growthChange.levelUp ? `<span>LEVEL UP · Lv.${growthChange.beforeLevel} → Lv.${growthChange.afterLevel}</span>` : ""}${growthChange.exp ? `<strong>EXP +${growthChange.exp}</strong>` : ""}${growthChange.energy ? `<small>Energy ${growthChange.energy > 0 ? "+" : ""}${growthChange.energy}</small>` : ""}${growthChange.achievements ? `<small>${growthChange.achievements} 个 Achievement 已解锁</small>` : ""}</div>` : "";
+  root.innerHTML = `<div class="focus-page"><section class="panel focus-complete-flash ${ironCurtain ? "iron-complete-flash" : ""}"><div class="complete-mark" aria-hidden="true">✓</div><div class="eyebrow">${ironCurtain ? "铁幕落幕" : "Focus 完成"}</div><strong>${duration(completed.actualSeconds)}</strong>${details}${feedback}<p>${ironCurtain ? "世界重新展开，这段过程已经留下来了。" : "这段时间留下来了。"}</p></section></div>`;
   await new Promise(resolve => window.setTimeout(resolve, ironCurtain ? 1800 : 420));
   document.body.classList.remove("focus-active", "iron-curtain-active");
 }
@@ -217,10 +219,15 @@ function bindActive(root, session) {
   root.querySelector("#focus-complete").addEventListener("click", async event => {
     event.currentTarget.disabled = true;
     try {
+      const beforeGrowth = await api.growth.overview();
       const completed = await api.focus.complete(session.id, root.querySelector("#focus-note").value);
+      const afterGrowth = await api.growth.overview();
+      const growthChange = {exp: afterGrowth.totalExp-beforeGrowth.totalExp, energy:afterGrowth.energy-beforeGrowth.energy,
+        beforeLevel:beforeGrowth.level, afterLevel:afterGrowth.level, levelUp:afterGrowth.level>beforeGrowth.level,
+        achievements:afterGrowth.achievementCount-beforeGrowth.achievementCount};
       toast("本轮 Focus 已完成");
       window.clearInterval(timerId);
-      await showCompletion(root, completed);
+      await showCompletion(root, completed, growthChange);
       if (session.mode === "POMODORO") await renderBreak(root, completed); else focus(root);
     } catch (reason) { toast(reason.message, true); event.currentTarget.disabled = false; }
   });

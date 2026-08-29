@@ -44,11 +44,11 @@ export async function dashboard(root) {
   });
 
   try {
-    const [state, events, currentFocus, focusToday] = await Promise.all([
-      api.state(), api.events(), api.focus.current(), api.focus.today()
+    const [state, events, currentFocus, focusToday, growth] = await Promise.all([
+      api.state(), api.events(), api.focus.current(), api.focus.today(), api.growth.overview()
     ]);
-    renderHero(root, state, currentFocus);
-    renderMetrics(root, state, currentFocus, focusToday);
+    renderHero(root, state, currentFocus, growth);
+    renderMetrics(root, state, currentFocus, focusToday, growth);
     renderTasks(root, state);
     renderEvents(root, events);
   } catch (reason) {
@@ -68,33 +68,34 @@ const formatFocusTime = seconds => {
   return hours ? `${hours}h ${minutes}min` : `${minutes}min`;
 };
 
-function renderHero(root, state, currentFocus) {
+function renderHero(root, state, currentFocus, growth) {
   root.querySelector("#hero-energy").textContent = currentFocus
     ? `${MODE_LABELS[currentFocus.mode]} · ${currentFocus.title}`
-    : (state.energy_text || "当前状态");
+    : `Energy ${growth.energy} / ${growth.energyMax}`;
   root.querySelector("#hero-title").textContent = currentFocus
     ? `${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`
-    : (state.title_text || "今天由你决定");
+    : (growth.currentTitle || "今天由你决定");
   if (currentFocus) root.querySelector('[data-go="/focus"]').textContent = "返回当前 Focus";
 }
 
-function renderMetrics(root, state, currentFocus, focusToday) {
-  const energy = escapeHtml(state.energy_text || "—");
-  const level = escapeHtml(state.level_text || "—");
-  const exp = escapeHtml(state.exp_text || "—");
-  const title = escapeHtml(state.title_text || "称号仍在积累");
-  const expProgress = progress(state);
-  const currentEnergy = energyProgress(state);
+function renderMetrics(root, state, currentFocus, focusToday, growth) {
+  const energy = `${growth.energy} / ${growth.energyMax}`;
+  const level = `Lv.${growth.level}`;
+  const exp = `${growth.currentExp} / ${growth.requiredExp}`;
+  const title = escapeHtml(growth.currentTitle || "称号仍在积累");
+  const expProgress = Math.min(100, Math.round(growth.currentExp / growth.requiredExp * 100));
+  const currentEnergy = Math.min(100, Math.round(growth.energy / growth.energyMax * 100));
 
   root.querySelector("#metrics").innerHTML = [
-    '<article class="card card-hover metric metric-energy"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">今天的能量状态</div></article>',
-    '<article class="card card-hover metric metric-level"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">' + title + '</div></article>',
-    '<article class="card card-hover metric metric-exp"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">一点一点，累积成新的阶段。</div></article>',
+    '<article class="card card-hover metric metric-energy growth-link" data-growth="overview"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">' + (growth.todayEnergyDelta ? `今日 ${growth.todayEnergyDelta > 0 ? "+" : ""}${growth.todayEnergyDelta}` : "今天的近期状态") + '</div></article>',
+    '<article class="card card-hover metric metric-level growth-link" data-growth="overview"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">距下一阶段 ' + growth.expToNext + ' EXP · ' + title + '</div></article>',
+    '<article class="card card-hover metric metric-exp growth-link" data-growth="overview"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">' + (growth.todayExpDelta ? `今日 +${growth.todayExpDelta}` : "一点一点，累积成新的阶段。") + '</div></article>',
     currentFocus
       ? '<article class="card card-hover metric metric-focus is-active"><div class="metric-label">正在 Focus</div><div class="metric-value metric-focus-title" title="' + escapeHtml(currentFocus.title) + '">' + escapeHtml(currentFocus.title) + '</div><div class="metric-note">' + escapeHtml(`${MODE_LABELS[currentFocus.mode]} · ${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`) + '</div><button class="metric-focus-action" type="button">返回 Focus →</button></article>'
       : '<article class="card card-hover metric metric-focus"><div class="metric-label">专注 · Focus</div><div class="metric-value">' + formatFocusTime(focusToday.totalSeconds) + '</div><div class="metric-note">' + (focusToday.sessionCount ? `今日 ${focusToday.sessionCount} 次 Session` : "今天还没有留下专注时间") + '</div><button class="metric-focus-action" type="button">开始 Focus →</button></article>'
   ].join("");
   root.querySelector(".metric-focus-action").addEventListener("click", () => window.navigate("/focus"));
+  root.querySelectorAll("[data-growth]").forEach(card => card.addEventListener("click", () => window.navigate(`/growth#${card.dataset.growth}`)));
 }
 
 function renderTasks(root, state) {
@@ -121,8 +122,12 @@ function renderTasks(root, state) {
     button.addEventListener("click", async () => {
       button.disabled = true;
       try {
+        const beforeGrowth = await api.growth.overview();
         const result = await api.command("COMPLETE_DAILY_TASK", JSON.parse(button.dataset.task));
-        toast(result.message || "已完成");
+        const afterGrowth = await api.growth.overview();
+        const exp = afterGrowth.totalExp - beforeGrowth.totalExp;
+        const energy = afterGrowth.energy - beforeGrowth.energy;
+        toast(`${result.message || "已完成"}${exp ? ` · EXP +${exp}` : ""}${energy ? ` · Energy ${energy > 0 ? "+" : ""}${energy}` : ""}`);
         window.navigate("/dashboard", true);
       } catch (reason) {
         toast(reason.message, true);

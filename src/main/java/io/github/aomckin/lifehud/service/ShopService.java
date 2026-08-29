@@ -10,6 +10,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 @Service
+@Deprecated(forRemoval = false)
 public final class ShopService {
     private final ShopManager shop;
     private final DailyTaskManager dailyTasks;

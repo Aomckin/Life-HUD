@@ -45,7 +45,7 @@ public class GameCommandFacade {
                     payload.path("action_name").asText(), toOption(payload.path("option")));
             case GameCommands.COMPLETE_DAILY_TASK -> taskService.completeDaily(payload.path("index").asInt(-1));
             case GameCommands.COMPLETE_SPECIAL_TASK -> taskService.completeSpecial(payload.path("index").asInt(-1));
-            case GameCommands.BUY_SHOP_ITEM -> shopService.buy(payload.path("item_id").asText());
+            case GameCommands.BUY_SHOP_ITEM -> queries.error("v0.4 已停用商店与金币经济");
             case GameCommands.EQUIP_TITLE -> titleService.equip(payload.path("title_id").asText());
             case GameCommands.REFRESH_DAILY_TASKS -> taskService.refresh();
             case GameCommands.LOG_ABANDONED_ACTION -> {

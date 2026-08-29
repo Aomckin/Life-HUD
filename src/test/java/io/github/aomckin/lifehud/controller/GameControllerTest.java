@@ -42,14 +42,12 @@ class GameControllerTest {
     }
 
     @Test void homeAndStaticAssetsAreServed() throws Exception {
-        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("index.html"));
-        mvc.perform(get("/index.html")).andExpect(status().isOk())
-                .andExpect(result -> org.assertj.core.api.Assertions.assertThat(
-                        new String(result.getResponse().getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8))
-                        .contains("Life HUD"));
-        mvc.perform(get("/static/app.js")).andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("COMPLETE_TIMED_ACTION")));
-        mvc.perform(get("/static/style.css")).andExpect(status().isOk());
+        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/static/v0.2.html"));
+        mvc.perform(get("/static/v0.2.html")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Life HUD v0.4")));
+        mvc.perform(get("/static/app-v02.js")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("pages/growth.js")));
+        mvc.perform(get("/static/styles/growth.css")).andExpect(status().isOk());
     }
 
     @Test void durationAndCommandUseOriginalRoutes() throws Exception {

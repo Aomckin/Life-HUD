@@ -13,7 +13,7 @@ const labels = {
 
 export async function placeholder(root, route) {
   if (route === '/tasks') return tasks(root);
-  root.innerHTML = `<section class='panel placeholder'><div class='eyebrow'>Life HUD v0.3.0</div><h1>${labels[route]}</h1><p>这个入口已经接入 Summer Sky Shell。完整体验会在后续版本写进这片天空。</p>${empty('现在先把注意力留给今天。')}</section>`;
+  root.innerHTML = `<section class='panel placeholder'><div class='eyebrow'>Life HUD v0.4.0</div><h1>${labels[route]}</h1><p>这个入口已经接入 Summer Sky Shell。完整体验会在后续版本写进这片天空。</p>${empty('现在先把注意力留给今天。')}</section>`;
 }
 
 async function tasks(root) {

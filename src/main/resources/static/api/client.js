@@ -22,10 +22,31 @@ const post = (url, body) => request(url, {
 const patch = (url, body) => request(url, {
   method: "PATCH", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
 });
+const remove = url => request(url, {method: "DELETE"});
 
 export const api = {
   state: () => request("/state"),
   events: (limit = 8) => request(`/api/life-events?limit=${limit}`),
+  growth: {
+    overview: () => request("/api/growth"),
+    history: (limit = 30) => request(`/api/growth/history?limit=${limit}`),
+    snapshots: (days = 7) => request(`/api/growth/snapshots?days=${days}`),
+    recalculate: () => post("/api/growth/recalculate")
+  },
+  achievements: () => request("/api/achievements"),
+  milestones: {
+    all: () => request("/api/milestones"),
+    create: body => post("/api/milestones", body),
+    update: (id, body) => patch(`/api/milestones/${id}`, body),
+    remove: id => remove(`/api/milestones/${id}`)
+  },
+  titles: {
+    all: () => request("/api/titles"),
+    create: body => post("/api/titles", body),
+    equip: id => post(`/api/titles/${id}/equip`),
+    unequip: () => post("/api/titles/unequip"),
+    remove: id => remove(`/api/titles/${id}`)
+  },
   command: (type, payload = {}) => post("/command", {type, payload}),
   focus: {
     current: () => request("/api/focus/current"),

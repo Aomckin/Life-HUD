@@ -209,3 +209,29 @@ v0.1.1 从成就子域开始清理 Python 风格的动态数据访问：
 - `TaskService` 到称号奖励链路已使用 `TaskSource` 枚举。JSON 中的 `daily` / `special` 字符串只在转换边界或旧兼容重载出现。
 
 后续同样的迁移路径适用于称号和商店：先在 repository 层完成 JSON 映射，再让服务仅处理领域类型，最后由 `GameViewAssembler` 在 HTTP 响应边界组装既有字段。
+
+## v0.4：事件驱动成长链
+
+```mermaid
+flowchart TD
+    Reality[真实生活行为] --> Event[LifeEvent]
+    Event --> Engine[GrowthEngine]
+    Engine --> Rules[GrowthRules]
+    Engine --> Stats[GrowthStatsService]
+    Engine --> Player[Player / EnergyState / EXP]
+    Engine --> Unlocks[Achievement / Title]
+    Engine --> Records[GrowthEventRecord / EnergyRecord]
+    Stats --> StatsFile[(growth-stats.json)]
+    Records --> GrowthFiles[(growth-events.json / energy-history.json)]
+    Event --> Timeline[(life-events.json)]
+    Player --> GrowthPage[Growth / Today]
+    Timeline --> TimelinePage[Timeline]
+    Stats --> Snapshot[GrowthSnapshot]
+    Snapshot --> GrowthPage
+```
+
+`LifeEvent` 是成长层唯一输入，持久化 `sourceType`、`sourceId`、`description` 与 schema `version`，同时兼容读取 v0.2-v0.3 的 `source` / `content` 字段。`GrowthEngine` 以 `eventId` 在 `growth-events.json` 中幂等处理，同一事件不会重复发放 EXP、Energy、Achievement 或 Title。
+
+Growth 页面和 Achievement 检查不扫描全部 Focus / Task / LifeEvent。`GrowthStatsService` 将累计 Focus、有效分钟、最大单次时长、Task、LifeEvent 与 Milestone 数写入 `growth-stats.json`，日常事件只做增量更新；仅首次迁移和显式 `POST /api/growth/recalculate` 会扫描旧事实重建统计。`GrowthSnapshot` 按日期 upsert，趋势层再把累计快照转换为每日 Focus、EXP、Task 与 Energy 数据。
+
+Energy 当前值通过强类型 `EnergyState` 暴露，变化历史通过 append-only `EnergyRecord` 保存。Achievement 使用 `GrowthConditionType`（COUNT、TOTAL_DURATION、SINGLE_DURATION、STREAK、LEVEL、VALUE_THRESHOLD、CUSTOM）和 `GrowthMetric` 描述条件，避免把规则写死在页面或控制器。

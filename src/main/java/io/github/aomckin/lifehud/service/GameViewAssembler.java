@@ -47,12 +47,10 @@ public final class GameViewAssembler {
         state.put("energy_text", "宅宅能量：" + player.energy + "/" + player.maxEnergy);
         state.put("energy_value", player.energy); state.put("energy_max", player.maxEnergy);
         state.put("exp_text", levels.expText(player.exp)); state.put("level_text", levels.levelText(player.exp));
-        state.put("coin_text", "金币：" + player.coin);
-        state.put("title_text", "称号：" + titles.name() + " " + titles.bonusText());
+        state.put("title_text", "称号：" + titles.name());
         state.put("logs", logs.recent()); state.put("action_views", actionViews());
         state.put("active_task_views", dailyViews(daily.tasks()));
         state.put("active_special_task_views", specialViews(special.tasks()));
-        state.put("shop_category_views", shopViews());
         state.put("achievement_sections", achievementSections()); state.put("title_views", titleViews());
         return new GameStateView(state);
     }
@@ -85,7 +83,7 @@ public final class GameViewAssembler {
         List<Map<String, Object>> out = new ArrayList<>();
         for (int i = 0; i < tasks.size(); i++) { SpecialTask t = tasks.get(i);
             out.add(map("id", t.id, "name", t.name,
-                    "detail_text", "金币 +" + t.coin + " / EXP +" + t.exp + " / " + (t.done ? "已完成" : "未完成"),
+                    "detail_text", "EXP +" + t.exp + " / " + (t.done ? "已完成" : "未完成"),
                     "button_text", t.done ? "已完成" : "完成", "button_state", t.done ? "disabled" : "normal",
                     "command_payload", map("index", i)));
         } return out;

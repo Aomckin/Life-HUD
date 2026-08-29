@@ -1,6 +1,6 @@
-# Life HUD v0.3.0
+# Life HUD v0.4.0 · Growth
 
-Life HUD 的 Java 21 / Spring Boot 3 版本。v0.3.0 “Focus / 铁幕与人性化番茄钟”提供统一的 Focus Session：铁幕、番茄与自由专注共享可靠的后端计时、暂停/恢复、刷新恢复、今日摘要和历史记录，并继续使用 Summer Sky 与玻璃化 App Shell。
+Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4.0 把 LifeEvent 变成统一成长输入：Focus 与 Task 只记录真实行为，Growth Engine 按 eventId 幂等推导 Energy、EXP、Level、Achievement 与 Title，并提供可编辑的人生 Milestone、每日 Growth Snapshot 和完整 Growth 页面。
 
 ## 运行
 
@@ -21,6 +21,14 @@ Life HUD 的 Java 21 / Spring Boot 3 版本。v0.3.0 “Focus / 铁幕与人性�
 番茄配置将“自定义专注”和“休息时长”作为两个独立、对齐的输入字段；运行页只保留底部主结束入口，避免重复操作。若前端资源与尚未重启的旧后端不匹配，Segment 请求会提示重启服务，而非只显示泛化 404。
 
 Focus API 提供 Current Focus、Today Summary 和 History；Today 统计按 Session 的开始日期归属，跨日 Session 保持完整，不拆分或重复统计。Dashboard 只展示当前 Focus 或今日摘要，并可返回工作台。
+
+## Growth System
+
+`/growth` 包含 Overview、Achievements、Milestones 与 Titles。Overview 显示 Level / EXP、近期 Energy、当前称号、成长日志和 7 天轻量趋势；Milestone 支持创建、编辑、删除和 Pin；Title 支持装备与自定义。Today 的 Energy、EXP 和 Level 卡片会直接进入 Growth。
+
+Growth 使用 `growth-events.json` 保存每个 LifeEvent 的处理回执，以 eventId 防止刷新、重试或重算带来重复成长；`energy-history.json` 解释 Energy 的每次变化；`growth-snapshots.json` 每日幂等更新当前快照。旧存档中的 Energy、EXP、Achievement 和 Title 会继续保留，旧 Shop / Coin 字段只为兼容读取而存在，不再进入 UI 或命令主流程。
+
+API、规则、持久化与迁移细节见 [GROWTH_V0.4.md](docs/GROWTH_V0.4.md)。
 
 ## 测试
 

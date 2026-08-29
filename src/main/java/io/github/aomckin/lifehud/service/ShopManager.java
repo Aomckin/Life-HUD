@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Supplier;
 
+@Deprecated(forRemoval = false)
 public final class ShopManager {
     private final Player player;private final PlayerRepository players;private final PlayerService playerService;private final Supplier<LocalDate> today;private final List<String> categories;private final List<Map<String,Object>> items;
     @SuppressWarnings("unchecked") public ShopManager(Player p,PlayerRepository players,JsonFileStore repo,ObjectMapper mapper,PlayerService playerService){this(p,players,repo,mapper,playerService,LocalDate::now);}

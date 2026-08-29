@@ -1,4 +1,4 @@
-# Life HUD v0.2 ~ v0.7 开发计划
+# Life HUD v0.2 ~ v0.9 开发计划
 
 > 当前目标：今晚正式开工，在 Agent 接入前，用 2~3 天完成 Life HUD 的主体生活业务。
 >
@@ -304,7 +304,41 @@ Dashboard 同步今日 Focus 数据。
 
 ---
 
-# v0.4 —— Direction / 梦想、任务、仪式与「现在。」
+# v0.4 —— Growth / 成长、里程碑与长期生活轨迹
+
+## 版本目标
+
+以 [Life HUD v0.4 总开发任务书](Life%20HUD%20v0.4%20任务书.md) 为唯一开发基准，把 Growth 从旧游戏经济中拆出，改造成由 LifeEvent 驱动的生活成长派生层。
+
+核心范围：
+
+```text
+LifeEvent
+  ↓ eventId 幂等
+Growth Engine
+  ├── Energy（近期状态）
+  ├── EXP / Level（长期累计）
+  ├── Achievement（系统识别节点）
+  ├── Milestone（用户选择节点）
+  ├── Title（身份标签，无 Buff）
+  └── Growth Snapshot
+```
+
+同时完成 Growth 一级页面、Today / Focus / Task / Timeline 联动、旧成长数据兼容迁移，并停用 Shop、Coin、Purchase、Redemption 与称号 Buff 主流程。
+
+## v0.4 完成标准
+
+- Focus / Task 只产生事实 LifeEvent，由 Growth Engine 统一计算
+- 同一事件不会重复增加 EXP / Energy 或重复解锁
+- Achievement、Milestone、Title、Snapshot 与 Growth 页面完整可用
+- Today 与 Timeline 能展示真实成长状态和重要节点
+- 旧 EXP、Energy、Achievement、Title 得到兼容保留
+- Shop / Coin 不再进入 UI 与命令主流程
+- 版本号为 v0.4.0，专项与回归测试通过
+
+---
+
+# v0.5 —— Direction / 梦想、任务、仪式与「现在。」
 
 ## 版本目标
 
@@ -509,7 +543,7 @@ Create Snapshot
 
 ---
 
-## v0.4 完成标准
+## v0.5 完成标准
 
 - Dream 可创建、修改、归档
 - Dream 可拆 Goal / Milestone
@@ -520,7 +554,7 @@ Create Snapshot
 
 ---
 
-# v0.5 —— Life / 生活输入与万能时间线
+# v0.6 —— Life / 生活输入与万能时间线
 
 ## 版本目标
 
@@ -798,7 +832,7 @@ JOURNAL_WRITTEN
 
 ---
 
-## v0.5 完成标准
+## v0.6 完成标准
 
 - 睡眠可手动记录
 - 饮食可上传照片
@@ -810,7 +844,7 @@ JOURNAL_WRITTEN
 
 ---
 
-# v0.6 —— Media / 宅宅生活档案
+# v0.7 —— Media / 宅宅生活档案
 
 ## 版本目标
 
@@ -960,7 +994,7 @@ MOVIE_WATCHED
 
 ---
 
-## v0.6 完成标准
+## v0.7 完成标准
 
 - Anime 可维护
 - Game 可维护
@@ -970,11 +1004,11 @@ MOVIE_WATCHED
 
 ---
 
-# v0.7 —— Growth / 游戏化反馈与 Agent 前置
+# v0.8 —— Growth 扩展与 Agent 前置
 
 ## 版本目标
 
-把旧“宅宅能量条”的核心机制重新接回整个新 Life HUD。
+让 v0.4 已建立的 Growth 派生层消费 v0.5 ~ v0.7 新增的真实生活行为，并准备 Agent 读取接口。
 
 此时 Growth 不再是业务本体，而是：
 
@@ -989,10 +1023,9 @@ Growth
 ├── Energy
 ├── EXP
 ├── Level
-├── Coin
 ├── Achievement
-├── Title
-└── Shop
+├── Milestone
+└── Title
 ```
 
 ---
@@ -1042,18 +1075,15 @@ EXP 来源：
 - Goal
 - Dream Milestone
 - Ritual
-- Achievement
 - 特殊行为
 
 ---
 
 ## 3. Achievement
 
-第一批可以做：
+基于后续模块追加：
 
 ```text
-第一次铁幕
-铁幕累计 10 小时
 连续专注 7 天
 完成 10 次晨光协议
 第一次创建梦想
@@ -1061,7 +1091,6 @@ EXP 来源：
 看完第一部番
 通关第一款记录游戏
 连续记录 30 天
-第 1000 条 LifeEvent
 ```
 
 ---
@@ -1076,13 +1105,13 @@ EXP 来源：
 
 支持手动装备。
 
-后续再考虑 Buff。
+Title 始终只作为身份标签，不引入 Buff。
 
 ---
 
 # B. Dashboard 聚合升级
 
-到 v0.7 首页应该能够显示：
+到 v0.8 首页应该能够显示：
 
 - 当前 Energy
 - Level / EXP
@@ -1101,7 +1130,7 @@ EXP 来源：
 
 # C. Agent Context API
 
-v0.7 不开发 Agent。
+v0.8 不开发 Agent。
 
 只准备干净的读取接口。
 
@@ -1151,7 +1180,7 @@ Agent
 
 ---
 
-## v0.7 完成标准
+## v0.8 完成标准
 
 到这一版结束，Life HUD 应该能够知道：
 
@@ -1175,7 +1204,7 @@ Agent
 
 ---
 
-# v0.8 —— 朝汐 Agent
+# v0.9 —— 朝汐 Agent
 
 > 不属于本轮 2~3 天开发目标。
 
@@ -1232,7 +1261,7 @@ LifeEvent
 
 ---
 
-## Day 1：v0.3 + v0.4
+## Day 1：v0.3 + v0.5
 
 上午 / 下午：
 
@@ -1255,7 +1284,7 @@ Ritual
 
 ---
 
-## Day 2：v0.5
+## Day 2：v0.6
 
 整天优先给：
 
@@ -1280,7 +1309,7 @@ Life Timeline
 
 ---
 
-## Day 3：v0.6 + v0.7
+## Day 3：v0.7 + v0.8
 
 前半：
 
@@ -1459,7 +1488,7 @@ Agent = 理解与交互层
 
 ---
 
-# v0.7 后的 Life HUD
+# v0.8 后的 Life HUD
 
 最终结构：
 

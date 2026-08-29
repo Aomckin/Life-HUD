@@ -3,6 +3,8 @@ import { dashboard } from './pages/dashboard.js?v=0.3.0-r5';
 import { placeholder } from './pages/placeholder.js';
 import { settings } from './pages/settings.js';
 import { focus } from './pages/focus.js?v=0.3.0-r5';
+import { growth } from './pages/growth.js?v=0.4.0';
+import { timeline } from './pages/timeline.js?v=0.4.0';
 import { appearance } from './modules/appearance.js';
 import { toast } from './components/ui.js';
 
@@ -28,6 +30,8 @@ async function render(replace = false) {
   if (path !== '/focus') document.body.classList.remove('focus-active', 'iron-curtain-active');
   if (path === '/dashboard') await dashboard(page);
   else if (path === '/focus') await focus(page);
+  else if (path === '/growth') await growth(page);
+  else if (path === '/journal') await timeline(page);
   else if (path === '/settings') await settings(page);
   else await placeholder(page, path);
 }

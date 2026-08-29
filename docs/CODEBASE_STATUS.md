@@ -1,6 +1,8 @@
 # Life HUD 代码现状速览
 
-> 工作区版本：v0.3.0；最后更新于 2026-08-28。本文只描述已落地代码，后续改造以此为对接基线。
+> v0.4.0 Growth 更新（2026-08-29）：LifeEvent → GrowthEngine 已成为 Focus / Task 成长主链；Growth、Achievement、Milestone、Title 与 Snapshot API 和页面已落地。Shop / Coin 仅保留旧 JSON 兼容字段，已从主视图和购买命令断开。详见 [GROWTH_V0.4.md](GROWTH_V0.4.md)。
+
+> 下文保留 v0.3.0 的重构背景，供调用链追溯。
 
 ## 当前能力
 

@@ -1,5 +1,16 @@
 # Python v1.2 → Java v0.1.0 迁移清单
 
+## v0.4 Growth 迁移补充
+
+| 旧状态 | v0.4 处理 |
+|---|---|
+| `save.exp` | 作为 total EXP 原值保留，按无硬上限的兼容曲线重新派生 Level |
+| `save.energy` | 原值保留，继续限制在 0～180 |
+| `unlocked_achievements` | id 原样保留；旧定义仅作历史展示，不再发放 Coin / EXP 奖励 |
+| `unlocked_titles` / `equipped_title` | id、原名称与装备状态保留；Buff 不再进入 Growth 计算 |
+| Coin / Shop purchase 字段 | 仅兼容读取；UI、状态主视图与购买命令已停用 |
+| Focus / Task 的直接奖励 | 改为 LifeEvent → GrowthEngine；eventId 回执防止重复结算 |
+
 状态只有在主要行为、JSON 兼容和对应 JUnit 验证已完成时才标记为“已迁移”。`ui.py`、`themes.py` 及 Tkinter 专用 API 客户端按任务书不在本阶段范围内。
 
 ## 核心与业务

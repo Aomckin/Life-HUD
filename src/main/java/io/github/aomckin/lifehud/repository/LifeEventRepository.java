@@ -29,9 +29,13 @@ public final class LifeEventRepository {
                 .limit(Math.max(1, Math.min(limit, 100))).toList();
     }
 
-    private List<LifeEvent> all() {
+    public synchronized List<LifeEvent> all() {
         if (!files.exists(FILE_NAME)) return List.of();
         try { return mapper.convertValue(files.read(FILE_NAME), EVENTS); }
         catch (IllegalArgumentException exception) { throw new IllegalStateException("???? LifeEvent ??", exception); }
+    }
+
+    public synchronized boolean contains(String id) {
+        return all().stream().anyMatch(event -> event.id().equals(id));
     }
 }

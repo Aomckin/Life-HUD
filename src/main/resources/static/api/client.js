@@ -49,6 +49,7 @@ export const api = {
     create: body => post("/api/dreams", body),
     update: (id, body) => put(`/api/dreams/${id}`, body),
     archive: id => remove(`/api/dreams/${id}`),
+    purge: id => remove(`/api/dreams/${id}/purge`),
     complete: id => post(`/api/dreams/${id}/complete`),
     pause: id => post(`/api/dreams/${id}/pause`),
     resume: id => post(`/api/dreams/${id}/resume`),

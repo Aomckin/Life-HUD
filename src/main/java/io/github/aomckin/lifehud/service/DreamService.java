@@ -125,6 +125,21 @@ public final class DreamService {
         return value;
     }
 
+    /** Physical delete: removes the dream and all its goals/milestones, clearing task links. */
+    public synchronized void purge(String id) {
+        get(id);
+        Set<String> goalIds = new HashSet<>();
+        Set<String> milestoneIds = new HashSet<>();
+        for (Goal g : goalsOf(id)) {
+            goalIds.add(g.id());
+            milestonesOf(g.id()).forEach(m -> milestoneIds.add(m.id()));
+        }
+        dreams.remove(id);
+        goalIds.forEach(goals::delete);
+        milestoneIds.forEach(milestones::delete);
+        clearTaskReferences(Set.of(id), goalIds, milestoneIds);
+    }
+
     /** Deleting a Goal clears the direction links of any tasks referencing it or its milestones. */
     public synchronized void deleteGoal(String id) {
         goal(id);

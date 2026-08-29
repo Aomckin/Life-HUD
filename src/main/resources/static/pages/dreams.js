@@ -9,25 +9,26 @@ let filter = "ACTIVE";
 export async function dreams(root) {
   root.innerHTML = '<section class="panel">正在整理梦想…</section>';
   try {
-    const dreams = await api.dreams.all();
-    if (selectedId && dreams.some(d => d.id === selectedId)) return renderDetail(root, selectedId);
+    const list = await api.dreams.all();
+    if (selectedId && list.some(d => d.id === selectedId)) return renderDetail(root, selectedId);
     selectedId = "";
-    renderList(root, dreams);
+    renderList(root, list);
   } catch (reason) { root.innerHTML = error(reason.message); }
 }
 
-function renderList(root, dreams) {
+function renderList(root, list) {
   const groups = ["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"];
-  const visible = dreams.filter(d => d.status === filter);
+  const visible = list.filter(d => d.status === filter);
   root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Direction</div><h2>我正在追逐什么</h2></div><button class="button button-primary" id="new-dream">${c.newDream}</button></div>
-  <nav class="growth-tabs status-tabs">${groups.map(s=>`<button class="${filter===s?"active":""}" data-filter="${s}">${statusLabels[s]} ${dreams.filter(d=>d.status===s).length}</button>`).join("")}</nav>
+  <nav class="growth-tabs status-tabs">${groups.map(s=>`<button class="${filter===s?"active":""}" data-filter="${s}">${statusLabels[s]} ${list.filter(d=>d.status===s).length}</button>`).join("")}</nav>
   <div class="dream-grid">${visible.map(d=>`
     <article class="card dream-card" data-open="${d.id}">
       ${d.coverImagePath?`<img class="dream-cover" src="${escapeHtml(d.coverImagePath)}" alt="">`:""}
       <div class="dream-card-body"><span class="badge">${statusLabels[d.status]}</span>
       <h3>${escapeHtml(d.title)}</h3>
       ${d.meaning?`<p class="dream-meaning">${escapeHtml(d.meaning)}</p>`:""}
-      <small>${d.targetDate?`目标 ${date(d.targetDate)}`:"没有设定期限"}</small></div>
+      <small>${d.targetDate?`目标 ${date(d.targetDate)}`:"没有设定期限"}</small>
+      <div class="row-actions"><button class="text-link danger-link" data-delete="${d.id}">${c.delete}</button></div></div>
     </article>`).join("")||empty(filter==="ACTIVE"?c.emptyActive:c.emptyFiltered)}</div></section>
   <form class="milestone-form" id="dream-form" hidden>
     <label class="field"><span>${c.titleLabel}</span><input id="dream-title" maxlength="120" required></label>
@@ -42,6 +43,12 @@ function renderList(root, dreams) {
   </form></div>`;
   root.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.filter;dreams(root);}));
   root.querySelectorAll("[data-open]").forEach(card=>card.addEventListener("click",()=>{selectedId=card.dataset.open;history.replaceState({},"",`/dreams#${selectedId}`);renderDetail(root,selectedId);}));
+  root.querySelectorAll("[data-delete]").forEach(button=>button.addEventListener("click",async event=>{
+    event.stopPropagation();
+    if(!confirm(c.deleteConfirm))return;
+    try{await api.dreams.purge(button.dataset.delete);toast("已删除");dreams(root);}
+    catch(reason){toast(reason.message,true);}
+  }));
   const form=root.querySelector("#dream-form");
   root.querySelector("#new-dream").addEventListener("click",()=>{form.reset();form.hidden=false;root.querySelector("#dream-title").focus();});
   root.querySelector("#cancel-dream").addEventListener("click",()=>form.hidden=true);
@@ -51,6 +58,7 @@ function renderList(root, dreams) {
       const cover=await uploadCover(form);
       await api.dreams.create({title:v("dream-title"),meaning:v("dream-meaning"),description:v("dream-description"),
         targetDate:v("dream-target")||null,coverImagePath:cover,note:v("dream-note"),status:"ACTIVE"});
+      form.hidden = true;
       toast("梦想已经立下了");dreams(root);
     }catch(reason){toast(reason.message,true);}
   });
@@ -90,6 +98,7 @@ async function renderDetail(root, id) {
         ${dream.status==="PAUSED"?`<button class="button button-ghost" data-act="resume">${c.resume}</button>`:""}
         ${dream.status!=="ARCHIVED"?`<button class="button button-ghost" data-act="archive">${c.archive}</button>`:""}
         <button class="text-link" data-act="edit">${c.edit}</button>
+        <button class="text-link danger-link" data-act="purge">${c.delete}</button>
       </div>
       <form class="milestone-form" id="dream-edit-form" hidden></form>
     </section>
@@ -132,6 +141,7 @@ async function renderDetail(root, id) {
         else if(act==="pause")await api.dreams.pause(id);
         else if(act==="resume")await api.dreams.resume(id);
         else if(act==="archive"){if(!confirm(c.archiveConfirm))return;await api.dreams.archive(id);}
+        else if(act==="purge"){if(!confirm(c.deleteConfirm))return;await api.dreams.purge(id);selectedId="";dreams(root);return;}
         else if(act==="edit")return openEdit();
         toast("已更新");renderDetail(root,id);
       }catch(reason){toast(reason.message,true);}

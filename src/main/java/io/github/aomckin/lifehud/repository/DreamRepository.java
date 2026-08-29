@@ -21,4 +21,5 @@ public final class DreamRepository {
     }
     public synchronized Optional<Dream> find(String id){return all().stream().filter(v->v.id().equals(id)).findFirst();}
     public synchronized void save(Dream value){List<Dream> all=new ArrayList<>(all());all.removeIf(v->v.id().equals(value.id()));all.add(value);files.write(FILE,all);}
+    public synchronized void remove(String id){List<Dream> all=new ArrayList<>(all());all.removeIf(v->v.id().equals(id));files.write(FILE,all);}
 }

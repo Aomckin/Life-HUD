@@ -82,7 +82,8 @@ export const directionCopy = {
   noLinkedTasks: "还没有关联到这个梦想的任务。",
   goalDone: "完成",
   delete: "删除",
-  deleteConfirm: "删除后无法恢复，确定继续？"
+  deleteConfirm: "删除后无法恢复，确定继续？",
+  purgeConfirm: "彻底删除这个梦想？其下所有方向和里程碑也会一并删除，关联任务将变为独立任务。",
 };
 
 export const ritualCopy = {

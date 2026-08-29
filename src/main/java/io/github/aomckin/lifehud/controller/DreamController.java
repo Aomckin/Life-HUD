@@ -33,6 +33,8 @@ public final class DreamController {
     }
     @PutMapping("/api/dreams/{id}") public Dream update(@PathVariable String id,@RequestBody DreamRequest request){return dreams.update(id,request);}
     @DeleteMapping("/api/dreams/{id}") public Dream archive(@PathVariable String id){return dreams.archive(id);}
+    @DeleteMapping("/api/dreams/{id}/purge") @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void purge(@PathVariable String id){dreams.purge(id);}
     @PostMapping("/api/dreams/{id}/complete") public Dream complete(@PathVariable String id){return dreams.complete(id);}
     @PostMapping("/api/dreams/{id}/pause") public Dream pause(@PathVariable String id){return dreams.pause(id);}
     @PostMapping("/api/dreams/{id}/resume") public Dream resume(@PathVariable String id){return dreams.resume(id);}

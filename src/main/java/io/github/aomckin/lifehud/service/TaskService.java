@@ -33,7 +33,8 @@ public final class TaskService {
         if (reward[0] > 0 || reward[1] > 0) {
             // baseExp is deprecated: GrowthRules only reads baseEnergy, EXP comes solely from Energy SPEND.
             events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成每日任务",List.of("task"),
-                    Map.of("taskId",task.id,"taskSource","daily","baseEnergy",reward[0]));
+                    Map.of("taskId",task.id,"taskSource","daily","baseEnergy",reward[0],
+                            "dreamId",task.dreamId,"goalId",task.goalId,"dreamMilestoneId",task.dreamMilestoneId));
             logs.action(copy.taskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
         return new OperationResult(true,"任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
@@ -47,7 +48,8 @@ public final class TaskService {
         if (reward[0] > 0 || reward[1] > 0) {
             // Special tasks had no Energy field; their legacy exp value becomes the Energy reward (capped by growth.json).
             events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
-                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",task.exp));
+                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",task.exp,
+                            "dreamId",task.dreamId,"goalId",task.goalId,"dreamMilestoneId",task.dreamMilestoneId));
             logs.action(copy.specialTaskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
         return new OperationResult(true,"特殊任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,

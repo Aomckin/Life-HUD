@@ -51,6 +51,14 @@ public final class GrowthCopy {
 
     public String energyDriftReason(int midpoint) { return format("drift.reason", "midpoint", midpoint); }
 
+    public String dreamCreatedDescription(String title) { return format("direction.dreamCreated", "title", title); }
+    public String dreamCompletedDescription(String title) { return format("direction.dreamCompleted", "title", title); }
+    public String goalCreatedDescription(String title) { return format("direction.goalCreated", "title", title); }
+    public String goalCompletedDescription(String title) { return format("direction.goalCompleted", "title", title); }
+    public String dreamMilestoneCompletedDescription(String title) { return format("direction.dreamMilestoneCompleted", "title", title); }
+    public String ritualCompletedDescription(String title) { return format("direction.ritualCompleted", "title", title); }
+    public String nowSnapshotCreatedDescription() { return text("direction.nowSnapshotCreated"); }
+
     public String shopDisabledMessage() { return text("command.shopDisabled"); }
     public String actionDisabledMessage() { return text("command.actionDisabled"); }
 

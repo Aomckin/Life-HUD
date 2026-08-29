@@ -1,0 +1,81 @@
+.direction-page { display:grid; gap:var(--space-4); }
+.direction-page .section-head { margin-bottom:var(--space-3); }
+.status-tabs { margin-bottom:var(--space-4); }
+
+.dream-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:var(--space-4); }
+.dream-card { display:flex; flex-direction:column; overflow:hidden; cursor:pointer; transition:transform 180ms var(--ease-emphasized),box-shadow 180ms var(--ease-emphasized); }
+.dream-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.dream-cover { width:100%; height:140px; object-fit:cover; display:block; }
+.dream-cover.big { width:160px; height:160px; border-radius:var(--radius-lg); flex:0 0 auto; }
+.dream-card-body { display:grid; gap:var(--space-2); padding:var(--space-4); }
+.dream-card-body h3 { margin:0; }
+.dream-meaning { color:var(--sky-800); font-size:.92rem; margin:0; }
+.dream-desc { color:var(--text-secondary); margin:var(--space-2) 0 0; }
+
+.dream-detail { display:grid; gap:var(--space-4); }
+.dream-detail-head { display:flex; gap:var(--space-5); align-items:flex-start; flex-wrap:wrap; }
+.dream-detail-head h2 { margin:var(--space-2) 0; }
+.dream-actions { padding-top:var(--space-2); border-top:1px solid var(--border-soft); }
+
+.goal-block { display:grid; gap:var(--space-3); margin-top:var(--space-3); padding:var(--space-4); border:1px solid var(--border-soft); border-radius:var(--radius-lg); background:var(--surface-glass); }
+.goal-block.done { opacity:.7; }
+.goal-head { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); }
+.goal-head strong { font-size:1.05rem; }
+.milestone-list { display:grid; gap:var(--space-2); }
+.milestone-row { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) 0; border-bottom:1px dashed var(--border-soft); }
+.milestone-row:last-of-type { border-bottom:0; }
+.milestone-row.done span { text-decoration:line-through; color:var(--text-muted); }
+.milestone-row .danger-link { margin-left:auto; opacity:0; transition:opacity 120ms ease; }
+.milestone-row:hover .danger-link { opacity:1; }
+.milestone-check { width:28px; height:28px; flex:0 0 auto; border:1px solid var(--border-default); border-radius:50%; background:var(--surface-elevated); color:var(--sky-700); cursor:pointer; }
+.milestone-check.checked { background:var(--sky-500); border-color:var(--sky-500); color:#fff; }
+.inline-form { display:flex; gap:var(--space-2); margin-top:var(--space-2); }
+.inline-form input { flex:1; }
+
+.step-row { display:grid; grid-template-columns:110px minmax(0,1.2fr) minmax(0,1.4fr) 80px minmax(0,1fr) auto auto; align-items:center; gap:var(--space-2); margin-bottom:var(--space-2); }
+.step-row input,.step-row select { min-height:36px; }
+
+.ritual-card { display:flex; justify-content:space-between; gap:var(--space-4); flex-wrap:wrap; }
+.ritual-card h3 { margin:var(--space-2) 0; }
+.ritual-card p { margin:0 0 var(--space-1); color:var(--text-secondary); }
+.ritual-actions { align-items:flex-end; }
+
+.ritual-runner { display:grid; gap:var(--space-5); max-width:720px; margin:0 auto; padding:var(--space-6); }
+.runner-head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-3); }
+.runner-head h2 { margin:0; }
+.runner-progress { height:6px; border-radius:var(--radius-pill); background:var(--accent-soft); overflow:hidden; }
+.runner-progress span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--sky-400),var(--sky-600)); transition:width 240ms var(--ease-emphasized); }
+.runner-step { display:grid; gap:var(--space-3); justify-items:start; padding:var(--space-5); border:1px solid var(--border-soft); border-radius:var(--radius-lg); background:var(--surface-elevated); }
+.runner-step h3 { margin:0; font-size:1.3rem; }
+.runner-step p { margin:0; color:var(--text-secondary); }
+.runner-timer { font-size:2rem; color:var(--sky-700); font-variant-numeric:tabular-nums; }
+.runner-actions { justify-content:flex-end; }
+
+.task-direction-row { display:flex; justify-content:space-between; align-items:center; gap:var(--space-4); flex-wrap:wrap; padding:var(--space-3) 0; border-bottom:1px solid var(--border-soft); }
+.task-direction-row:last-of-type { border-bottom:0; }
+.task-direction-row small { display:block; color:var(--text-muted); }
+.task-direction-side { display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap; }
+.direction-text { color:var(--sky-800); font-size:.9rem; }
+.direction-text em { color:var(--text-muted); }
+
+.now-section { margin-top:var(--space-4); }
+.now-section h3 { margin:0 0 var(--space-2); font-size:1rem; color:var(--sky-800); }
+.now-list { display:grid; gap:var(--space-2); }
+.now-item { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto; gap:var(--space-2); }
+.now-checks { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-2); }
+.now-checks small { color:var(--text-muted); }
+.field-hint { color:var(--text-muted); font-size:var(--font-size-sm); }
+
+.snapshot-card { padding:var(--space-3) 0; border-bottom:1px solid var(--border-soft); display:grid; gap:var(--space-2); }
+.snapshot-card:last-of-type { border-bottom:0; }
+.snapshot-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--space-3); }
+.snapshot-head small { color:var(--text-muted); }
+.snapshot-quote { color:var(--sky-800); margin:0; }
+.snapshot-quote.big { font-size:1.15rem; margin:var(--space-3) 0; }
+.snapshot-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-4); margin-top:var(--space-3); }
+.snapshot-grid h3 { font-size:.95rem; margin:0 0 var(--space-2); }
+.snapshot-grid ul { margin:0; padding-left:1.1rem; color:var(--text-secondary); }
+.snapshot-content { white-space:pre-wrap; color:var(--text-secondary); }
+
+@media(max-width:900px){ .step-row { grid-template-columns:110px minmax(0,1fr) minmax(0,1fr); } .step-row .step-url,.step-row .step-duration { grid-column:auto; } .dream-detail-head { flex-direction:column; } }
+@media(max-width:640px){ .step-row { grid-template-columns:1fr 1fr; } .now-item { grid-template-columns:1fr; } .task-direction-row { flex-direction:column; align-items:flex-start; } .dream-cover.big { width:100%; height:180px; } }

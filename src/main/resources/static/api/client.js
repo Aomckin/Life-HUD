@@ -22,6 +22,9 @@ const post = (url, body) => request(url, {
 const patch = (url, body) => request(url, {
   method: "PATCH", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
 });
+const put = (url, body) => request(url, {
+  method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+});
 const remove = url => request(url, {method: "DELETE"});
 
 export const api = {
@@ -40,6 +43,52 @@ export const api = {
     update: (id, body) => patch(`/api/entertainment/${id}`, body),
     remove: id => remove(`/api/entertainment/${id}`)
   },
+  dreams: {
+    all: () => request("/api/dreams"),
+    detail: id => request(`/api/dreams/${id}`),
+    create: body => post("/api/dreams", body),
+    update: (id, body) => put(`/api/dreams/${id}`, body),
+    archive: id => remove(`/api/dreams/${id}`),
+    complete: id => post(`/api/dreams/${id}/complete`),
+    pause: id => post(`/api/dreams/${id}/pause`),
+    resume: id => post(`/api/dreams/${id}/resume`),
+    createGoal: (dreamId, body) => post(`/api/dreams/${dreamId}/goals`, body),
+    updateGoal: (id, body) => put(`/api/goals/${id}`, body),
+    completeGoal: id => post(`/api/goals/${id}/complete`),
+    deleteGoal: id => remove(`/api/goals/${id}`),
+    createMilestone: (goalId, body) => post(`/api/goals/${goalId}/milestones`, body),
+    updateMilestone: (id, body) => put(`/api/dream-milestones/${id}`, body),
+    completeMilestone: id => post(`/api/dream-milestones/${id}/complete`),
+    deleteMilestone: id => remove(`/api/dream-milestones/${id}`)
+  },
+  rituals: {
+    all: () => request("/api/rituals"),
+    detail: id => request(`/api/rituals/${id}`),
+    create: body => post("/api/rituals", body),
+    update: (id, body) => put(`/api/rituals/${id}`, body),
+    remove: id => remove(`/api/rituals/${id}`),
+    enable: id => post(`/api/rituals/${id}/enable`),
+    disable: id => post(`/api/rituals/${id}/disable`),
+    start: id => post(`/api/rituals/${id}/start`),
+    execution: id => request(`/api/ritual-executions/${id}`),
+    step: (id, stepId, body) => post(`/api/ritual-executions/${id}/steps/${stepId}`, body),
+    completeExecution: (id, note = "") => post(`/api/ritual-executions/${id}/complete`, {note}),
+    cancelExecution: (id, note = "") => post(`/api/ritual-executions/${id}/cancel`, {note})
+  },
+  now: {
+    current: () => request("/api/now"),
+    update: body => put("/api/now", body),
+    snapshots: () => request("/api/now/snapshots"),
+    snapshot: id => request(`/api/now/snapshots/${id}`),
+    createSnapshot: () => post("/api/now/snapshots"),
+    removeSnapshot: id => remove(`/api/now/snapshots/${id}`)
+  },
+  taskDirections: {
+    all: () => request("/api/task-directions"),
+    link: (source, taskId, body) => put(`/api/task-directions/${source}/${taskId}`, body),
+    unlink: (source, taskId) => remove(`/api/task-directions/${source}/${taskId}`)
+  },
+  uploadImage: formData => request("/api/images", {method: "POST", body: formData}),
   achievements: () => request("/api/achievements"),
   milestones: {
     all: () => request("/api/milestones"),

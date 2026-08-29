@@ -136,3 +136,13 @@
 |---|---|
 | 新一天 Energy 向基准值回归 | `midpoint=90`、`day_start_factor=0.75` 外置在 `data/content/energy-drift.json`；每日最多一次，标记在 `save.json` 的 `energy_drift_date` |
 | 回归的账目表达 | 以 ADJUST 类型 LifeEvent（`ENERGY_CHANGED`）经 GrowthEngine 结算，进 Energy History，不产生 EXP、不触碰转换余数 |
+
+## v0.5 Direction 数据补充
+
+| 新增 | 存储 |
+|---|---|
+| Dream / Goal / DreamMilestone | `dreams.json` / `goals.json` / `dream-milestones.json`；Dream 删除=归档，不物理删除 |
+| Task 方向关联 | `tasks.json` / `special_tasks.json` 内每条任务新增 `dreamId` / `goalId` / `dreamMilestoneId`（缺省空串，旧数据无需迁移） |
+| Ritual / Step / Execution | `rituals.json` / `ritual-steps.json` / `ritual-executions.json` |
+| 「现在。」 | `now-state.json`（当前，可变）+ `now-snapshots.json`（快照，不可变） |
+| 图片 | `data/uploads/`（UUID 文件名），`/uploads/**` 静态映射 |

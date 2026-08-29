@@ -1,6 +1,6 @@
-# Life HUD v0.4.2 · Growth（v0.4 封版）
+# Life HUD v0.5.0 · Direction
 
-Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 最终核心循环：Focus / Task 等建设性活动赚取 Energy（每 3 有效分钟 +1）；在 Growth 页记录一次娱乐（游戏 / 看番 / 电影…），Energy 按你填写的消耗真实减少（SPEND），每 10 点实际消耗沉淀 +1 EXP 并推进 Level。Energy 看今天，EXP 看一段时间，Level 看很久以后；Achievement / Milestone / Title 只记录生活成长，不参与数值。
+Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 完成了成长循环：Focus / Task 赚取 Energy（每 3 有效分钟 +1），娱乐消费（SPEND）按实际消耗沉淀 EXP（每 10 点 +1）并推进 Level。v0.5「Direction」让 Life HUD 开始知道你为什么往前走：`/dreams` 承载 Dream → Goal → DreamMilestone 三层方向并可关联到具体任务；`/rituals` 用"仪式 + 步骤 + 执行记录"进入一种状态；`/now` 记录此刻的人生阶段并可保存不可变快照。这些模块只产生事实 LifeEvent，成长结算仍由 GrowthEngine 唯一负责。
 
 ## 运行
 

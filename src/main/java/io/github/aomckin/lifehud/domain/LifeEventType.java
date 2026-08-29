@@ -3,6 +3,12 @@ package io.github.aomckin.lifehud.domain;
 /** Stable event vocabulary shared by current and future Life HUD modules. */
 public enum LifeEventType {
     TASK_COMPLETED,
+    DREAM_CREATED,
+    DREAM_COMPLETED,
+    GOAL_CREATED,
+    GOAL_COMPLETED,
+    DREAM_MILESTONE_COMPLETED,
+    NOW_SNAPSHOT_CREATED,
     FOCUS_STARTED,
     FOCUS_PAUSED,
     FOCUS_RESUMED,

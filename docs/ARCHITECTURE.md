@@ -237,3 +237,23 @@ flowchart TD
 Growth 页面和 Achievement 检查不扫描全部 Focus / Task / LifeEvent。`GrowthStatsService` 将累计 Focus、有效分钟、最大单次时长、Task、LifeEvent 与 Milestone 数写入 `growth-stats.json`，日常事件只做增量更新；仅首次迁移和显式 `POST /api/growth/recalculate` 会扫描旧事实重建统计。`GrowthSnapshot` 按日期 upsert，趋势层再把累计快照转换为每日 Focus、EXP、Task 与 Energy 数据。
 
 Energy 当前值通过强类型 `EnergyState` 暴露，变化历史通过 append-only `EnergyRecord` 保存。Achievement 使用 `GrowthConditionType`（COUNT、TOTAL_DURATION、SINGLE_DURATION、STREAK、LEVEL、VALUE_THRESHOLD、CUSTOM）和 `GrowthMetric` 描述条件，避免把规则写死在页面或控制器。
+
+
+## v0.5：Direction 三模块
+
+```mermaid
+flowchart LR
+    Dream --> Goal --> DreamMilestone
+    Task -.可选关联.-> Dream & Goal & DreamMilestone
+    Ritual --> RitualStep
+    Ritual --> RitualExecution -->|RITUAL_COMPLETED| LifeEvent
+    NowState -->|保存阶段快照| NowSnapshot
+    Dream & Goal & DreamMilestone & Now -->|事实事件| GrowthEngine
+```
+
+- `DreamService` 管理 Dream / Goal / DreamMilestone 聚合，完成类操作幂等（已 COMPLETED 直接返回，不重复发事件）；删除 Goal / 里程碑会通过 `DirectionLinkService` 清理任务上的悬挂关联，Dream 用归档代替物理删除。
+- `DirectionLinkService` 负责任务↔方向的可选关联：选最深层自动向上推导，人工指定与推导冲突时拒绝；与 `DreamService` 的循环依赖用 `ObjectProvider` 打破。
+- `RitualService`：Ritual + RitualStep（TEXT/CHECK/TIMER/LINK/MUSIC_HINT/NOTE，存 `ritual-steps.json`）+ RitualExecution（启动时冻结步骤快照，完成/取消各一次）。
+- `NowService`：NowState 持续可编辑；NowSnapshot 保存时深拷贝全部内容（Dream/Goal 冻结 id + 当时标题），后续编辑不污染历史。
+- 图片统一走 `ImageStorageService`（`POST /api/images`，类型/大小限制，UUID 文件名，存 `data/uploads/` 由 `/uploads/**` 静态映射提供）。
+- 这些模块全部只产生事实 LifeEvent，不直接修改 Energy / EXP；v0.5 不新增 Growth 数值规则。

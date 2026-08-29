@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.5.3";
-import { nowCopy as c } from "../content/copy.js?v=0.5.3";
-import { renderBoard } from "./now-playlist.js?v=0.5.3";
+import { api } from "../api/client.js?v=0.5.5";
+import { nowCopy as c } from "../content/copy.js?v=0.5.5";
+import { renderBoard } from "./now-playlist.js?v=0.5.5";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";

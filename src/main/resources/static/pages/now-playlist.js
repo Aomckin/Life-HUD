@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.5.3";
-import { nowCopy as c } from "../content/copy.js?v=0.5.3";
+import { api } from "../api/client.js?v=0.5.5";
+import { nowCopy as c } from "../content/copy.js?v=0.5.5";
 import { empty, escapeHtml, toast } from "../components/ui.js";
 
 /**
@@ -52,8 +52,23 @@ function rotationFor(slot) {
   return ((slot * 41) % 9) - 4; // -4° ~ +4°
 }
 
+/** First free anchor whose rank fits the level, scanning from `salt` so a
+ *  non-zero salt rotates the assignment and yields a visibly new arrangement. */
+function pickAnchor(used, rank, salt) {
+  const n = ANCHORS.length;
+  for (let step = 0; step < n; step++) {
+    const i = (salt + step) % n;
+    if (!used.has(i) && ANCHORS[i].rank >= rank) return i;
+  }
+  for (let step = 0; step < n; step++) {
+    const i = (salt + step) % n;
+    if (!used.has(i)) return i;
+  }
+  return -1;
+}
+
 /** Assign anchors to songs that have no wall position yet; deterministic and stable. */
-export function ensureLayout(songs) {
+export function ensureLayout(songs, salt = 0) {
   const placed = songs.filter(s => s.posX != null && s.posY != null);
   const missing = songs.filter(s => s.posX == null || s.posY == null);
   if (!missing.length) return songs;
@@ -63,15 +78,14 @@ export function ensureLayout(songs) {
   const out = songs.map(s => ({...s}));
   for (const song of order) {
     const level = sizeLevel(song.playCount);
-    let chosen = ANCHORS.findIndex((a, i) => !used.has(i) && a.rank >= LEVEL_RANK[level]);
-    if (chosen < 0) chosen = ANCHORS.findIndex((a, i) => !used.has(i));
+    let chosen = pickAnchor(used, LEVEL_RANK[level], salt);
     if (chosen < 0) chosen = 0;
     used.add(chosen);
     const anchor = ANCHORS[chosen];
     const index = out.findIndex(s => s.slot === song.slot);
     out[index] = {...out[index],
-      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, 1, 30))),
-      posY: Math.min(.90, Math.max(.02, anchor.y + jitter(song.slot, 2, 20))),
+      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, 1 + salt, 30))),
+      posY: Math.min(.90, Math.max(.02, anchor.y + jitter(song.slot, 2 + salt, 20))),
       rotationDeg: rotationFor(song.slot),
       zIndex: song.playCount > 0 ? 20 + song.slot : 10 + song.slot,
       _anchor: chosen
@@ -89,9 +103,10 @@ function anchorIndexOf(song) {
   return best;
 }
 
-/** Escape hatch used after a playCount change: re-flow everything deterministically. */
-export function relayout(songs) {
-  return ensureLayout(songs.map(s => ({...s, posX: null, posY: null})));
+/** Escape hatch used after a playCount change: re-flow everything; the salt
+ *  differs per invocation so the new arrangement is visibly different. */
+export function relayout(songs, salt = 1) {
+  return ensureLayout(songs.map(s => ({...s, posX: null, posY: null})), salt);
 }
 
 /**
@@ -240,8 +255,21 @@ export function renderBoard(container, options) {
       try { onBackgroundChange(await api.now.clearBackground()); }
       catch (reason) { toast(reason.message, true); }
     });
-    container.querySelector("#board-relayout")?.addEventListener("click", () => {
-      onSongsChange(relayout(songs), null);
+    container.querySelector("#board-relayout")?.addEventListener("click", async () => {
+      const arranged = relayout(songs, Math.floor(Date.now() / 1000));
+      try {
+        let state = null;
+        for (const song of arranged) {
+          state = await api.now.updateSong(song.slot, {
+            title: song.title, artist: song.artist, album: song.album,
+            playCount: song.playCount, note: song.note,
+            posX: song.posX, posY: song.posY, rotationDeg: song.rotationDeg, zIndex: song.zIndex
+          });
+        }
+        if (state) onSongsChange(state.favoriteSongs, {playlistBackgroundImage: state.playlistBackgroundImage,
+          playlistTitle: state.playlistTitle, playlistSubtitle: state.playlistSubtitle});
+        toast("已重新排版");
+      } catch (reason) { toast(reason.message, true); }
     });
   }
 }

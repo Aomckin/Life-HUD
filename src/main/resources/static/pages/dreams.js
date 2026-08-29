@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.5.3";
-import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.5.3";
-import { empty, error, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.5.5";
+import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.5.5";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.5.5";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 let selectedId = location.hash.slice(1) || "";
@@ -45,7 +45,7 @@ function renderList(root, list) {
   root.querySelectorAll("[data-open]").forEach(card=>card.addEventListener("click",()=>{selectedId=card.dataset.open;history.replaceState({},"",`/dreams#${selectedId}`);renderDetail(root,selectedId);}));
   root.querySelectorAll("[data-delete]").forEach(button=>button.addEventListener("click",async event=>{
     event.stopPropagation();
-    if(!confirm(c.deleteConfirm))return;
+    if(!(await confirmDialog(c.deleteConfirm)))return;
     try{await api.dreams.purge(button.dataset.delete);toast("已删除");dreams(root);}
     catch(reason){toast(reason.message,true);}
   }));
@@ -140,8 +140,8 @@ async function renderDetail(root, id) {
         if(act==="complete")await api.dreams.complete(id);
         else if(act==="pause")await api.dreams.pause(id);
         else if(act==="resume")await api.dreams.resume(id);
-        else if(act==="archive"){if(!confirm(c.archiveConfirm))return;await api.dreams.archive(id);}
-        else if(act==="purge"){if(!confirm(c.deleteConfirm))return;await api.dreams.purge(id);selectedId="";dreams(root);return;}
+        else if(act==="archive"){if(!(await confirmDialog(c.archiveConfirm)))return;await api.dreams.archive(id);}
+        else if(act==="purge"){if(!(await confirmDialog(c.deleteConfirm)))return;await api.dreams.purge(id);selectedId="";dreams(root);return;}
         else if(act==="edit")return openEdit();
         toast("已更新");renderDetail(root,id);
       }catch(reason){toast(reason.message,true);}
@@ -170,7 +170,7 @@ async function renderDetail(root, id) {
       }catch(reason){toast(reason.message,true);}
     }));
     root.querySelectorAll("[data-delete-milestone]").forEach(button=>button.addEventListener("click",async()=>{
-      if(!confirm(c.deleteConfirm))return;
+      if(!(await confirmDialog(c.deleteConfirm)))return;
       try{await api.dreams.deleteMilestone(button.dataset.deleteMilestone);renderDetail(root,id);}
       catch(reason){toast(reason.message,true);}
     }));
@@ -179,7 +179,7 @@ async function renderDetail(root, id) {
       catch(reason){toast(reason.message,true);}
     }));
     root.querySelectorAll("[data-delete-goal]").forEach(button=>button.addEventListener("click",async()=>{
-      if(!confirm(c.deleteConfirm))return;
+      if(!(await confirmDialog(c.deleteConfirm)))return;
       try{await api.dreams.deleteGoal(button.dataset.deleteGoal);renderDetail(root,id);}
       catch(reason){toast(reason.message,true);}
     }));

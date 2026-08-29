@@ -3,3 +3,23 @@ export function toast(message, error = false) { const item = document.createElem
 export function empty(message) { return `<div class="empty-state">${escapeHtml(message)}</div>`; }
 export function error(message) { return `<div class="error-state">${escapeHtml(message)}</div>`; }
 export function icon(name) { const paths = {today:"M12 3v18M3 12h18",focus:"M12 3v18M3 12h18",tasks:"M5 12l4 4L19 6",dreams:"M4 18c4-9 8-12 16-12-1 8-6 12-16 12",rituals:"M12 3c3 4 5 7 5 10a5 5 0 1 1-10 0c0-3 2-6 5-10",life:"M12 20s-7-4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 6-7 10-7 10",media:"M5 5h14v14H5zM9 9l6 3-6 3z",journal:"M6 3h12v18H6zM9 7h6M9 11h6",now:"M12 7v5l3 2M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0",growth:"M5 17l5-5 3 3 6-7",settings:"M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"}; return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.today}"/></svg>`; }
+/** In-page confirmation modal replacing native window.confirm, which is
+ *  unreliable in embedded browsers (silently blocked or page-freezing). */
+export function confirmDialog(message) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.className = "board-modal-overlay";
+    overlay.innerHTML = `<div class="board-modal panel confirm-modal">
+      <p class="confirm-message">${escapeHtml(message)}</p>
+      <div class="row-actions confirm-actions">
+        <button class="button button-primary" data-confirm-ok>确定</button>
+        <button class="button button-ghost" data-confirm-cancel>取消</button>
+      </div></div>`;
+    const done = value => { overlay.remove(); resolve(value); };
+    overlay.querySelector("[data-confirm-ok]").addEventListener("click", () => done(true));
+    overlay.querySelector("[data-confirm-cancel]").addEventListener("click", () => done(false));
+    overlay.addEventListener("click", event => { if (event.target === overlay) done(false); });
+    document.body.append(overlay);
+    overlay.querySelector("[data-confirm-ok]").focus();
+  });
+}

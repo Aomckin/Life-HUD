@@ -34,26 +34,19 @@ const LEVEL_BOX = {
 
 /** Predefined hang points (normalized top-left + rank of the biggest level they host). */
 const ANCHORS = [
-  // middle band hosts the biggest cards (rank 4/3); top and bottom bands are
-  // sized so card + note never collide across bands at desktop height.
-  {x: .36, y: .38, rank: 4},
-  {x: .03, y: .38, rank: 3},
-  {x: .72, y: .38, rank: 3},
-  {x: .04, y: .05, rank: 2},
-  {x: .35, y: .05, rank: 2},
-  {x: .66, y: .05, rank: 2},
-  {x: .05, y: .78, rank: 1},
-  {x: .36, y: .78, rank: 1},
-  {x: .67, y: .78, rank: 1},
-  {x: .20, y: .05, rank: 0},
-  {x: .49, y: .05, rank: 0},
-  {x: .84, y: .05, rank: 0},
-  {x: .20, y: .78, rank: 0}
+  // scattered hang points — deliberately irregular, never a 3x3 grid;
+  // everything sits below the header zone (y >= ~0.12)
+  {x:.32, y:.34, rank:4},
+  {x:.02, y:.42, rank:3}, {x:.67, y:.36, rank:3},
+  {x:.05, y:.12, rank:2}, {x:.47, y:.08, rank:2}, {x:.75, y:.14, rank:2},
+  {x:.02, y:.76, rank:1}, {x:.32, y:.80, rank:1}, {x:.66, y:.72, rank:1},
+  {x:.88, y:.44, rank:0},
+  {x:.20, y:.16, rank:0}, {x:.87, y:.78, rank:0}, {x:.50, y:.84, rank:0}
 ];
 
 /** Deterministic per-slot jitter (never Math.random) for the scattered feel. */
 function jitter(slot, salt, spread) {
-  return (((slot * 53 + salt * 29) % (spread * 2 + 1)) - spread) / 1000;
+  return (((slot * 53 + salt * 29) % (spread * 2 + 1)) - spread) / 700;
 }
 function rotationFor(slot) {
   return ((slot * 41) % 9) - 4; // -4° ~ +4°
@@ -77,8 +70,8 @@ export function ensureLayout(songs) {
     const anchor = ANCHORS[chosen];
     const index = out.findIndex(s => s.slot === song.slot);
     out[index] = {...out[index],
-      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, 1, 22))),
-      posY: Math.min(.90, Math.max(.02, anchor.y + jitter(song.slot, 2, 16))),
+      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, 1, 30))),
+      posY: Math.min(.90, Math.max(.02, anchor.y + jitter(song.slot, 2, 20))),
       rotationDeg: rotationFor(song.slot),
       zIndex: song.playCount > 0 ? 20 + song.slot : 10 + song.slot,
       _anchor: chosen
@@ -110,12 +103,15 @@ export function renderBoard(container, options) {
   const songs = editable ? ensureLayout(state.favoriteSongs) : state.favoriteSongs;
   const usedAnchors = new Set(songs.map(anchorIndexOf));
   const emptySlots = [];
+  const taken = new Set(usedAnchors);
   for (let slot = 1; slot <= 10; slot++) {
     if (songs.some(s => s.slot === slot)) continue;
-    let anchor = ANCHORS.findIndex((a, i) => !usedAnchors.has(i) && !emptySlots.some(e => e.anchor === i));
-    if (anchor < 0) break;
-    usedAnchors.add(anchor);
-    emptySlots.push({slot, anchor});
+    const candidates = ANCHORS.map((a, i) => ({a, i})).filter(({i}) => !taken.has(i));
+    if (!candidates.length) break;
+    candidates.sort((p, q) => p.a.rank - q.a.rank); // outer / low-rank spots first
+    const chosen = candidates[0].i;
+    taken.add(chosen);
+    emptySlots.push({slot, anchor: chosen});
   }
   const featuredSlot = [...songs].sort((a, b) => (b.playCount - a.playCount) || (a.slot - b.slot))[0]?.slot;
   const decorations = ["tape", "pin", "clip"];
@@ -166,6 +162,7 @@ export function renderBoard(container, options) {
         <label class="text-link">${state.playlistBackgroundImage?c.bgReplace:c.bgAdd}
           <input type="file" id="board-bg-input" accept="image/*" hidden></label>
         ${state.playlistBackgroundImage?`<button class="text-link danger-link" id="board-bg-remove">${c.bgRemove}</button>`:""}
+        ${editable?`<button class="text-link" id="board-relayout">${c.relayout}</button>`:""}
       </div>`:""}
     </div>
     <div class="board-wall">
@@ -242,6 +239,9 @@ export function renderBoard(container, options) {
     container.querySelector("#board-bg-remove")?.addEventListener("click", async () => {
       try { onBackgroundChange(await api.now.clearBackground()); }
       catch (reason) { toast(reason.message, true); }
+    });
+    container.querySelector("#board-relayout")?.addEventListener("click", () => {
+      onSongsChange(relayout(songs), null);
     });
   }
 }

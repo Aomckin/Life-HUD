@@ -150,6 +150,7 @@ export const nowCopy = {
   noteEditorLabel: "这一阶段的一句话",
   noteEditorPlaceholder: "八月末…… 夏日落幕感……",
   editorTitle: "编辑歌曲",
+  relayout: "重新排版",
   addSong: "＋ 添加歌曲",
   songReplace: "替换",
   songRemove: "移除",

@@ -137,9 +137,9 @@ function renderStage(root) {
     <section class="panel"><div class="section-head"><h2>${c.images}</h2></div>
       <div class="now-gallery">
         ${current.images.map((img, index) => `<div class="gallery-item"><img src="${escapeHtml(img)}" alt="">
-          <button class="text-link danger-link" data-remove-image="${index}">${c.removeImage}</button></div>`).join("")}
+          <button class="gallery-remove" data-remove-image="${index}" title="${c.removeImage}" aria-label="${c.removeImage}">×</button></div>`).join("")}
         ${pendingImages.map((p, index) => `<div class="gallery-item pending"><img src="${p.preview}" alt="">
-          <button class="text-link danger-link" data-remove-pending="${index}">${c.removeImage}</button></div>`).join("")}
+          <button class="gallery-remove" data-remove-pending="${index}" title="${c.removeImage}" aria-label="${c.removeImage}">×</button></div>`).join("")}
         <label class="gallery-item gallery-add">${c.uploadImage}<input type="file" id="now-image-input" accept="image/*" multiple hidden></label>
       </div>
       ${pendingImages.length?`<div class="row-actions"><button class="button button-primary" id="save-now">${c.save}</button></div>`:""}
@@ -355,7 +355,7 @@ function renderSnapshot(root, snapshot) {
       ${snapshot.currentGoals.length?`<div><h3>${c.currentGoals}</h3><ul>${snapshot.currentGoals.map(g=>`<li>${escapeHtml(g.snapshotTitle)}</li>`).join("")}</ul></div>`:""}
     </div>
     ${snapshot.content?`<p class="snapshot-content">${escapeHtml(snapshot.content)}</p>`:""}
-    ${snapshot.images.map(img=>`<img class="dream-cover" src="${escapeHtml(img)}" alt="">`).join("")}
+    ${snapshot.images.length?`<div class="now-gallery">${snapshot.images.map(img=>`<div class="gallery-item"><img src="${escapeHtml(img)}" alt=""></div>`).join("")}</div>`:""}
   </section></div>`;
   root.querySelector("#back-now").addEventListener("click", () => { viewingSnapshot = null; now(root); });
 }

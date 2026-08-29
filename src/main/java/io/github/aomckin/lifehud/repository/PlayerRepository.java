@@ -28,6 +28,8 @@ public final class PlayerRepository {
         if (p.unlocked_titles == null) p.unlocked_titles = new java.util.ArrayList<>();
         if (p.daily_double_exp_date == null) p.daily_double_exp_date = "";
         if (p.equipped_title == null) p.equipped_title = "";
+        if (p.exp_conversion_remainder < 0) p.exp_conversion_remainder = 0;
+        if (p.energy_drift_date == null) p.energy_drift_date = "";
         if (p.special_task_slots < 1) p.special_task_slots = 1;
     }
 }

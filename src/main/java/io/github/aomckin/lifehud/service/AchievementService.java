@@ -32,7 +32,7 @@ public final class AchievementService {
         for (AchievementDefinition achievement : unlocked) {
             playerService.unlockAchievement(player, achievement.id());
             playerService.addCoin(player, achievement.rewardCoin());
-            playerService.addExp(player, achievement.rewardExp());
+            // v0.4: EXP only comes from actually spent Energy settled by GrowthEngine; achievements never grant it.
         }
         if (!unlocked.isEmpty()) {
             playerRepository.save(player);

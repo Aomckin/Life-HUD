@@ -16,7 +16,11 @@ import java.util.Optional;
 public class JsonRepository extends JsonFileStore {
     private static final List<String> DEFAULTS = List.of(
             "config.json", "actions.json", "level.json", "tasks.json", "special_tasks.json",
-            "shop.json", "achievements.json", "titles.json", "save.json");
+            "shop.json", "achievements.json", "titles.json", "save.json", "growth.json");
+    /** Editable content files seeded once into data/content/; user-tunable without recompiling. */
+    private static final List<String> CONTENT_DEFAULTS = List.of(
+            "content/growth-achievements.json", "content/growth-titles.json",
+            "content/growth-copy.json", "content/app.json", "content/energy-drift.json");
 
     public JsonRepository(ObjectMapper mapper, @Value("${lifehud.data-dir:}") String propertyRoot) {
         super(mapper, resolveRoot(propertyRoot));
@@ -25,9 +29,15 @@ public class JsonRepository extends JsonFileStore {
     @PostConstruct
     public void initialize() throws IOException {
         Files.createDirectories(root());
-        for (String name : DEFAULTS) {
+        seedDefaults(DEFAULTS);
+        seedDefaults(CONTENT_DEFAULTS);
+    }
+
+    private void seedDefaults(List<String> names) throws IOException {
+        for (String name : names) {
             Path target = resolve(name);
             if (!Files.exists(target)) {
+                Files.createDirectories(target.getParent());
                 try (var input = new ClassPathResource("data/" + name).getInputStream()) {
                     Files.copy(input, target);
                 }

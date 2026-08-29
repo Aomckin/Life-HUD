@@ -232,6 +232,8 @@ flowchart TD
 
 `LifeEvent` 是成长层唯一输入，持久化 `sourceType`、`sourceId`、`description` 与 schema `version`，同时兼容读取 v0.2-v0.3 的 `source` / `content` 字段。`GrowthEngine` 以 `eventId` 在 `growth-events.json` 中幂等处理，同一事件不会重复发放 EXP、Energy、Achievement 或 Title。
 
+核心循环（v0.4.2）：现实积极行为（Focus / Task）通过 LifeEvent 只产出 Energy（EARN，每 3 有效分钟 +1、单事件上限 80）；娱乐与生活消费由 `EntertainmentRecordService` 记录事实（`ENTERTAINMENT_RECORDED`）并复用 `EnergyLedgerService` 记为 SPEND 事件，`GrowthEngine` 按 clamp 后的实际消耗量（actualEnergySpent）结算 EXP——`pool = 余数 + 实际消耗`，每 `energy_per_exp`（默认 10）点沉淀 1 EXP，整数余数持久化在 `save.json` 的 `exp_conversion_remainder`；DECAY / ADJUST 不产生 EXP 也不触碰余数池；新的一天 Energy 由 `EnergyDriftService` 向基准值回归一次（`data/content/energy-drift.json` 的 midpoint 与 day_start_factor，ADJUST 记账）。Energy 变化带 `EnergyChangeType`（EARN / SPEND / DECAY / ADJUST）与 `requestedDelta` 落入 `energy-history.json`；数值参数全部外置在 `growth.json`，成就与称号目录及全部成长文案外置在 `data/content/`（由 `GrowthCatalog` / `GrowthCopy` / `AppInfo` 加载）。旧 v0.1 行动命令（`COMPLETE_ACTION` / `COMPLETE_TIMED_ACTION`）已在 facade 层停用，普通业务不存在绕过 GrowthEngine 的 EXP 增长路径。
+
 Growth 页面和 Achievement 检查不扫描全部 Focus / Task / LifeEvent。`GrowthStatsService` 将累计 Focus、有效分钟、最大单次时长、Task、LifeEvent 与 Milestone 数写入 `growth-stats.json`，日常事件只做增量更新；仅首次迁移和显式 `POST /api/growth/recalculate` 会扫描旧事实重建统计。`GrowthSnapshot` 按日期 upsert，趋势层再把累计快照转换为每日 Focus、EXP、Task 与 Energy 数据。
 
 Energy 当前值通过强类型 `EnergyState` 暴露，变化历史通过 append-only `EnergyRecord` 保存。Achievement 使用 `GrowthConditionType`（COUNT、TOTAL_DURATION、SINGLE_DURATION、STREAK、LEVEL、VALUE_THRESHOLD、CUSTOM）和 `GrowthMetric` 描述条件，避免把规则写死在页面或控制器。

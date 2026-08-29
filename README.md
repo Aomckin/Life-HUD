@@ -1,6 +1,6 @@
-# Life HUD v0.4.0 · Growth
+# Life HUD v0.4.2 · Growth（v0.4 封版）
 
-Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4.0 把 LifeEvent 变成统一成长输入：Focus 与 Task 只记录真实行为，Growth Engine 按 eventId 幂等推导 Energy、EXP、Level、Achievement 与 Title，并提供可编辑的人生 Milestone、每日 Growth Snapshot 和完整 Growth 页面。
+Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 最终核心循环：Focus / Task 等建设性活动赚取 Energy（每 3 有效分钟 +1）；在 Growth 页记录一次娱乐（游戏 / 看番 / 电影…），Energy 按你填写的消耗真实减少（SPEND），每 10 点实际消耗沉淀 +1 EXP 并推进 Level。Energy 看今天，EXP 看一段时间，Level 看很久以后；Achievement / Milestone / Title 只记录生活成长，不参与数值。
 
 ## 运行
 
@@ -24,9 +24,9 @@ Focus API 提供 Current Focus、Today Summary 和 History；Today 统计按 Ses
 
 ## Growth System
 
-`/growth` 包含 Overview、Achievements、Milestones 与 Titles。Overview 显示 Level / EXP、近期 Energy、当前称号、成长日志和 7 天轻量趋势；Milestone 支持创建、编辑、删除和 Pin；Title 支持装备与自定义。Today 的 Energy、EXP 和 Level 卡片会直接进入 Growth。
+`/growth` 包含 Overview、Achievements、Milestones 与 Titles。Overview 显示 Level / EXP、近期 Energy、当前称号、成长日志和 7 天轻量趋势，并提供"＋ 记录娱乐"快速入口：选择类型（游戏 / 看番 / 电影 / 视频 / 社交 / 外出娱乐 / 其他）、填写做了什么与 Energy 消耗，提交后经统一 Energy Ledger 真实扣减并结算 EXP。Overview 同时展示最近娱乐与 Energy History（时间 / 变化 / 类型 / 原因）。Milestone 支持创建、编辑、删除和 Pin；Title 支持装备与自定义。Today 的 Energy（今日 +获得 / −消耗）、EXP 和 Level 卡片会直接进入 Growth。
 
-Growth 使用 `growth-events.json` 保存每个 LifeEvent 的处理回执，以 eventId 防止刷新、重试或重算带来重复成长；`energy-history.json` 解释 Energy 的每次变化；`growth-snapshots.json` 每日幂等更新当前快照。旧存档中的 Energy、EXP、Achievement 和 Title 会继续保留，旧 Shop / Coin 字段只为兼容读取而存在，不再进入 UI 或命令主流程。
+Growth 使用 `growth-events.json` 保存每个 LifeEvent 的处理回执，以 eventId 防止刷新、重试或重算带来重复成长；`energy-history.json` 解释 Energy 的每次变化（EARN / SPEND / DECAY / ADJUST 及请求量）；`growth-snapshots.json` 每日幂等更新当前快照。数值参数全部外置在 `data/growth.json`，EXP 转换余数保存在 `save.json` 的 `exp_conversion_remainder`，小额消费不会被吃掉；新的一天 Energy 会向基准值回归（基准值与倍率在 `data/content/energy-drift.json`）。旧存档中的 Energy、EXP、Achievement 和 Title 会继续保留，旧 Shop / Coin 字段只为兼容读取而存在，不再进入 UI 或命令主流程。
 
 API、规则、持久化与迁移细节见 [GROWTH_V0.4.md](docs/GROWTH_V0.4.md)。
 

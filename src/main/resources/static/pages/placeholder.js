@@ -1,4 +1,4 @@
-import { api } from '../api/client.js?v=0.3.0-r5';
+import { api } from '../api/client.js?v=0.4.2';
 import { empty, error, escapeHtml, toast } from '../components/ui.js';
 
 const labels = {

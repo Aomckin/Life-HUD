@@ -30,8 +30,15 @@ export const api = {
   growth: {
     overview: () => request("/api/growth"),
     history: (limit = 30) => request(`/api/growth/history?limit=${limit}`),
+    energyHistory: () => request("/api/growth/energy-history"),
     snapshots: (days = 7) => request(`/api/growth/snapshots?days=${days}`),
     recalculate: () => post("/api/growth/recalculate")
+  },
+  entertainment: {
+    all: () => request("/api/entertainment"),
+    create: body => post("/api/entertainment", body),
+    update: (id, body) => patch(`/api/entertainment/${id}`, body),
+    remove: id => remove(`/api/entertainment/${id}`)
   },
   achievements: () => request("/api/achievements"),
   milestones: {

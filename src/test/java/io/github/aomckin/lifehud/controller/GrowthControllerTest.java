@@ -21,7 +21,7 @@ class GrowthControllerTest {
     @Autowired MockMvc mvc; @Autowired ObjectMapper mapper;
 
     @Test void growthMilestoneSnapshotAndCustomTitleApisWork() throws Exception {
-        mvc.perform(get("/api/growth")).andExpect(status().isOk()).andExpect(jsonPath("$.version").value("0.4.0"));
+        mvc.perform(get("/api/growth")).andExpect(status().isOk()).andExpect(jsonPath("$.version").value("0.4.2"));
         String milestone=mvc.perform(post("/api/milestones").contentType("application/json").content("{\"title\":\"Life HUD v0.4\",\"occurredAt\":\"2026-08-29\",\"category\":\"项目\",\"pinned\":true}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.pinned").value(true)).andReturn().getResponse().getContentAsString();
         String milestoneId=mapper.readTree(milestone).path("id").asText();
@@ -36,5 +36,19 @@ class GrowthControllerTest {
         mvc.perform(get("/api/growth/snapshots")).andExpect(status().isOk()).andExpect(jsonPath("$[0].milestoneCount").value(1));
         mvc.perform(get("/api/growth/snapshots")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
         mvc.perform(delete("/api/milestones/{id}",milestoneId)).andExpect(status().isNoContent());
+    }
+
+    @Test void energySpendSettlesExpFromActualAmountAndRejectsInvalidInput() throws Exception {
+        mvc.perform(post("/api/growth/energy/spend").contentType("application/json").content("{\"amount\":10,\"reason\":\"看完一部纪录片\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requestedDelta").value(-10))
+                .andExpect(jsonPath("$.actualDelta").value(-10))
+                .andExpect(jsonPath("$.expGained").value(1));
+        mvc.perform(get("/api/growth/energy-history")).andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.type == 'SPEND')].requestedDelta").value(-10));
+        mvc.perform(post("/api/growth/energy/adjust").contentType("application/json").content("{\"delta\":5,\"reason\":\"修正\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.expGained").value(0));
+        mvc.perform(post("/api/growth/energy/spend").contentType("application/json").content("{\"amount\":0}"))
+                .andExpect(status().isBadRequest());
     }
 }

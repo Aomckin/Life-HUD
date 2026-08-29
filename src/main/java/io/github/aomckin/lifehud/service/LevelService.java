@@ -5,9 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class LevelService {
+    /** Loop guard against corrupt saves; the curve itself has no level cap since v0.4. */
+    private static final int LEVEL_CEILING = 10_000;
     private final JsonNode config;
     public LevelService(JsonNode config){this.config=config;}
-    public Map<String,Object> status(int totalExp){int level=config.path("initial_level").asInt(1),remaining=Math.max(0,totalExp);while(remaining>=requiredExp(level)&&level<10000){remaining-=requiredExp(level);level++;}Map<String,Object> m=new LinkedHashMap<>();m.put("level",level);m.put("current_exp",remaining);m.put("required_exp",requiredExp(level));m.put("is_max_level",false);return m;}
+    public Map<String,Object> status(int totalExp){int level=config.path("initial_level").asInt(1),remaining=Math.max(0,totalExp);while(remaining>=requiredExp(level)&&level<LEVEL_CEILING){remaining-=requiredExp(level);level++;}Map<String,Object> m=new LinkedHashMap<>();m.put("level",level);m.put("current_exp",remaining);m.put("required_exp",requiredExp(level));m.put("is_max_level",false);return m;}
     /** Preserves the historical curve while removing the old hard level cap. */
     public int requiredExp(int level){int initial=config.path("initial_level").asInt(1);return config.path("base_required_exp").asInt(20)+((Math.max(initial,level)-initial)/Math.max(1,config.path("step_levels").asInt(5)))*config.path("step_increase_exp").asInt(10);}
     public int level(int totalExp){return (int)status(totalExp).get("level");}

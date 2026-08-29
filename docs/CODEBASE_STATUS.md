@@ -1,6 +1,6 @@
 # Life HUD 代码现状速览
 
-> v0.4.0 Growth 更新（2026-08-29）：LifeEvent → GrowthEngine 已成为 Focus / Task 成长主链；Growth、Achievement、Milestone、Title 与 Snapshot API 和页面已落地。Shop / Coin 仅保留旧 JSON 兼容字段，已从主视图和购买命令断开。详见 [GROWTH_V0.4.md](GROWTH_V0.4.md)。
+> **v0.4 已封版（2026-08-29，最终版本号 v0.4.2）**。最终核心循环：Focus / Task → Energy EARN（每 3 有效分钟 +1，单事件上限 80）；娱乐记录（`EntertainmentRecordService`，`/api/entertainment`）→ 统一 Energy Ledger SPEND → 每 10 点实际消耗 +1 EXP（整数余数池 `exp_conversion_remainder`）→ Level。新的一天 Energy 向基准值回归（`midpoint=90`、`day_start_factor=0.75`，内容文件 `data/content/energy-drift.json`，每日最多一次、ADJUST 记账、不产 EXP）。Energy 不足时照常记录现实、按实际剩余结算；娱乐记录的 energyCost 手动填写、不可修改，删除不回滚账目。Achievement / Milestone / Title 只记录不参与数值；Shop / Coin / 旧行动命令全部停用。参数在 `data/growth.json`，内容在 `data/content/` + `static/content/copy.js`。Snapshot 的娱乐字段扩展留给 v0.5。详见 [GROWTH_V0.4.md](GROWTH_V0.4.md)。
 
 > 下文保留 v0.3.0 的重构背景，供调用链追溯。
 

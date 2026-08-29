@@ -1,4 +1,5 @@
-import { api } from "../api/client.js?v=0.3.0-r5";
+import { api } from "../api/client.js?v=0.4.2";
+import { modeLabels, growthCopy } from "../content/copy.js?v=0.4.2";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const formatDate = value => new Intl.DateTimeFormat("zh-CN", {
@@ -59,7 +60,7 @@ export async function dashboard(root) {
   }
 }
 
-const MODE_LABELS = {IRON_CURTAIN: "铁幕", POMODORO: "番茄", FREE: "自由专注"};
+const MODE_LABELS = modeLabels;
 const formatFocusTime = seconds => {
   const total = Math.max(0, Math.floor(seconds || 0));
   if (total > 0 && total < 60) return "<1min";
@@ -85,11 +86,15 @@ function renderMetrics(root, state, currentFocus, focusToday, growth) {
   const title = escapeHtml(growth.currentTitle || "称号仍在积累");
   const expProgress = Math.min(100, Math.round(growth.currentExp / growth.requiredExp * 100));
   const currentEnergy = Math.min(100, Math.round(growth.energy / growth.energyMax * 100));
+  const energyFlow = (growth.todayEnergyEarn || growth.todayEnergySpend)
+    ? `今日 +${growth.todayEnergyEarn || 0} / −${growth.todayEnergySpend || 0}`
+    : growthCopy.energyFlowEmpty;
+  const expNote = growth.todayExpDelta ? `今日 +${growth.todayExpDelta} · 长期积累` : growthCopy.expAccumulating;
 
   root.querySelector("#metrics").innerHTML = [
-    '<article class="card card-hover metric metric-energy growth-link" data-growth="overview"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">' + (growth.todayEnergyDelta ? `今日 ${growth.todayEnergyDelta > 0 ? "+" : ""}${growth.todayEnergyDelta}` : "今天的近期状态") + '</div></article>',
+    '<article class="card card-hover metric metric-energy growth-link" data-growth="overview"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">' + energyFlow + '</div></article>',
     '<article class="card card-hover metric metric-level growth-link" data-growth="overview"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">距下一阶段 ' + growth.expToNext + ' EXP · ' + title + '</div></article>',
-    '<article class="card card-hover metric metric-exp growth-link" data-growth="overview"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">' + (growth.todayExpDelta ? `今日 +${growth.todayExpDelta}` : "一点一点，累积成新的阶段。") + '</div></article>',
+    '<article class="card card-hover metric metric-exp growth-link" data-growth="overview"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">' + expNote + '</div></article>',
     currentFocus
       ? '<article class="card card-hover metric metric-focus is-active"><div class="metric-label">正在 Focus</div><div class="metric-value metric-focus-title" title="' + escapeHtml(currentFocus.title) + '">' + escapeHtml(currentFocus.title) + '</div><div class="metric-note">' + escapeHtml(`${MODE_LABELS[currentFocus.mode]} · ${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`) + '</div><button class="metric-focus-action" type="button">返回 Focus →</button></article>'
       : '<article class="card card-hover metric metric-focus"><div class="metric-label">专注 · Focus</div><div class="metric-value">' + formatFocusTime(focusToday.totalSeconds) + '</div><div class="metric-note">' + (focusToday.sessionCount ? `今日 ${focusToday.sessionCount} 次 Session` : "今天还没有留下专注时间") + '</div><button class="metric-focus-action" type="button">开始 Focus →</button></article>'

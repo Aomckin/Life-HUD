@@ -9,6 +9,7 @@ import io.github.aomckin.lifehud.dto.OperationResult;
 import io.github.aomckin.lifehud.repository.LogRepository;
 import io.github.aomckin.lifehud.service.ActionService;
 import io.github.aomckin.lifehud.service.GameQueryService;
+import io.github.aomckin.lifehud.service.GrowthCopy;
 import io.github.aomckin.lifehud.service.ProgressionService;
 import io.github.aomckin.lifehud.service.ShopService;
 import io.github.aomckin.lifehud.service.TaskService;
@@ -22,14 +23,14 @@ public class GameCommandFacade {
     private final ActionService actionService; private final TaskService taskService;
     private final ShopService shopService; private final TitleService titleService;
     private final ProgressionService progressionService; private final GameQueryService queries;
-    private final Player player; private final LogRepository logs;
+    private final Player player; private final LogRepository logs; private final GrowthCopy copy;
 
     public GameCommandFacade(ActionService actionService, TaskService taskService, ShopService shopService,
                              TitleService titleService, ProgressionService progressionService,
-                             GameQueryService queries, Player player, LogRepository logs) {
+                             GameQueryService queries, Player player, LogRepository logs, GrowthCopy copy) {
         this.actionService = actionService; this.taskService = taskService; this.shopService = shopService;
         this.titleService = titleService; this.progressionService = progressionService; this.queries = queries;
-        this.player = player; this.logs = logs;
+        this.player = player; this.logs = logs; this.copy = copy;
     }
 
     public java.util.Map<String, Object> state() { return queries.state(); }
@@ -40,12 +41,13 @@ public class GameCommandFacade {
         if (command.type() == null) return queries.error("未知指令");
         return switch (command.type()) {
             case GameCommands.INITIALIZE_PROGRESSION -> progressionService.result(true, "", player.exp, List.of());
-            case GameCommands.COMPLETE_ACTION -> actionService.completeNow(payload.path("action_name").asText());
-            case GameCommands.COMPLETE_TIMED_ACTION -> actionService.completeTimed(
-                    payload.path("action_name").asText(), toOption(payload.path("option")));
+            // v0.4.2: retired legacy actions granted EXP directly, bypassing GrowthEngine.
+            // Constructive and entertainment activity will re-enter via LifeEvent / EnergyLedgerService in later modules.
+            case GameCommands.COMPLETE_ACTION, GameCommands.COMPLETE_TIMED_ACTION ->
+                    queries.error(copy.actionDisabledMessage());
             case GameCommands.COMPLETE_DAILY_TASK -> taskService.completeDaily(payload.path("index").asInt(-1));
             case GameCommands.COMPLETE_SPECIAL_TASK -> taskService.completeSpecial(payload.path("index").asInt(-1));
-            case GameCommands.BUY_SHOP_ITEM -> queries.error("v0.4 已停用商店与金币经济");
+            case GameCommands.BUY_SHOP_ITEM -> queries.error(copy.shopDisabledMessage());
             case GameCommands.EQUIP_TITLE -> titleService.equip(payload.path("title_id").asText());
             case GameCommands.REFRESH_DAILY_TASKS -> taskService.refresh();
             case GameCommands.LOG_ABANDONED_ACTION -> {

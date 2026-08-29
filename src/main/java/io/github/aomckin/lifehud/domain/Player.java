@@ -18,5 +18,9 @@ public class Player {
     public List<String> unlocked_titles = new ArrayList<>();
     public String equipped_title = "";
     public int completed_timed_actions;
+    /** Unspent tail of the Energy→EXP conversion pool; only SPEND adds to it, 0 <= value < energy_per_exp. */
+    public int exp_conversion_remainder;
+    /** Last date (ISO) the day-boundary Energy drift toward the midpoint was applied. */
+    public String energy_drift_date = "";
     @JsonIgnore public int maxEnergy;
 }

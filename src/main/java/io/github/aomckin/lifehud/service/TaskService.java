@@ -18,12 +18,12 @@ public final class TaskService {
     private final LogRepository logs;
     private final GameQueryService queries;
     private final LifeEventService events;
-    private final GrowthEngine growth;
+    private final GrowthCopy copy;
 
     public TaskService(DailyTaskManager dailyTasks, SpecialTaskManager specialTasks,
-                       LogRepository logs, GameQueryService queries, LifeEventService events, GrowthEngine growth) {
+                       LogRepository logs, GameQueryService queries, LifeEventService events, GrowthCopy copy) {
         this.dailyTasks = dailyTasks; this.specialTasks = specialTasks;
-        this.logs = logs; this.queries = queries; this.events = events; this.growth = growth;
+        this.logs = logs; this.queries = queries; this.events = events; this.copy = copy;
     }
 
     public OperationResult completeDaily(int index) {
@@ -31,10 +31,10 @@ public final class TaskService {
         DailyTask task = dailyTasks.tasks().get(index);
         int[] reward = dailyTasks.finish(index);
         if (reward[0] > 0 || reward[1] > 0) {
-            var event=events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成每日任务",List.of("task"),
-                    Map.of("taskId",task.id,"taskSource","daily","baseEnergy",reward[0],"baseExp",reward[1]));
-            growth.process(event);
-            logs.action("完成任务：" + task.name, "成长记录已同步", 0);
+            // baseExp is deprecated: GrowthRules only reads baseEnergy, EXP comes solely from Energy SPEND.
+            events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成每日任务",List.of("task"),
+                    Map.of("taskId",task.id,"taskSource","daily","baseEnergy",reward[0]));
+            logs.action(copy.taskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
         return new OperationResult(true,"任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
                 GameViewAssembler.map("task",task.toMap(),"source","daily"))),queries.state());
@@ -45,10 +45,10 @@ public final class TaskService {
         SpecialTask task = specialTasks.tasks().get(index);
         int[] reward = specialTasks.finish(index);
         if (reward[0] > 0 || reward[1] > 0) {
-            var event=events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
-                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",0,"baseExp",reward[1]));
-            growth.process(event);
-            logs.action("完成特殊任务：" + task.name, "成长记录已同步", 0);
+            // Special tasks had no Energy field; their legacy exp value becomes the Energy reward (capped by growth.json).
+            events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
+                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",task.exp));
+            logs.action(copy.specialTaskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }
         return new OperationResult(true,"特殊任务完成",List.of(new GameEvent(GameEvents.TASK_COMPLETE,
                 GameViewAssembler.map("task",task.toMap(),"source","special"))),queries.state());

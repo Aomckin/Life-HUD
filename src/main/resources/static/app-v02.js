@@ -1,10 +1,10 @@
 import { sidebar, routes } from './modules/navigation.js';
-import { dashboard } from './pages/dashboard.js?v=0.3.0-r5';
+import { dashboard } from './pages/dashboard.js?v=0.4.2';
 import { placeholder } from './pages/placeholder.js';
 import { settings } from './pages/settings.js';
-import { focus } from './pages/focus.js?v=0.3.0-r5';
-import { growth } from './pages/growth.js?v=0.4.0';
-import { timeline } from './pages/timeline.js?v=0.4.0';
+import { focus } from './pages/focus.js?v=0.4.2';
+import { growth } from './pages/growth.js?v=0.4.2';
+import { timeline } from './pages/timeline.js?v=0.4.2';
 import { appearance } from './modules/appearance.js';
 import { toast } from './components/ui.js';
 

@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
+/**
+ * @deprecated v0.4.2 legacy v0.1 action path. Its commands are rejected at {@code GameCommandFacade}
+ * because they granted EXP directly, bypassing GrowthEngine. Retained only as reference for a future
+ * LifeEvent-based re-wiring; never call it from new code.
+ */
+@Deprecated
 @Service
 public final class ActionService {
     private final Player player;

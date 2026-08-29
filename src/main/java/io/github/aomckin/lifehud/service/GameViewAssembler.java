@@ -73,7 +73,7 @@ public final class GameViewAssembler {
         List<Map<String, Object>> out = new ArrayList<>();
         for (int i = 0; i < tasks.size(); i++) { DailyTask t = tasks.get(i);
             out.add(map("id", t.id, "name", t.name,
-                    "detail_text", String.format("能量 %+d / EXP +%d / %s", t.reward, t.exp, t.done ? "已完成" : "未完成"),
+                    "detail_text", String.format("Energy +%d / %s", t.reward, t.done ? "已完成" : "未完成"),
                     "button_text", t.done ? "已完成" : "完成", "button_state", t.done ? "disabled" : "normal",
                     "command_payload", map("index", i)));
         } return out;
@@ -83,7 +83,7 @@ public final class GameViewAssembler {
         List<Map<String, Object>> out = new ArrayList<>();
         for (int i = 0; i < tasks.size(); i++) { SpecialTask t = tasks.get(i);
             out.add(map("id", t.id, "name", t.name,
-                    "detail_text", "EXP +" + t.exp + " / " + (t.done ? "已完成" : "未完成"),
+                    "detail_text", "Energy +" + t.exp + " / " + (t.done ? "已完成" : "未完成"),
                     "button_text", t.done ? "已完成" : "完成", "button_state", t.done ? "disabled" : "normal",
                     "command_payload", map("index", i)));
         } return out;

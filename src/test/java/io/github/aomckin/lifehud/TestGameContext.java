@@ -32,8 +32,8 @@ public final class TestGameContext extends GameCore {
                             AchievementSystem achievements, ShopManager shop, GameViewAssembler views,
                             GameQueryService queries, AchievementService achievementService,
                             ActionService action, TaskService task, ShopService shopService, TitleService title,
-                            ProgressionService progression) {
-        super(action, task, shopService, title, progression, queries, player, logs);
+                            ProgressionService progression, GrowthCopy copy) {
+        super(action, task, shopService, title, progression, queries, player, logs, copy);
         this.json=json; this.players=players; this.mapper=mapper; this.config=config; this.actions=actions;
         this.player=player; this.daily=daily; this.special=special; this.levels=levels; this.titles=titles;
         this.achievements=achievements; this.shop=shop; this.views=views; this.achievementService=achievementService;
@@ -53,18 +53,28 @@ public final class TestGameContext extends GameCore {
         ProgressionService progression = new ProgressionService(achievementService, levels, queries, views);
         ActionService action = new ActionService(player, actions, players, playerService, titles, progression, logs, queries);
         LifeEventRepository lifeEventRepository = new LifeEventRepository(json, mapper);
-        LifeEventService lifeEvents = new LifeEventService(lifeEventRepository);
         GrowthRecordRepository growthRecords = new GrowthRecordRepository(json, mapper);
         FocusSessionRepository focusSessions = new FocusSessionRepository(json, mapper);
         MilestoneRepository milestones = new MilestoneRepository(json, mapper);
         GrowthStatsService growthStats = new GrowthStatsService(new GrowthStatsRepository(json, mapper), focusSessions,
                 lifeEventRepository, milestones);
-        GrowthEngine growth = new GrowthEngine(new GrowthRules(), growthRecords, player, playerService, players,
-                levels, lifeEvents, growthStats);
-        TaskService task = new TaskService(daily, special, logs, queries, lifeEvents, growth);
+        // Wire the same event→engine auto-settlement the Spring context provides via ObjectProvider.
+        final GrowthEngine[] engineHolder = new GrowthEngine[1];
+        LifeEventService lifeEvents = new LifeEventService(lifeEventRepository, new org.springframework.beans.factory.ObjectProvider<GrowthEngine>() {
+            @Override public GrowthEngine getObject() { return engineHolder[0]; }
+            @Override public GrowthEngine getObject(Object... args) { return engineHolder[0]; }
+            @Override public GrowthEngine getIfAvailable() { return engineHolder[0]; }
+            @Override public GrowthEngine getIfUnique() { return engineHolder[0]; }
+        });
+        GrowthCopy growthCopy = new GrowthCopy(json);
+        GrowthCatalog growthCatalog = new GrowthCatalog(json, mapper);
+        GrowthEngine growth = new GrowthEngine(new GrowthRules(new GrowthEconomy(json), growthCopy, config),
+                growthRecords, player, playerService, players, levels, lifeEvents, growthStats, growthCatalog, growthCopy);
+        engineHolder[0] = growth;
+        TaskService task = new TaskService(daily, special, logs, queries, lifeEvents, growthCopy);
         ShopService shopService = new ShopService(shop, daily, special, logs, queries); TitleService title = new TitleService(titles, queries);
         return new TestGameContext(json, players, logs, mapper, config, actions, player, daily, special, levels, titles,
-                achievements, shop, views, queries, achievementService, action, task, shopService, title, progression);
+                achievements, shop, views, queries, achievementService, action, task, shopService, title, progression, growthCopy);
     }
 
     public JsonRepository json() { return json; } public PlayerRepository players() { return players; }

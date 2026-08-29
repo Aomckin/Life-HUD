@@ -20,7 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public final class ImageStorageService {
     private static final Set<String> ALLOWED = Set.of("image/png", "image/jpeg", "image/webp", "image/gif");
-    private static final long MAX_BYTES = 8 * 1024 * 1024;
+    private static final long MAX_BYTES = 64L * 1024 * 1024; // matches the multipart limit in application.yml
     public static final String PUBLIC_PREFIX = "/uploads/";
     private final JsonFileStore files;
 

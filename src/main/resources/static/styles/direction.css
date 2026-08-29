@@ -86,9 +86,11 @@
 .now-hero-text h1 { margin:0 0 var(--space-1); font-size:2rem; letter-spacing:.04em; }
 .now-hero-text p { margin:0; color:var(--text-secondary); letter-spacing:.12em; }
 .now-hero-edit { display:grid; gap:var(--space-3); }
-.song-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:var(--space-4); }
-.song-card { position:relative; display:grid; gap:var(--space-2); padding:var(--space-4); }
-.song-cover { width:100%; height:130px; object-fit:cover; border-radius:var(--radius-md); }
+.song-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-5); }
+.song-card { position:relative; display:grid; gap:var(--space-3); padding:var(--space-4); transition:transform 220ms var(--ease-emphasized),box-shadow 220ms var(--ease-emphasized); animation:song-in 420ms var(--ease-emphasized) both; animation-delay:calc(var(--i,1) * 45ms); }
+.song-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+@keyframes song-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.song-cover { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:var(--radius-md); }
 .song-cover-empty { display:grid; place-items:center; font-size:2.4rem; color:var(--sky-400); background:var(--accent-soft); }
 .song-info { display:grid; gap:2px; }
 .song-info strong { font-size:1rem; }
@@ -96,7 +98,7 @@
 .song-slot { position:absolute; top:var(--space-3); right:var(--space-3); color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:.85rem; }
 .song-audio { width:100%; height:32px; }
 .song-actions { justify-content:flex-end; }
-.song-slot-empty { display:grid; place-items:center; gap:var(--space-2); min-height:210px; border:1px dashed var(--border-default); border-radius:var(--radius-lg); background:transparent; color:var(--text-muted); cursor:pointer; font-size:.95rem; }
+.song-slot-empty { display:grid; place-items:center; gap:var(--space-3); min-height:230px; border:1px dashed var(--border-soft); border-radius:var(--radius-lg); background:rgb(255 255 255 / .35); color:var(--text-muted); cursor:pointer; font-size:.95rem; transition:border-color 160ms ease,color 160ms ease; animation:song-in 420ms var(--ease-emphasized) both; animation-delay:calc(var(--i,1) * 45ms); }
 .song-slot-empty:hover { border-color:var(--sky-400); color:var(--sky-700); }
 .song-slot-empty .song-slot { position:static; font-size:1.1rem; }
 .song-card.readonly .song-actions { display:none; }
@@ -115,9 +117,9 @@
 .goal-chip small { color:var(--text-muted); }
 #direction-picker h3 { margin:var(--space-3) 0 var(--space-2); font-size:.95rem; color:var(--sky-800); }
 
-.now-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:var(--space-3); }
-.gallery-item { position:relative; display:grid; }
-.gallery-item img { width:100%; height:130px; object-fit:cover; border-radius:var(--radius-md); }
+.now-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-4); align-items:start; }
+.gallery-item { position:relative; display:grid; gap:var(--space-1); }
+.gallery-item img { width:100%; height:auto; max-height:460px; object-fit:contain; border-radius:var(--radius-md); background:var(--surface-glass-strong); }
 .gallery-item .text-link { margin-top:var(--space-1); }
 .gallery-add { place-items:center; min-height:130px; border:1px dashed var(--border-default); border-radius:var(--radius-md); color:var(--text-muted); cursor:pointer; text-align:center; }
 .gallery-add:hover { border-color:var(--sky-400); color:var(--sky-700); }

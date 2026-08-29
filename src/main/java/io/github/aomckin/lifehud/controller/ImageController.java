@@ -16,4 +16,8 @@ public final class ImageController {
         String path=images.store(file);
         return Map.of("path",path,"url",path);
     }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE)
+    public Map<String,String> tooLarge(){return Map.of("message","文件太大：单张图片不能超过 64MB");}
 }

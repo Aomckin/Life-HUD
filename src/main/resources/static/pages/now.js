@@ -33,7 +33,7 @@ export async function now(root) {
 function renderStage(root) {
   const song = slot => current.favoriteSongs.find(s => s.slot === slot);
   const songCard = (song, slot) => song ? `
-    <article class="song-card">
+    <article class="song-card" style="--i:${slot}">
       ${song.coverPath?`<img class="song-cover" src="${escapeHtml(song.coverPath)}" alt="">`
         :`<div class="song-cover song-cover-empty">♫</div>`}
       <div class="song-info"><strong>${escapeHtml(song.title)}</strong>
@@ -46,7 +46,7 @@ function renderStage(root) {
         <button class="text-link danger-link" data-song-remove="${slot}">${c.songRemove}</button>
       </div>
     </article>`
-    : `<button class="song-card song-slot-empty" data-song-add="${slot}">
+    : `<button class="song-card song-slot-empty" style="--i:${slot}" data-song-add="${slot}">
         <span class="song-slot">${String(slot).padStart(2,"0")}</span>${c.addSong}</button>`;
 
   const itemEditor = (key, index, item) => `

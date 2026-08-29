@@ -17,6 +17,7 @@ body.iron-curtain-active::after { background:linear-gradient(rgb(20 49 69 / calc
 .field input,.field textarea,.custom-minutes { width:100%; border:1px solid var(--border-default); border-radius:var(--radius-md); background:rgb(255 255 255 / 72%); color:var(--text-primary); outline:0; }
 .field input::placeholder,.field textarea::placeholder,.custom-minutes input::placeholder { color:rgb(76 104 125 / 58%); }
 .field input { height:48px; padding:0 var(--space-4); }
+.field input[type="file"] { height:auto; padding:var(--space-2) 0; border:0; background:transparent; line-height:1.6; }
 .field textarea { resize:vertical; padding:var(--space-3) var(--space-4); }
 .field input:focus,.field textarea:focus,.custom-minutes:focus-within { border-color:var(--sky-500); box-shadow:0 0 0 3px rgb(93 188 245 / 14%); }
 .mode-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-2); margin:0; padding:0; border:0; }

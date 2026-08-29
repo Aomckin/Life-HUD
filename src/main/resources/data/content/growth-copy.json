@@ -1,0 +1,73 @@
+{
+  "reason": {
+    "focusEnergy": "有效 Focus {minutes} 分钟",
+    "task": "完成任务",
+    "spend": "消费 Energy",
+    "earnRecorded": "记录 Energy 收入",
+    "decay": "Energy 自然衰减",
+    "adjust": "Energy 调整",
+    "testExcluded": "测试记录不计入成长",
+    "lifeEventRecorded": "已记录生活事件"
+  },
+  "derived": {
+    "levelUpTitle": "Level Up",
+    "levelUpDescription": "Lv.{before} → Lv.{after}",
+    "growthTag": "growth",
+    "achievementTag": "achievement",
+    "titleTag": "title",
+    "milestoneTag": "milestone"
+  },
+  "legacy": {
+    "achievementDescription": "从旧版 Life HUD 保留下来的成长记录。",
+    "titleDescription": "从旧版 Life HUD 保留下来的称号。",
+    "hiddenAchievementName": "隐藏成就",
+    "hiddenAchievementDescription": "在生活里偶然遇见它。"
+  },
+  "title": {
+    "noSelection": "尚未选择",
+    "equippedDescription": "设为当前称号",
+    "unequippedTitle": "取消当前称号",
+    "unequippedDescription": "已取消装备称号"
+  },
+  "milestone": {
+    "defaultCategory": "生活"
+  },
+  "entertainment": {
+    "recordedDescription": "记录了一次娱乐",
+    "updatedDescription": "娱乐记录已更新",
+    "deletedDescription": "娱乐记录已删除；Energy 与 EXP 历史不会自动回滚"
+  },
+  "drift": {
+    "reason": "新的一天，Energy 向基准值 {midpoint} 回归"
+  },
+  "direction": {
+    "dreamCreated": "立下了一个新的梦想「{title}」",
+    "dreamCompleted": "实现了梦想「{title}」",
+    "goalCreated": "在梦想下立了一个新方向「{title}」",
+    "goalCompleted": "完成了方向「{title}」",
+    "dreamMilestoneCompleted": "完成了梦想里程碑「{title}」",
+    "ritualCompleted": "完成了一次仪式「{title}」",
+    "nowSnapshotCreated": "保存了一份「现在。」快照",
+    "nowSnapshotDeleted": "删除了一份「现在。」快照",
+    "nowSongAdded": "把「{title}」放进了「现在。」歌单的第 {slot} 位",
+    "nowSongReplaced": "在「现在。」歌单的第 {slot} 位换上了「{title}」",
+    "nowSongRemoved": "把「{title}」从「现在。」歌单取下了",
+    "nowBackgroundSet": "为「现在。」歌单挂上了新的舞台背景",
+    "nowBackgroundCleared": "取下了「现在。」歌单的舞台背景",
+    "nowStageItemAdded": "现在正在{verb}「{title}」",
+    "nowStageItemRemoved": "不再{verb}「{title}」了",
+    "nowImagesAdded": "往「现在。」贴上了 {count} 张图片",
+    "nowImagesRemoved": "从「现在。」揭下了 {count} 张图片",
+    "nowDirectionPicked": "把「{title}」放进了「现在。」的当下",
+    "nowDirectionReleased": "把「{title}」移出了「现在。」的当下"
+  },
+  "command": {
+    "shopDisabled": "v0.4 已停用商店与金币经济",
+    "actionDisabled": "v0.4.2 已停用旧行动命令；积极与娱乐行为将经由 LifeEvent 与统一 Energy 接口重新接入"
+  },
+  "task": {
+    "logCompleted": "完成任务：{name}",
+    "logSpecialCompleted": "完成特殊任务：{name}",
+    "logGrowthSynced": "成长记录已同步"
+  }
+}

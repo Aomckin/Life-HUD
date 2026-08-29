@@ -58,6 +58,26 @@ public final class GrowthCopy {
     public String dreamMilestoneCompletedDescription(String title) { return format("direction.dreamMilestoneCompleted", "title", title); }
     public String ritualCompletedDescription(String title) { return format("direction.ritualCompleted", "title", title); }
     public String nowSnapshotCreatedDescription() { return text("direction.nowSnapshotCreated"); }
+    public String nowSnapshotDeletedDescription() { return text("direction.nowSnapshotDeleted"); }
+    public String nowSongAddedDescription(int slot, String title) {
+        return format("direction.nowSongAdded", "slot", slot).replace("{title}", title);
+    }
+    public String nowSongReplacedDescription(int slot, String title) {
+        return format("direction.nowSongReplaced", "slot", slot).replace("{title}", title);
+    }
+    public String nowSongRemovedDescription(String title) { return format("direction.nowSongRemoved", "title", title); }
+    public String nowBackgroundSetDescription() { return text("direction.nowBackgroundSet"); }
+    public String nowBackgroundClearedDescription() { return text("direction.nowBackgroundCleared"); }
+    public String nowStageItemAddedDescription(String verb, String title) {
+        return format("direction.nowStageItemAdded", "verb", verb).replace("{title}", title);
+    }
+    public String nowStageItemRemovedDescription(String verb, String title) {
+        return format("direction.nowStageItemRemoved", "verb", verb).replace("{title}", title);
+    }
+    public String nowImagesAddedDescription(int count) { return format("direction.nowImagesAdded", "count", count); }
+    public String nowImagesRemovedDescription(int count) { return format("direction.nowImagesRemoved", "count", count); }
+    public String nowDirectionPickedDescription(String title) { return format("direction.nowDirectionPicked", "title", title); }
+    public String nowDirectionReleasedDescription(String title) { return format("direction.nowDirectionReleased", "title", title); }
 
     public String shopDisabledMessage() { return text("command.shopDisabled"); }
     public String actionDisabledMessage() { return text("command.actionDisabled"); }

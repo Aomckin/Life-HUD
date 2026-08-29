@@ -1,5 +1,9 @@
 target/
-data/
+/data/
 .tools/
 .idea/
 *.iml
+
+# user saves that accidentally landed inside packaged defaults; never ship or commit these
+/src/main/resources/data/save.json
+/src/main/resources/data/life-events.json

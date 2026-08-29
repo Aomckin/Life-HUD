@@ -1,0 +1,7 @@
+[
+  {"id": "iron_walker", "name": "铁幕行者", "description": "在一次次开幕与落幕之间前行。", "sourceType": "ACHIEVEMENT", "sourceId": "iron_first", "hidden": false, "custom": false},
+  {"id": "night_voyager", "name": "夜航者", "description": "曾在长夜里保持自己的航向。", "sourceType": "ACHIEVEMENT", "sourceId": "long_night", "hidden": true, "custom": false},
+  {"id": "hundred_hours", "name": "百时专注", "description": "一百小时的有效专注已经留下。", "sourceType": "ACHIEVEMENT", "sourceId": "focus_hundred_hours", "hidden": false, "custom": false},
+  {"id": "life_recorder", "name": "生活记录者", "description": "认真保存生活留下的痕迹。", "sourceType": "ACHIEVEMENT", "sourceId": "events_hundred", "hidden": false, "custom": false},
+  {"id": "milestone_keeper", "name": "里程碑收藏家", "description": "知道哪些时刻值得被留下。", "sourceType": "ACHIEVEMENT", "sourceId": "milestone_first", "hidden": false, "custom": false}
+]

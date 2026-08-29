@@ -1,0 +1,7 @@
+{
+    "window_title": "Life HUD",
+  "window_size": "650x1000",
+  "max_energy": 180,
+  "default_energy": 50,
+  "theme": "default"
+}

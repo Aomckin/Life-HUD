@@ -1,0 +1,8 @@
+{
+  "focus_minutes_per_energy": 3,
+  "focus_energy_event_cap": 80,
+  "energy_per_exp": 10,
+  "task_energy_cap": 20,
+  "overview_history_limit": 12,
+  "trend_days": 7
+}

@@ -79,6 +79,27 @@ public final class GrowthCopy {
     public String nowDirectionPickedDescription(String title) { return format("direction.nowDirectionPicked", "title", title); }
     public String nowDirectionReleasedDescription(String title) { return format("direction.nowDirectionReleased", "title", title); }
 
+    /** v0.6 life-module labels and fact summaries (content/life section). */
+    public String lifeSleepTitle() { return text("life.sleepTitle"); }
+    public String lifeSleepSummary(String duration, int quality) {
+        return format("life.sleepSummary", "duration", duration).replace("{quality}", String.valueOf(quality));
+    }
+    public String lifeMealType(String type) { return text("life.mealType." + type); }
+    public String lifeMealSummary(Integer satisfaction) {
+        return satisfaction == null ? "" : format("life.mealSummary", "satisfaction", satisfaction);
+    }
+    public String lifeExerciseType(String type) { return text("life.exerciseType." + type); }
+    public String lifeExerciseIntensity(String intensity) { return text("life.exerciseIntensity." + intensity); }
+    public String lifeCheckInTitle() { return text("life.checkInTitle"); }
+    public String lifeCheckInSummary(int energy, int mood, int focusDesire, int fatigue) {
+        return format("life.checkInSummary", "energy", energy)
+                .replace("{mood}", String.valueOf(mood))
+                .replace("{focus}", String.valueOf(focusDesire))
+                .replace("{fatigue}", String.valueOf(fatigue));
+    }
+    public String lifeRecordType(String type) { return text("life.lifeRecordType." + type); }
+    public String lifeJournalTitle() { return text("life.journalTitle"); }
+
     public String shopDisabledMessage() { return text("command.shopDisabled"); }
     public String actionDisabledMessage() { return text("command.actionDisabled"); }
 

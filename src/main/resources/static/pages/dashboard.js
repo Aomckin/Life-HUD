@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.5.5";
-import { modeLabels, growthCopy } from "../content/copy.js?v=0.5.5";
+import { api } from "../api/client.js?v=0.6.0";
+import { modeLabels, growthCopy } from "../content/copy.js?v=0.6.0";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const formatDate = value => new Intl.DateTimeFormat("zh-CN", {

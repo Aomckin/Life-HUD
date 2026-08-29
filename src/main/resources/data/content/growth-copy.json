@@ -69,5 +69,43 @@
     "logCompleted": "完成任务：{name}",
     "logSpecialCompleted": "完成特殊任务：{name}",
     "logGrowthSynced": "成长记录已同步"
+  },
+  "life": {
+    "sleepTitle": "睡眠",
+    "sleepSummary": "睡了 {duration} · 质量 {quality}/5",
+    "mealType": {
+      "BREAKFAST": "早餐",
+      "LUNCH": "午餐",
+      "DINNER": "晚餐",
+      "SNACK": "夜宵",
+      "OTHER": "一餐"
+    },
+    "mealSummary": "满意度 {satisfaction}/5",
+    "exerciseType": {
+      "STRENGTH": "力量训练",
+      "WALK": "散步",
+      "CYCLING": "骑行",
+      "MAIMAI": "舞萌",
+      "RUNNING": "跑步",
+      "OTHER": "运动"
+    },
+    "exerciseIntensity": {
+      "LOW": "低强度",
+      "MEDIUM": "中等强度",
+      "HIGH": "高强度"
+    },
+    "checkInTitle": "状态记录",
+    "checkInSummary": "能量 {energy} · 心情 {mood} · 专注 {focus} · 疲劳 {fatigue}",
+    "lifeRecordType": {
+      "WATER": "喝水",
+      "CAFFEINE": "咖啡因",
+      "ALCOHOL": "饮酒",
+      "SUNLIGHT": "晒太阳",
+      "SOCIAL": "社交",
+      "BODY_STATUS": "身体状态",
+      "OUTDOOR": "外出",
+      "CUSTOM": "记录"
+    },
+    "journalTitle": "日记"
   }
 }

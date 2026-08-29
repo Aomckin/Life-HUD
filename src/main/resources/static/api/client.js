@@ -95,6 +95,53 @@ export const api = {
     unlink: (source, taskId) => remove(`/api/task-directions/${source}/${taskId}`),
     complete: (source, taskId) => post(`/api/task-directions/${source}/${taskId}/complete`)
   },
+  life: {
+    sleep: {
+      all: () => request("/api/life/sleep"),
+      create: body => post("/api/life/sleep", body),
+      update: (id, body) => put(`/api/life/sleep/${id}`, body),
+      remove: id => remove(`/api/life/sleep/${id}`)
+    },
+    meals: {
+      all: () => request("/api/life/meals"),
+      create: body => post("/api/life/meals", body),
+      update: (id, body) => put(`/api/life/meals/${id}`, body),
+      remove: id => remove(`/api/life/meals/${id}`)
+    },
+    exercises: {
+      all: () => request("/api/life/exercises"),
+      create: body => post("/api/life/exercises", body),
+      update: (id, body) => put(`/api/life/exercises/${id}`, body),
+      remove: id => remove(`/api/life/exercises/${id}`)
+    },
+    checkIns: {
+      all: () => request("/api/life/check-ins"),
+      latest: () => request("/api/life/check-ins")
+        .then(list => [...list].sort((a, b) => new Date(b.time) - new Date(a.time))[0] || null),
+      create: body => post("/api/life/check-ins", body),
+      update: (id, body) => put(`/api/life/check-ins/${id}`, body),
+      remove: id => remove(`/api/life/check-ins/${id}`)
+    },
+    records: {
+      all: () => request("/api/life/records"),
+      create: body => post("/api/life/records", body),
+      update: (id, body) => put(`/api/life/records/${id}`, body),
+      remove: id => remove(`/api/life/records/${id}`)
+    }
+  },
+  journal: {
+    all: () => request("/api/journal"),
+    create: body => post("/api/journal", body),
+    update: (id, body) => put(`/api/journal/${id}`, body),
+    remove: id => remove(`/api/journal/${id}`)
+  },
+  timeline: (params = {}) => {
+    const query = Object.entries(params)
+      .filter(([, value]) => value !== undefined && value !== null && value !== "")
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join("&");
+    return request(`/api/timeline${query ? "?" + query : ""}`);
+  },
   taskPool: {
     all: () => request("/api/task-pool"),
     createDaily: body => post("/api/task-pool/daily", body),

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 /** Stable producer vocabulary for durable life events. */
 public enum LifeEventSourceType {
-    FOCUS, TASK, SYSTEM, ACHIEVEMENT, MILESTONE, LEVEL, RITUAL, SLEEP, MEAL, MEDIA, DREAM, TITLE, JOURNAL, MANUAL;
+    FOCUS, TASK, SYSTEM, ACHIEVEMENT, MILESTONE, LEVEL, RITUAL, SLEEP, MEAL, EXERCISE, CHECK_IN, LIFE_RECORD, MEDIA, DREAM, TITLE, JOURNAL, MANUAL;
 
     @JsonCreator
     public static LifeEventSourceType from(String value) {

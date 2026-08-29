@@ -1,6 +1,10 @@
-# Life HUD v0.5.5 · Direction
+# Life HUD v0.6.0 · Life / 生活输入与万能时间线
 
 Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 完成了成长循环：Focus / Task 赚取 Energy（每 3 有效分钟 +1），娱乐消费（SPEND）按实际消耗沉淀 EXP（每 10 点 +1）并推进 Level。v0.5「Direction」让 Life HUD 开始知道你为什么往前走：`/dreams` 承载 Dream → Goal → DreamMilestone 三层方向；`/tasks` 是行动台——每日任务紧凑卡片、特别行动舒展卡片，完成即弱化并折叠，方向以「✦ 梦想」的意义展示而非外键字段；`/rituals` 用"仪式 + 步骤 + 执行记录"进入一种状态；`/now` 是陈列页——「现在。」歌单是一面横板沉浸记忆墙：真实 MP3 / FLAC 上传（自动读取元数据与内嵌封面），十首歌以不等大的卡片挂在可设背景的舞台上，听歌次数决定卡片大小，每首歌挂着一句阶段备注，布局持久化、刷新不乱跳；阶段快照把背景、歌曲、次数、备注与布局完整封存。这些模块只产生事实 LifeEvent，成长结算仍由 GrowthEngine 唯一负责。
+
+## v0.6 · Life 与时间线
+
+v0.6 让 Life HUD 开始记录「人是怎么生活的」。`/life` 是今天生活的输入面板：最近一次 Check-in 状态卡、五个快速记录入口（状态 / 饮食 / 睡眠 / 运动 / 通用记录），全部走短表单 Modal，时间可改、默认合理，保存即反馈；「今日生活」列出当天的生活条目，点卡片即可编辑、点删除即同步清理。`/journal` 是统一生活时间线：后端 `GET /api/timeline` 按天聚合 Focus、任务、仪式、成长、睡眠、饮食、运动、Check-in、通用记录与日记，支持日期 / 来源组 / 类型过滤与分页；页首是手动日记 Composer（长文本 + 标签 + 照片）。业务记录是唯一事实源：每个记录拥有且只拥有一个 RECORDED LifeEvent——编辑原位重写事件（version+1），删除连事件一起消失，时间线上没有幽灵。睡眠时长由后端按时间戳计算，跨午夜与补录天然正确；事件时间语义用 occurredAt（何时发生）而非 createdAt（何时补录）。通用记录（喝水 / 咖啡因 / 酒精 / 晒太阳 / 社交 / 身体状态 / 外出）共用同一模型与 API，小众需求走 CUSTOM 标签，不再开新 Controller。数据仍为 `data/` 下的 JSON 存档（sleep-records / meal-records / exercise-records / check-ins / life-records / journal-entries），图片走统一 `/api/images` 上传存储。
 
 ## 运行
 

@@ -38,4 +38,20 @@ public final class LifeEventRepository {
     public synchronized boolean contains(String id) {
         return all().stream().anyMatch(event -> event.id().equals(id));
     }
+
+    /** Overwrites one event in place; used when an edited business record must update its fact. */
+    public synchronized void replace(LifeEvent event) {
+        List<LifeEvent> events = new ArrayList<>(all());
+        events.removeIf(existing -> existing.id().equals(event.id()));
+        events.add(event);
+        files.write(FILE_NAME, events);
+    }
+
+    /** A deleted business record must not leave a ghost fact behind. */
+    public synchronized boolean delete(String id) {
+        List<LifeEvent> events = new ArrayList<>(all());
+        boolean removed = events.removeIf(existing -> existing.id().equals(id));
+        if (removed) files.write(FILE_NAME, events);
+        return removed;
+    }
 }

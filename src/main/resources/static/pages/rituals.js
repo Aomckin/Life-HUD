@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.0";
-import { ritualCopy as c } from "../content/copy.js?v=0.6.0";
+import { api } from "../api/client.js?v=0.6.1";
+import { ritualCopy as c } from "../content/copy.js?v=0.6.1";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const time = value => new Date(value).toLocaleString("zh-CN", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});

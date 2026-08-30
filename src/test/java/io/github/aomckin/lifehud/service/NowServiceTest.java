@@ -22,6 +22,13 @@ class NowServiceTest {
                 dreamId==null?List.of():List.of(dreamId),List.of(),
                 "走自己的路。",List.of(),"自由文字内容",null);
     }
+    private NowState stateWithImages(List<String> images){
+        NowState current=w.now.current();
+        return new NowState(current.stageTitle(),current.theme(),current.playlistBackgroundImage(),
+                current.playlistTitle(),current.playlistSubtitle(),current.favoriteSongs(),
+                current.currentGames(),current.currentAnime(),current.currentBooks(),current.currentDreamIds(),
+                current.currentGoalIds(),current.favoriteQuote(),images,current.content(),null);
+    }
     private MockMultipartFile song(String name){
         return new MockMultipartFile("file",name,"audio/mpeg",new byte[] {1,2,3,4});
     }
@@ -116,6 +123,55 @@ class NowServiceTest {
         assertThat(state.playlistBackgroundImage()).startsWith("/uploads/");
         assertThat(w.now.current().playlistBackgroundImage()).isEqualTo(state.playlistBackgroundImage());
         assertThat(w.now.clearBackground().playlistBackgroundImage()).isEmpty();
+    }
+
+    @Test void imageChangesRecordEachConcretePathForTimelineMedia(){
+        w.now.update(stateWithImages(List.of("/uploads/first.png","/uploads/second.png")));
+        w.now.update(stateWithImages(List.of("/uploads/second.png","/uploads/third.png")));
+        var imageEvents=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_IMAGE_ADDED
+                ||e.type()==LifeEventType.NOW_IMAGE_REMOVED).toList();
+        assertThat(imageEvents).hasSize(4);
+        assertThat(imageEvents).extracting(e->e.metadata().get("imagePath"))
+                .containsExactly("/uploads/first.png","/uploads/second.png","/uploads/third.png","/uploads/first.png");
+        assertThat(imageEvents.getLast().metadata().get("images")).isEqualTo(List.of("/uploads/first.png"));
+        assertThat(imageEvents).allMatch(e->e.sourceType()==LifeEventSourceType.NOW);
+    }
+
+    @Test void songReplacementAndRemovalKeepBeforeAndAfterDetails(){
+        w.now.uploadSong(2,song("旧歌.mp3"));
+        w.now.uploadSong(2,song("新歌.mp3"));
+        w.now.removeSong(2);
+        var replaced=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_SONG_REPLACED).findFirst().orElseThrow();
+        assertThat(replaced.description()).contains("旧歌").contains("新歌");
+        assertThat(((java.util.Map<?,?>)replaced.metadata().get("before")).get("title")).isEqualTo("旧歌");
+        assertThat(((java.util.Map<?,?>)replaced.metadata().get("after")).get("title")).isEqualTo("新歌");
+        var removed=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_SONG_REMOVED).findFirst().orElseThrow();
+        assertThat(((java.util.Map<?,?>)removed.metadata().get("before")).get("title")).isEqualTo("新歌");
+    }
+
+    @Test void backgroundAndSnapshotDeletionKeepTheConcreteRemovedObject(){
+        NowState background=w.now.setBackground(new MockMultipartFile("file","bg.png","image/png",new byte[]{1}));
+        w.now.clearBackground();
+        var backgroundEvents=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_BACKGROUND_CHANGED).toList();
+        assertThat(backgroundEvents).hasSize(2);
+        assertThat(backgroundEvents.getFirst().metadata().get("images")).isEqualTo(List.of(background.playlistBackgroundImage()));
+        assertThat(backgroundEvents.getLast().metadata()).containsEntry("beforePath",background.playlistBackgroundImage());
+
+        w.now.update(state("值得记住的盛夏",null));
+        NowSnapshot snapshot=w.now.createSnapshot();
+        w.now.deleteSnapshot(snapshot.id());
+        var deleted=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_SNAPSHOT_DELETED).findFirst().orElseThrow();
+        assertThat(deleted.title()).isEqualTo("值得记住的盛夏");
+        assertThat(deleted.metadata()).containsEntry("snapshotId",snapshot.id()).containsEntry("stageTitle","值得记住的盛夏");
+    }
+
+    @Test void stageItemsAndDirectionsCarryActionableMetadata(){
+        Dream dream=w.dreams.create(new DreamRequest("自己的生活 Agent","","",null,null,"",""));
+        w.now.update(state("盛夏",dream.id()));
+        var stage=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_STAGE_ITEM_ADDED).findFirst().orElseThrow();
+        assertThat(stage.metadata()).containsEntry("category","GAME").containsEntry("title","舞萌");
+        var direction=w.lifeEvents.all().stream().filter(e->e.type()==LifeEventType.NOW_DIRECTION_CHANGED).findFirst().orElseThrow();
+        assertThat(direction.metadata()).containsEntry("directionType","DREAM").containsEntry("directionId",dream.id()).containsEntry("action","ADDED");
     }
 
     /** Snapshot freezes playCount, note and wall layout together with everything else. */

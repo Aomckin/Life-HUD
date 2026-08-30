@@ -2,6 +2,8 @@
 
 /* ---------- /life input panel ---------- */
 .life-hero-grid { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:var(--space-4); }
+.life-status,.life-quick { min-width:0; padding:var(--space-4); }
+.life-status > .section-head,.life-quick > .section-head { margin-bottom:var(--space-3); }
 .life-status-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3); margin-bottom:var(--space-3); }
 .life-status-cell { display:grid; gap:2px; justify-items:center; padding:var(--space-3) var(--space-2); border:1px solid var(--border-soft); border-radius:var(--radius-md); background:rgb(255 255 255 / .45); }
 .life-status-cell small { color:var(--text-muted); }

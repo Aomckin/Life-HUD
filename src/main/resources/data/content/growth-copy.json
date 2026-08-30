@@ -50,7 +50,7 @@
     "nowSnapshotCreated": "保存了一份「现在。」快照",
     "nowSnapshotDeleted": "删除了一份「现在。」快照",
     "nowSongAdded": "把「{title}」放进了「现在。」歌单的第 {slot} 位",
-    "nowSongReplaced": "在「现在。」歌单的第 {slot} 位换上了「{title}」",
+    "nowSongReplaced": "把「现在。」歌单第 {slot} 位的「{oldTitle}」换成了「{title}」",
     "nowSongRemoved": "把「{title}」从「现在。」歌单取下了",
     "nowBackgroundSet": "为「现在。」歌单挂上了新的舞台背景",
     "nowBackgroundCleared": "取下了「现在。」歌单的舞台背景",

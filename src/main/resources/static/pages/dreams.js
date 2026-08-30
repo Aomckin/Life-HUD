@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.6.0";
-import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.6.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.6.0";
+import { api } from "../api/client.js?v=0.6.1";
+import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.6.1";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 let selectedId = location.hash.slice(1) || "";

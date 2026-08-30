@@ -183,6 +183,7 @@
   #page > .focus-page,
   #page > .growth-page,
   #page > .timeline-page,
+  #page > .life-page,
   #page > .direction-page {
     grid-column: 1 / -1;
   }

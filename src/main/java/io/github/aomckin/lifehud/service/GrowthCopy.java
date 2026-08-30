@@ -62,8 +62,12 @@ public final class GrowthCopy {
     public String nowSongAddedDescription(int slot, String title) {
         return format("direction.nowSongAdded", "slot", slot).replace("{title}", title);
     }
-    public String nowSongReplacedDescription(int slot, String title) {
-        return format("direction.nowSongReplaced", "slot", slot).replace("{title}", title);
+    public String nowSongReplacedDescription(int slot, String oldTitle, String title) {
+        String template = text("direction.nowSongReplaced");
+        String rendered = template.replace("{slot}", String.valueOf(slot)).replace("{oldTitle}", oldTitle).replace("{title}", title);
+        // Existing user content files predate {oldTitle}; enrich their wording
+        // without modifying the real data directory during an upgrade.
+        return template.contains("{oldTitle}") ? rendered : rendered + "，换下了「" + oldTitle + "」";
     }
     public String nowSongRemovedDescription(String title) { return format("direction.nowSongRemoved", "title", title); }
     public String nowBackgroundSetDescription() { return text("direction.nowBackgroundSet"); }

@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.6.0";
-import { nowCopy as c } from "../content/copy.js?v=0.6.0";
-import { empty, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.6.1-delete1";
+import { nowCopy as c } from "../content/copy.js?v=0.6.1";
+import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
 
 /**
  * PlaylistBoard — the horizontal immersive wall for the 「现在。」歌单.
@@ -208,6 +208,8 @@ export function renderBoard(container, options) {
   }));
   container.querySelectorAll("[data-remove-song]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
+    const song = songs.find(value => value.slot === Number(button.dataset.removeSong));
+    if (!(await confirmDialog(`从「现在。」歌单取下「${song?.title || "这首歌"}」？`))) return;
     try {
       const state = await api.now.removeSong(Number(button.dataset.removeSong));
       onSongsChange(state.favoriteSongs, {playlistBackgroundImage: state.playlistBackgroundImage,
@@ -252,6 +254,7 @@ export function renderBoard(container, options) {
       } catch (reason) { toast(reason.message, true); }
     });
     container.querySelector("#board-bg-remove")?.addEventListener("click", async () => {
+      if (!(await confirmDialog("取下「现在。」歌单的舞台背景？"))) return;
       try { onBackgroundChange(await api.now.clearBackground()); }
       catch (reason) { toast(reason.message, true); }
     });

@@ -61,23 +61,24 @@ public final class NowService {
         recordStageList("玩", previous.currentGames(), value.currentGames());
         recordStageList("看", previous.currentAnime(), value.currentAnime());
         recordStageList("读", previous.currentBooks(), value.currentBooks());
-        recordListDelta(previous.images(), value.images(),
-            count -> events.record(LifeEventType.NOW_IMAGE_ADDED, "now", "照片",
-                copy.nowImagesAddedDescription(count), List.of("now"), Map.of("count", count)),
-            count -> events.record(LifeEventType.NOW_IMAGE_REMOVED, "now", "照片",
-                copy.nowImagesRemovedDescription(count), List.of("now"), Map.of("count", count)));
+        for (String path : listDifference(value.images(), previous.images()))
+            events.record(LifeEventType.NOW_IMAGE_ADDED, "now", "照片",
+                copy.nowImagesAddedDescription(1), List.of("now"), imageMetadata("ADDED", path));
+        for (String path : listDifference(previous.images(), value.images()))
+            events.record(LifeEventType.NOW_IMAGE_REMOVED, "now", "照片",
+                copy.nowImagesRemovedDescription(1), List.of("now"), imageMetadata("REMOVED", path));
         for (String id : added(value.currentDreamIds(), previous.currentDreamIds()))
             dreams.find(id).ifPresent(dream -> events.record(LifeEventType.NOW_DIRECTION_CHANGED, "now", dream.title(),
-                copy.nowDirectionPickedDescription(dream.title()), List.of("now"), Map.of("dreamId", id)));
+                copy.nowDirectionPickedDescription(dream.title()), List.of("now"), directionMetadata("ADDED", "DREAM", id)));
         for (String id : added(previous.currentDreamIds(), value.currentDreamIds()))
             dreams.find(id).ifPresent(dream -> events.record(LifeEventType.NOW_DIRECTION_CHANGED, "now", dream.title(),
-                copy.nowDirectionReleasedDescription(dream.title()), List.of("now"), Map.of("dreamId", id)));
+                copy.nowDirectionReleasedDescription(dream.title()), List.of("now"), directionMetadata("REMOVED", "DREAM", id)));
         for (String id : added(value.currentGoalIds(), previous.currentGoalIds()))
             goals.find(id).ifPresent(goal -> events.record(LifeEventType.NOW_DIRECTION_CHANGED, "now", goal.title(),
-                copy.nowDirectionPickedDescription(goal.title()), List.of("now"), Map.of("goalId", id)));
+                copy.nowDirectionPickedDescription(goal.title()), List.of("now"), directionMetadata("ADDED", "GOAL", id)));
         for (String id : added(previous.currentGoalIds(), value.currentGoalIds()))
             goals.find(id).ifPresent(goal -> events.record(LifeEventType.NOW_DIRECTION_CHANGED, "now", goal.title(),
-                copy.nowDirectionReleasedDescription(goal.title()), List.of("now"), Map.of("goalId", id)));
+                copy.nowDirectionReleasedDescription(goal.title()), List.of("now"), directionMetadata("REMOVED", "GOAL", id)));
     }
 
     /** One fact per entering/leaving title; same-title edits (subtitle/note) stay private. */
@@ -87,18 +88,21 @@ public final class NowService {
         for (NowItem item : value)
             if (item != null && !item.title().isBlank() && !before.contains(item.title()))
                 events.record(LifeEventType.NOW_STAGE_ITEM_ADDED, "now", item.title(),
-                    copy.nowStageItemAddedDescription(verb, item.title()), List.of("now"), Map.of());
+                    copy.nowStageItemAddedDescription(verb, item.title()), List.of("now"), itemMetadata("ADDED", verb, item));
         for (NowItem item : previous)
             if (item != null && !item.title().isBlank() && !after.contains(item.title()))
                 events.record(LifeEventType.NOW_STAGE_ITEM_REMOVED, "now", item.title(),
-                    copy.nowStageItemRemovedDescription(verb, item.title()), List.of("now"), Map.of());
+                    copy.nowStageItemRemovedDescription(verb, item.title()), List.of("now"), itemMetadata("REMOVED", verb, item));
     }
 
-    private void recordListDelta(List<String> previous, List<String> value,
-                                 java.util.function.IntConsumer added, java.util.function.IntConsumer removed) {
-        int grew = value.size() - previous.size();
-        if (grew > 0) added.accept(grew);
-        else if (grew < 0) removed.accept(-grew);
+    /** Multiset difference preserves order and handles a path repeated more than once. */
+    private List<String> listDifference(List<String> values, List<String> baseline) {
+        List<String> remaining = new ArrayList<>(baseline == null ? List.of() : baseline);
+        List<String> difference = new ArrayList<>();
+        for (String value : values == null ? List.<String>of() : values) {
+            if (!remaining.remove(value)) difference.add(value);
+        }
+        return difference;
     }
 
     private Set<String> titlesOf(List<NowItem> items) {
@@ -115,16 +119,17 @@ public final class NowService {
     public synchronized NowState uploadSong(int slot, MultipartFile file) {
         validateSlot(slot);
         NowState state = current();
-        boolean replaced = state.favoriteSongs().stream().anyMatch(song -> song.slot() == slot);
+        NowSong oldSong = state.favoriteSongs().stream().filter(song -> song.slot() == slot).findFirst().orElse(null);
+        boolean replaced = oldSong != null;
         if (replaced) state = withoutSong(state, slot);
         NowSong song = audio.store(file, slot);
         NowState value = withSong(state, song);
         repository.saveState(value);
         events.record(replaced ? LifeEventType.NOW_SONG_REPLACED : LifeEventType.NOW_SONG_ADDED,
                 "now", song.title(),
-                replaced ? copy.nowSongReplacedDescription(slot, song.title())
+                replaced ? copy.nowSongReplacedDescription(slot, oldSong.title(), song.title())
                          : copy.nowSongAddedDescription(slot, song.title()),
-                List.of("now", "playlist"), Map.of("slot", slot));
+                List.of("now", "playlist"), songChangeMetadata(replaced ? "REPLACED" : "ADDED", oldSong, song));
         return value;
     }
 
@@ -154,12 +159,11 @@ public final class NowService {
     public synchronized NowState removeSong(int slot) {
         validateSlot(slot);
         NowState state = current();
-        String title = state.favoriteSongs().stream().filter(s -> s.slot() == slot)
-                .findFirst().map(NowSong::title).orElse(null);
+        NowSong removed = state.favoriteSongs().stream().filter(s -> s.slot() == slot).findFirst().orElse(null);
         NowState value = withoutSong(state, slot);
         repository.saveState(value);
-        if (title != null) events.record(LifeEventType.NOW_SONG_REMOVED, "now", title,
-                copy.nowSongRemovedDescription(title), List.of("now", "playlist"), Map.of("slot", slot));
+        if (removed != null) events.record(LifeEventType.NOW_SONG_REMOVED, "now", removed.title(),
+                copy.nowSongRemovedDescription(removed.title()), List.of("now", "playlist"), songChangeMetadata("REMOVED", removed, null));
         return value;
     }
 
@@ -167,25 +171,27 @@ public final class NowService {
     public synchronized NowState setBackground(MultipartFile file) {
         String path = images.store(file);
         NowState state = current();
+        String oldPath = state.playlistBackgroundImage();
         NowState value = new NowState(state.stageTitle(), state.theme(), path, state.playlistTitle(),
                 state.playlistSubtitle(), state.favoriteSongs(), state.currentGames(), state.currentAnime(),
                 state.currentBooks(), state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(),
                 state.images(), state.content(), Instant.now());
         repository.saveState(value);
         events.record(LifeEventType.NOW_BACKGROUND_CHANGED, "now", "舞台背景",
-                copy.nowBackgroundSetDescription(), List.of("now"), Map.of());
+                copy.nowBackgroundSetDescription(), List.of("now"), backgroundMetadata(oldPath, path));
         return value;
     }
 
     public synchronized NowState clearBackground() {
         NowState state = current();
+        String oldPath = state.playlistBackgroundImage();
         NowState value = new NowState(state.stageTitle(), state.theme(), "", state.playlistTitle(),
                 state.playlistSubtitle(), state.favoriteSongs(), state.currentGames(), state.currentAnime(),
                 state.currentBooks(), state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(),
                 state.images(), state.content(), Instant.now());
         repository.saveState(value);
-        events.record(LifeEventType.NOW_BACKGROUND_CHANGED, "now", "舞台背景",
-                copy.nowBackgroundClearedDescription(), List.of("now"), Map.of());
+        if (!oldPath.isBlank()) events.record(LifeEventType.NOW_BACKGROUND_CHANGED, "now", "舞台背景",
+                copy.nowBackgroundClearedDescription(), List.of("now"), backgroundMetadata(oldPath, ""));
         return value;
     }
 
@@ -238,7 +244,7 @@ public final class NowService {
                 state.favoriteQuote(), state.images(), state.content(), now);
         repository.saveSnapshot(value);
         events.record(LifeEventType.NOW_SNAPSHOT_CREATED, "now", value.stageTitle().isBlank() ? "现在。" : value.stageTitle(),
-                copy.nowSnapshotCreatedDescription(), List.of("now"), Map.of("snapshotId", value.id(), "sourceId", value.id()));
+                copy.nowSnapshotCreatedDescription(), List.of("now"), snapshotMetadata(value));
         return value;
     }
 
@@ -246,9 +252,67 @@ public final class NowService {
     public NowSnapshot snapshot(String id) { return repository.findSnapshot(id).orElseThrow(this::missingSnapshot); }
 
     public synchronized void deleteSnapshot(String id) {
+        NowSnapshot snapshot = repository.findSnapshot(id).orElseThrow(this::missingSnapshot);
         if (!repository.deleteSnapshot(id)) throw missingSnapshot();
-        events.record(LifeEventType.NOW_SNAPSHOT_DELETED, "now", "快照",
-                copy.nowSnapshotDeletedDescription(), List.of("now"), Map.of("snapshotId", id, "sourceId", id));
+        events.record(LifeEventType.NOW_SNAPSHOT_DELETED, "now", snapshot.stageTitle().isBlank() ? "现在。" : snapshot.stageTitle(),
+                copy.nowSnapshotDeletedDescription(), List.of("now"), snapshotMetadata(snapshot));
+    }
+
+    private Map<String, Object> imageMetadata(String action, String path) {
+        return Map.of("action", action, "imagePath", path, "images", List.of(path));
+    }
+
+    private Map<String, Object> directionMetadata(String action, String type, String id) {
+        return Map.of("action", action, "directionType", type, "directionId", id);
+    }
+
+    private Map<String, Object> itemMetadata(String action, String verb, NowItem item) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("action", action); metadata.put("verb", verb);
+        metadata.put("category", switch (verb) { case "玩" -> "GAME"; case "看" -> "ANIME"; default -> "BOOK"; });
+        metadata.put("title", clean(item.title())); metadata.put("subtitle", clean(item.subtitle())); metadata.put("note", clean(item.note()));
+        return metadata;
+    }
+
+    private Map<String, Object> songChangeMetadata(String action, NowSong before, NowSong after) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("action", action);
+        NowSong relevant = after == null ? before : after;
+        metadata.put("slot", relevant.slot());
+        if (before != null) metadata.put("before", songMetadata(before));
+        if (after != null) metadata.put("after", songMetadata(after));
+        List<String> covers = new ArrayList<>();
+        if (after != null && !clean(after.coverPath()).isBlank()) covers.add(after.coverPath());
+        else if (before != null && !clean(before.coverPath()).isBlank()) covers.add(before.coverPath());
+        if (!covers.isEmpty()) metadata.put("images", covers);
+        return metadata;
+    }
+
+    private Map<String, Object> songMetadata(NowSong song) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("slot", song.slot()); metadata.put("title", clean(song.title()));
+        metadata.put("artist", clean(song.artist())); metadata.put("album", clean(song.album()));
+        metadata.put("filePath", clean(song.filePath())); metadata.put("coverPath", clean(song.coverPath()));
+        return metadata;
+    }
+
+    private Map<String, Object> backgroundMetadata(String before, String after) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("action", clean(before).isBlank() ? "ADDED" : clean(after).isBlank() ? "REMOVED" : "REPLACED");
+        metadata.put("beforePath", clean(before)); metadata.put("afterPath", clean(after));
+        String relevant = clean(after).isBlank() ? clean(before) : clean(after);
+        if (!relevant.isBlank()) metadata.put("images", List.of(relevant));
+        return metadata;
+    }
+
+    private Map<String, Object> snapshotMetadata(NowSnapshot snapshot) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("snapshotId", snapshot.id()); metadata.put("sourceId", snapshot.id());
+        metadata.put("stageTitle", clean(snapshot.stageTitle()));
+        metadata.put("songCount", snapshot.favoriteSongs().size()); metadata.put("imageCount", snapshot.images().size());
+        if (!snapshot.images().isEmpty()) metadata.put("images", snapshot.images());
+        else if (!clean(snapshot.playlistBackgroundImage()).isBlank()) metadata.put("images", List.of(snapshot.playlistBackgroundImage()));
+        return metadata;
     }
 
     private Optional<NowSnapshot.NowRef> dreamRef(String id) {

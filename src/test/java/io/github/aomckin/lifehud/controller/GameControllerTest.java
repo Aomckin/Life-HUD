@@ -1,6 +1,8 @@
 package io.github.aomckin.lifehud.controller;
 
 import io.github.aomckin.lifehud.LifeHudApplication;
+import io.github.aomckin.lifehud.domain.LifeEventType;
+import io.github.aomckin.lifehud.service.LifeEventService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,8 +13,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,6 +37,7 @@ class GameControllerTest {
     }
 
     @Autowired MockMvc mvc;
+    @Autowired LifeEventService events;
 
     @Test void stateReturnsFullQueryViewModel() throws Exception {
         mvc.perform(get("/state"))
@@ -44,7 +50,7 @@ class GameControllerTest {
     @Test void homeAndStaticAssetsAreServed() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/static/v0.2.html"));
         mvc.perform(get("/static/v0.2.html")).andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Life HUD v0.5")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Life HUD v0.6.1")));
         mvc.perform(get("/static/app-v02.js")).andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("pages/growth.js")));
         mvc.perform(get("/static/styles/growth.css")).andExpect(status().isOk());
@@ -65,5 +71,13 @@ class GameControllerTest {
         mvc.perform(post("/actions/学习")).andExpect(status().isNotFound());
         mvc.perform(post("/tasks/0/complete")).andExpect(status().isNotFound());
         mvc.perform(post("/shop/x/buy")).andExpect(status().isNotFound());
+    }
+
+    @Test void lifeEventCanBeDeletedAndMissingIdReturns404() throws Exception {
+        var event = events.record(LifeEventType.NOW_IMAGE_ADDED, "now", "测试删除", "测试删除",
+                List.of("test"), Map.of());
+        mvc.perform(delete("/api/life-events/{id}", event.id())).andExpect(status().isNoContent());
+        org.assertj.core.api.Assertions.assertThat(events.find(event.id())).isEmpty();
+        mvc.perform(delete("/api/life-events/{id}", event.id())).andExpect(status().isNotFound());
     }
 }

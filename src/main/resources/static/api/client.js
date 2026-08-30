@@ -30,6 +30,7 @@ const remove = url => request(url, {method: "DELETE"});
 export const api = {
   state: () => request("/state"),
   events: (limit = 8) => request(`/api/life-events?limit=${limit}`),
+  removeEvent: id => remove(`/api/life-events/${id}`),
   growth: {
     overview: () => request("/api/growth"),
     history: (limit = 30) => request(`/api/growth/history?limit=${limit}`),

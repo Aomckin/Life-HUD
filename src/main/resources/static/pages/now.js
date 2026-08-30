@@ -1,7 +1,7 @@
-import { api } from "../api/client.js?v=0.6.0";
-import { nowCopy as c } from "../content/copy.js?v=0.6.0";
-import { renderBoard } from "./now-playlist.js?v=0.6.0";
-import { empty, error, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.6.1-delete1";
+import { nowCopy as c } from "../content/copy.js?v=0.6.1";
+import { renderBoard } from "./now-playlist.js?v=0.6.1-delete1";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 const minutes = seconds => {
@@ -197,6 +197,8 @@ function bind(root) {
   root.querySelectorAll("[data-remove-item]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
     const key = button.closest("[data-item-editor]").dataset.itemEditor.split("|")[0];
+    const item = current[key][Number(button.dataset.removeItem)];
+    if (!(await confirmDialog(`从「现在。」移除「${item.title}」？`))) return;
     const items = current[key].filter((_, i) => i !== Number(button.dataset.removeItem));
     editing = {};
     await saveText(root, {[key]: items});
@@ -233,10 +235,12 @@ function bind(root) {
     renderStage(root);
   });
   root.querySelectorAll("[data-remove-image]").forEach(button => button.addEventListener("click", async () => {
+    if (!(await confirmDialog("从「现在。」移除这张图片？"))) return;
     const images = current.images.filter((_, i) => i !== Number(button.dataset.removeImage));
     await saveText(root, {images});
   }));
-  root.querySelectorAll("[data-remove-pending]").forEach(button => button.addEventListener("click", () => {
+  root.querySelectorAll("[data-remove-pending]").forEach(button => button.addEventListener("click", async () => {
+    if (!(await confirmDialog("移除这张尚未保存的图片？"))) return;
     pendingImages.splice(Number(button.dataset.removePending), 1);
     renderStage(root);
   }));
@@ -293,9 +297,9 @@ function renderSnapshots(root) {
       renderSnapshot(root, viewingSnapshot);
     }));
     list.querySelectorAll("[data-del]").forEach(button => button.addEventListener("click", async () => {
-      if (!confirm(c.snapshotDeleteConfirm)) return;
-      await api.now.removeSnapshot(button.dataset.del);
-      now(root);
+      if (!(await confirmDialog(c.snapshotDeleteConfirm))) return;
+      try { await api.now.removeSnapshot(button.dataset.del); now(root); }
+      catch (reason) { toast(reason.message, true); }
     }));
   }).catch(reason => toast(reason.message, true));
 }

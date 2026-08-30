@@ -12,6 +12,10 @@ public record LifeEvent(String id, LifeEventType type, String source, String tit
         metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
         tags = tags == null ? List.of() : List.copyOf(tags);
         sourceType = sourceType == null ? LifeEventSourceType.from(source) : sourceType;
+        // v0.5.5 wrote source="now" before NOW existed, so persisted events were
+        // classified as SYSTEM. Normalize on read without rewriting user data.
+        if ("now".equalsIgnoreCase(source) && sourceType == LifeEventSourceType.SYSTEM)
+            sourceType = LifeEventSourceType.NOW;
         sourceId = sourceId == null ? inferredSourceId(metadata) : sourceId;
         description = description == null ? content : description;
         version = version < 1 ? 1 : version;

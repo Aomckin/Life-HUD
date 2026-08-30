@@ -266,3 +266,37 @@ flowchart LR
 ## v0.5.3：/tasks 行动台
 
 `/tasks` 从行式列表重构为卡片行动台：Daily 紧凑卡（2~4 列）、Special 舒展卡（1~2 列）、已完成折叠弱化。Direction 以 `DirectionInfo` 聚合字段展示为「✦ 梦想 › 方向 › 里程碑」意义 chip（tooltip 完整路径），关联编辑只存在于 Task Modal。完成走新增的 `POST /api/task-directions/{source}/{taskId}/complete`（`TaskService.completeDailyById/completeSpecialById`，基于 `DailyTaskManager/SpecialTaskManager.finishById`，done 任务重复完成为 no-op，不重复发 TASK_COMPLETED）。事件边界不变：Task → LifeEvent → GrowthEngine。
+
+## v0.6：Life 与统一时间线
+
+v0.6 将六类生活记录统一为“业务记录是唯一事实源”的链路：Sleep、Meal、Exercise、CheckIn、LifeRecord 与 Journal 各自拥有 domain record、JSON repository、service 和 controller；`LifeFactRecorder` 保证每条业务记录对应且只对应一条 RECORDED LifeEvent。创建幂等发射，编辑原位 replace 并将 version 加一，删除同步移除事件。
+
+```mermaid
+flowchart LR
+    Life[Sleep / Meal / Exercise / CheckIn / LifeRecord / Journal] --> Fact[LifeFactRecorder]
+    Fact --> Event[(life-events.json)]
+    Other[Focus / Task / Ritual / Dream / Now / Growth] --> Event
+    Event --> Timeline[TimelineService]
+    Timeline --> API[GET /api/timeline]
+    API --> Journal[/journal 按天时间线]
+```
+
+`TimelineService` 统一按 occurredAt 排序、过滤和分页，前端不拼接多套业务 API。图片通过约定字段 `metadata.images` 投影为 `TimelineItem.media`，由 Journal 统一提供缩略图和 lightbox。
+
+## v0.6.1：「现在。」具体事件与来源分区
+
+`LifeEventSourceType.NOW` 是「现在。」的稳定来源类型。为兼容 v0.5.5 已落盘数据，LifeEvent 构造边界会把 `source=now/sourceType=SYSTEM` 归一化为 NOW，但不会重写用户文件；真正的 SYSTEM 事件保持不变。
+
+NowService 在保存状态后比较前后快照：图片使用路径多重集合差，每张图片产生独立事件；玩 / 看 / 读、梦想与方向保留具体对象和动作；歌曲与背景替换保留 before/after；快照删除在 repository 删除前读取完整标题与摘要。媒体路径统一写入 `metadata.images`，因此 Now 不需要另建时间线展示协议。
+
+Journal 的日期分组与组内事件均按 `occurredAt` 倒序，保证从上到下持续远离现在。非 JOURNAL 事件可通过 `DELETE /api/life-events/{id}` 单独移除；该操作只删除时间线事实，不反向撤销来源业务记录。Journal 事件仍走原有日记删除链路。前端所有这类删除以及 Now 页面中的条目、图片、歌曲、背景和快照移除，都复用 Dreams 的异步确认弹窗。
+
+```mermaid
+flowchart LR
+    NowPage[/now] --> NowService
+    NowService --> Diff[具体对象差异]
+    Diff --> NowEvent[NOW LifeEvent + metadata]
+    NowEvent --> TimelineService
+    TimelineService --> All[全部]
+    TimelineService --> NowTab[「现在。」分区]
+```

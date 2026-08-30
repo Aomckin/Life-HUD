@@ -1,6 +1,7 @@
 package io.github.aomckin.lifehud.domain;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * A 10-second state snapshot before/after doing things. All four scales are
@@ -8,4 +9,6 @@ import java.time.Instant;
  * a live telemetry feed.
  */
 public record CheckIn(String id, int energy, int mood, int focusDesire, int fatigue,
-                      Instant time, String note, Instant createdAt, Instant updatedAt) { }
+                      Instant time, String note, List<String> images, Instant createdAt, Instant updatedAt) {
+    public CheckIn { images = images == null ? List.of() : List.copyOf(images); }
+}

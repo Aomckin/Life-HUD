@@ -291,6 +291,8 @@ NowService 在保存状态后比较前后快照：图片使用路径多重集合
 
 Journal 的日期分组与组内事件均按 `occurredAt` 倒序，保证从上到下持续远离现在。非 JOURNAL 事件可通过 `DELETE /api/life-events/{id}` 单独移除；该操作只删除时间线事实，不反向撤销来源业务记录。Journal 事件仍走原有日记删除链路。前端所有这类删除以及 Now 页面中的条目、图片、歌曲、背景和快照移除，都复用 Dreams 的异步确认弹窗。
 
+五类 Life 输入（CheckIn、Meal、Sleep、Exercise、LifeRecord）都在业务记录上持久化 `images` 路径列表，服务更新时 `images=null` 表示保留旧值、空列表表示明确清空。对应 LifeEvent 将同一列表投影到 `metadata.images`，因此 Life 今日卡片与 Journal 时间线共用媒体展示。旧 JSON 缺少该字段时由 record 紧凑构造器归一化为空列表。
+
 ```mermaid
 flowchart LR
     NowPage[/now] --> NowService

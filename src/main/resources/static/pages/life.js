@@ -124,7 +124,7 @@ function modalShell(title, bodyHtml) {
       <div class="row-actions"><button class="button button-primary" type="submit">保存</button>
       <button class="button button-ghost" type="button" data-close>取消</button></div></form></div>`;
   document.body.append(overlay);
-  const close = () => overlay.remove();
+  const close = () => { overlay.dispatchEvent(new CustomEvent("life-modal-close")); overlay.remove(); };
   overlay.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
   overlay.addEventListener("click", event => { if (event.target === overlay) close(); });
   return {overlay, close};
@@ -136,6 +136,47 @@ const slider = (name, label, max, value) => `
 const timeField = (name, label, value) => `
   <label class="field"><span>${label}</span><input type="datetime-local" name="${name}" value="${value}"></label>`;
 const nowInput = () => localInputValue(new Date());
+const imageField = () => `<div class="field life-image-field"><span>照片(可选，可多选)</span>
+  <input type="file" name="images" accept="image/*" multiple>
+  <div class="life-image-previews" data-image-previews></div></div>`;
+
+function attachImagePicker(overlay, initialImages = []) {
+  const input = overlay.querySelector('input[type="file"][name="images"]');
+  const previews = overlay.querySelector("[data-image-previews]");
+  let saved = [...(initialImages || [])];
+  let pending = [];
+  const renderPreviews = () => {
+    previews.innerHTML = [
+      ...saved.map((src, index) => `<figure><img src="${escapeHtml(src)}" alt="已有照片">
+        <button type="button" data-remove-saved="${index}" aria-label="移除这张照片">✕</button></figure>`),
+      ...pending.map((entry, index) => `<figure><img src="${escapeHtml(entry.url)}" alt="待上传照片">
+        <button type="button" data-remove-pending="${index}" aria-label="移除这张照片">✕</button></figure>`)
+    ].join("");
+    previews.hidden = !saved.length && !pending.length;
+    previews.querySelectorAll("[data-remove-saved]").forEach(button => button.addEventListener("click", () => {
+      saved.splice(+button.dataset.removeSaved, 1); renderPreviews();
+    }));
+    previews.querySelectorAll("[data-remove-pending]").forEach(button => button.addEventListener("click", () => {
+      URL.revokeObjectURL(pending[+button.dataset.removePending].url);
+      pending.splice(+button.dataset.removePending, 1); renderPreviews();
+    }));
+  };
+  input.addEventListener("change", () => {
+    pending.push(...[...input.files].map(file => ({file, url: URL.createObjectURL(file)})));
+    input.value = "";
+    renderPreviews();
+  });
+  overlay.addEventListener("life-modal-close", () => pending.forEach(entry => URL.revokeObjectURL(entry.url)));
+  renderPreviews();
+  return {upload: async () => {
+    const paths = [...saved];
+    for (const entry of pending) {
+      const data = new FormData(); data.append("file", entry.file);
+      paths.push((await api.uploadImage(data)).path);
+    }
+    return paths;
+  }};
+}
 
 function openModal(kind, record) {
   const builders = {
@@ -153,7 +194,9 @@ function checkInModal(record) {
     ${slider("focusDesire", "专注意愿", 10, value("focusDesire"))}
     ${slider("fatigue", "疲劳", 10, value("fatigue"))}
     ${timeField("time", "什么时候", record ? localInputValue(new Date(record.time)) : nowInput())}
+    ${imageField()}
     <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+  const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelectorAll("input[type=range]").forEach(input => input.addEventListener("input",
     () => { input.closest("label").querySelector("output").textContent = input.value; }));
   overlay.querySelector("form").addEventListener("submit", async event => {
@@ -161,7 +204,8 @@ function checkInModal(record) {
     const form = event.target;
     try {
       const body = {energy: +form.energy.value, mood: +form.mood.value, focusDesire: +form.focusDesire.value,
-        fatigue: +form.fatigue.value, time: fromInput(form.time.value), note: form.note.value.trim()};
+        fatigue: +form.fatigue.value, time: fromInput(form.time.value), note: form.note.value.trim(),
+        images: await imagePicker.upload()};
       if (record) await api.life.checkIns.update(record.id, body);
       else await api.life.checkIns.create(body);
       close(); toast(record ? "状态已更新" : "状态已记下");
@@ -182,24 +226,18 @@ function mealModal(record) {
     <label class="field"><span>吃了什么</span><input name="description" maxlength="160"
       placeholder="一句话就够" value="${escapeHtml(record?.description || "")}"></label>
     ${slider("satisfaction", "满意度", 5, record?.satisfaction || 3)}
-    <label class="field"><span>照片(可选)</span><input type="file" name="images" accept="image/*" multiple></label>
+    ${imageField()}
     <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+  const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelector("input[type=range]").addEventListener("input",
     event => { event.target.closest("label").querySelector("output").textContent = event.target.value; });
   overlay.querySelector("form").addEventListener("submit", async event => {
     event.preventDefault();
     const form = event.target;
     try {
-      const images = [];
-      for (const file of form.images.files) {
-        const data = new FormData();
-        data.append("file", file);
-        images.push((await api.uploadImage(data)).path);
-      }
       const body = {mealType: form.mealType.value, time: fromInput(form.time.value),
         description: form.description.value.trim(), satisfaction: +form.satisfaction.value,
-        note: form.note.value.trim(),
-        images: record && !images.length ? record.images : [...(record?.images || []), ...images]};
+        note: form.note.value.trim(), images: await imagePicker.upload()};
       if (record) await api.life.meals.update(record.id, body);
       else await api.life.meals.create(body);
       close(); toast(record ? "这一餐已更新" : "这一餐已记下");
@@ -221,7 +259,9 @@ function sleepModal(record) {
       <label class="field"><span>时长</span><input name="duration" disabled placeholder="自动计算"></label>
     </div>
     ${slider("quality", "质量", 5, record?.quality || 3)}
+    ${imageField()}
     <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+  const imagePicker = attachImagePicker(overlay, record?.images);
   const form = overlay.querySelector("form");
   const durationHint = () => {
     const ms = new Date(form.wakeTime.value) - new Date(form.sleepTime.value);
@@ -238,7 +278,8 @@ function sleepModal(record) {
     const target = event.target;
     try {
       const body = {sleepTime: fromInput(target.sleepTime.value), wakeTime: fromInput(target.wakeTime.value),
-        quality: +target.quality.value, type: target.type.value, note: target.note.value.trim()};
+        quality: +target.quality.value, type: target.type.value, note: target.note.value.trim(),
+        images: await imagePicker.upload()};
       if (record) await api.life.sleep.update(record.id, body);
       else await api.life.sleep.create(body);
       close(); toast(record ? "睡眠已更新" : "睡眠已记下");
@@ -260,13 +301,16 @@ function exerciseModal(record) {
         .map(([value, label]) => `<option value="${value}" ${(record?.intensity || "MEDIUM") === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
       ${timeField("startTime", "开始时间", record ? localInputValue(new Date(record.startTime)) : nowInput())}
     </div>
+    ${imageField()}
     <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+  const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelector("form").addEventListener("submit", async event => {
     event.preventDefault();
     const form = event.target;
     try {
       const body = {type: form.type.value, durationMinutes: +form.durationMinutes.value,
-        intensity: form.intensity.value, startTime: fromInput(form.startTime.value), note: form.note.value.trim()};
+        intensity: form.intensity.value, startTime: fromInput(form.startTime.value), note: form.note.value.trim(),
+        images: await imagePicker.upload()};
       if (record) await api.life.exercises.update(record.id, body);
       else await api.life.exercises.create(body);
       close(); toast(record ? "运动已更新" : "运动已记下");
@@ -288,7 +332,9 @@ function recordModal(record) {
     </div>
     <label class="field" data-custom-label hidden><span>自定义名称</span><input name="label" maxlength="20"
       placeholder="比如:遛狗" value="${escapeHtml(record?.metadata?.label || "")}"></label>
+    ${imageField()}
     <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+  const imagePicker = attachImagePicker(overlay, record?.images);
   const form = overlay.querySelector("form");
   const syncLabel = () => { form.querySelector("[data-custom-label]").hidden = form.type.value !== "CUSTOM"; };
   form.type.addEventListener("change", () => {
@@ -301,7 +347,8 @@ function recordModal(record) {
     try {
       const metadata = form.type.value === "CUSTOM" ? {label: form.label.value.trim()} : null;
       const body = {type: form.type.value, value: +form.value.value, unit: form.unit.value.trim(),
-        time: fromInput(form.time.value), note: form.note.value.trim(), metadata};
+        time: fromInput(form.time.value), note: form.note.value.trim(), metadata,
+        images: await imagePicker.upload()};
       if (record) await api.life.records.update(record.id, body);
       else await api.life.records.create(body);
       close(); toast(record ? "记录已更新" : "已记下");

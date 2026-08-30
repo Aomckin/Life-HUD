@@ -9,6 +9,7 @@ import io.github.aomckin.lifehud.domain.SleepType;
 import io.github.aomckin.lifehud.repository.SleepRecordRepository;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,5 +69,13 @@ class SleepServiceTest {
         sleep.remove(record.id());
         assertThat(sleep.all()).isEmpty();
         assertThat(w.lifeEvents.all()).noneMatch(v -> v.type() == LifeEventType.SLEEP_RECORDED);
+    }
+
+    @Test void imagesSurvivePartialUpdatesAndReachTheTimeline(){
+        SleepRecord record = sleep.create(new SleepRequest(Instant.parse("2026-08-28T23:40:00Z"),
+                Instant.parse("2026-08-29T07:00:00Z"), 4, "NIGHT", "", List.of("/uploads/sleep.jpg")));
+        sleep.update(record.id(), new SleepRequest(null, null, 5, null, null));
+        assertThat(sleep.get(record.id()).images()).containsExactly("/uploads/sleep.jpg");
+        assertThat(w.lifeEvents.all().getFirst().metadata()).containsEntry("images", List.of("/uploads/sleep.jpg"));
     }
 }

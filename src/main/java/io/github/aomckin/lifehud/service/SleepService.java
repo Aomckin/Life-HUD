@@ -37,7 +37,7 @@ public final class SleepService {
         int duration = durationOf(sleepTime, wakeTime);
         Instant now = Instant.now();
         SleepRecord value = new SleepRecord(java.util.UUID.randomUUID().toString(), sleepTime, wakeTime, duration,
-                quality(request.quality()), type(request.type()), clean(request.note()), now, now);
+                quality(request.quality()), type(request.type()), clean(request.note()), images(request.images()), now, now);
         records.save(value);
         facts.recordCreated(LifeEventType.SLEEP_RECORDED, "sleep", value.id(), copy.lifeSleepTitle(),
                 summary(value), wakeTime, List.of("life", "sleep"), metadata(value));
@@ -52,7 +52,7 @@ public final class SleepService {
                 request.quality() == null ? old.quality() : quality(request.quality()),
                 request.type() == null ? old.type() : type(request.type()),
                 request.note() == null ? old.note() : clean(request.note()),
-                old.createdAt(), Instant.now());
+                request.images() == null ? old.images() : images(request.images()), old.createdAt(), Instant.now());
         records.save(value);
         facts.recordUpdated(LifeEventType.SLEEP_RECORDED, "sleep", id, copy.lifeSleepTitle(),
                 summary(value), value.wakeTime(), List.of("life", "sleep"), metadata(value));
@@ -80,9 +80,14 @@ public final class SleepService {
     }
 
     private Map<String, Object> metadata(SleepRecord value) {
-        return Map.of("durationMinutes", value.durationMinutes(), "quality", value.quality(),
-                "sleepType", value.type().name());
+        Map<String, Object> metadata = new java.util.HashMap<>();
+        metadata.put("durationMinutes", value.durationMinutes()); metadata.put("quality", value.quality());
+        metadata.put("sleepType", value.type().name());
+        if (!value.images().isEmpty()) metadata.put("images", value.images());
+        return metadata;
     }
+    private List<String> images(List<String> images) { return images == null ? List.of() : images.stream()
+            .filter(path -> path != null && !path.isBlank()).map(String::trim).toList(); }
 
     private int quality(Integer quality) {
         if (quality == null) return 3;

@@ -40,7 +40,7 @@ public final class LifeRecordService {
         Map<String, Object> metadata = normalizedMetadata(type, request.metadata());
         Instant now = Instant.now();
         LifeRecord value = new LifeRecord(UUID.randomUUID().toString(), type, request.value(), unit, time,
-                clean(request.note()), metadata, now, now);
+                clean(request.note()), metadata, images(request.images()), now, now);
         records.save(value);
         facts.recordCreated(LifeEventType.LIFE_RECORDED, "life_record", value.id(), label(value),
                 summary(value), time, List.of("life", "record"), displayMetadata(value));
@@ -58,7 +58,8 @@ public final class LifeRecordService {
                 request.unit() == null ? old.unit() : request.unit().trim(),
                 request.time() == null ? old.time() : request.time(),
                 request.note() == null ? old.note() : clean(request.note()),
-                metadata, old.createdAt(), Instant.now());
+                metadata, request.images() == null ? old.images() : images(request.images()),
+                old.createdAt(), Instant.now());
         records.save(value);
         facts.recordUpdated(LifeEventType.LIFE_RECORDED, "life_record", id, label(value),
                 summary(value), value.time(), List.of("life", "record"), displayMetadata(value));
@@ -97,8 +98,11 @@ public final class LifeRecordService {
         Map<String, Object> display = new HashMap<>(value.metadata());
         display.put("value", value.value());
         display.put("unit", value.unit());
+        if (!value.images().isEmpty()) display.put("images", value.images());
         return display;
     }
+    private List<String> images(List<String> images) { return images == null ? List.of() : images.stream()
+            .filter(path -> path != null && !path.isBlank()).map(String::trim).toList(); }
     private String defaultUnit(LifeRecordType type) {
         return switch (type) {
             case WATER, ALCOHOL -> "ml";

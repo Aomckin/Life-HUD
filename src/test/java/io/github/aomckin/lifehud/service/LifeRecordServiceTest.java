@@ -7,6 +7,7 @@ import io.github.aomckin.lifehud.domain.LifeRecordRequest;
 import io.github.aomckin.lifehud.repository.LifeRecordRepository;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,5 +47,12 @@ class LifeRecordServiceTest {
     @Test void negativeValuesAreRejected(){
         assertThatThrownBy(() -> records.create(new LifeRecordRequest("WATER", -5.0, null, null, null, null)))
                 .hasMessageContaining("不小于 0");
+    }
+
+    @Test void genericRecordsExposeImagesToTheTimeline(){
+        var value = records.create(new LifeRecordRequest("SUNLIGHT", 20.0, "min", null, "",
+                null, List.of("/uploads/sun.jpg")));
+        assertThat(value.images()).containsExactly("/uploads/sun.jpg");
+        assertThat(w.lifeEvents.all().getFirst().metadata()).containsEntry("images", List.of("/uploads/sun.jpg"));
     }
 }

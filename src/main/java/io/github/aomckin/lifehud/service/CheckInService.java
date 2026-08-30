@@ -40,7 +40,7 @@ public final class CheckInService {
         Instant time = request.time() == null ? Instant.now() : request.time();
         Instant now = Instant.now();
         CheckIn value = new CheckIn(UUID.randomUUID().toString(), scale(energy), scale(mood), scale(focusDesire),
-                scale(fatigue), time, clean(request.note()), now, now);
+                scale(fatigue), time, clean(request.note()), images(request.images()), now, now);
         records.save(value);
         facts.recordCreated(LifeEventType.CHECK_IN_RECORDED, "check_in", value.id(), copy.lifeCheckInTitle(),
                 summary(value), time, List.of("life", "check-in"), metadata(value));
@@ -56,7 +56,7 @@ public final class CheckInService {
         CheckIn value = new CheckIn(id, energy, mood, focusDesire, fatigue,
                 request.time() == null ? old.time() : request.time(),
                 request.note() == null ? old.note() : clean(request.note()),
-                old.createdAt(), Instant.now());
+                request.images() == null ? old.images() : images(request.images()), old.createdAt(), Instant.now());
         records.save(value);
         facts.recordUpdated(LifeEventType.CHECK_IN_RECORDED, "check_in", id, copy.lifeCheckInTitle(),
                 summary(value), value.time(), List.of("life", "check-in"), metadata(value));
@@ -73,9 +73,14 @@ public final class CheckInService {
         return copy.lifeCheckInSummary(value.energy(), value.mood(), value.focusDesire(), value.fatigue());
     }
     private Map<String, Object> metadata(CheckIn value) {
-        return Map.of("energy", value.energy(), "mood", value.mood(),
-                "focusDesire", value.focusDesire(), "fatigue", value.fatigue());
+        Map<String, Object> metadata = new java.util.HashMap<>();
+        metadata.put("energy", value.energy()); metadata.put("mood", value.mood());
+        metadata.put("focusDesire", value.focusDesire()); metadata.put("fatigue", value.fatigue());
+        if (!value.images().isEmpty()) metadata.put("images", value.images());
+        return metadata;
     }
+    private List<String> images(List<String> images) { return images == null ? List.of() : images.stream()
+            .filter(path -> path != null && !path.isBlank()).map(String::trim).toList(); }
     private int scale(Integer value) { return Math.max(1, Math.min(10, value)); }
     private String clean(String value) { return value == null ? "" : value.trim(); }
     private ResponseStatusException missing() { return new ResponseStatusException(HttpStatus.NOT_FOUND, "状态记录不存在"); }

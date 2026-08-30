@@ -1,6 +1,7 @@
 package io.github.aomckin.lifehud.domain;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * One sleep fact. durationMinutes is always computed from sleepTime → wakeTime
@@ -8,4 +9,7 @@ import java.time.Instant;
  * from the timestamps.
  */
 public record SleepRecord(String id, Instant sleepTime, Instant wakeTime, int durationMinutes,
-                          int quality, SleepType type, String note, Instant createdAt, Instant updatedAt) { }
+                          int quality, SleepType type, String note, List<String> images,
+                          Instant createdAt, Instant updatedAt) {
+    public SleepRecord { images = images == null ? List.of() : List.copyOf(images); }
+}

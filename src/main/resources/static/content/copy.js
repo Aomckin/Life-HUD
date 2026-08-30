@@ -107,6 +107,8 @@ export const ritualCopy = {
   stepUrlLabel: "链接（可选）",
   stepRequiredLabel: "必做",
   removeStep: "移除",
+  save: "保存仪式",
+  cancel: "取消",
   start: "开始",
   edit: "编辑",
   disable: "停用",

@@ -35,7 +35,8 @@ public final class ExerciseService {
         ExerciseIntensity intensity = intensity(request == null ? null : request.intensity());
         Instant now = Instant.now();
         ExerciseRecord value = new ExerciseRecord(UUID.randomUUID().toString(), type, startTime, duration,
-                intensity, clean(request == null ? null : request.note()), now, now);
+                intensity, clean(request == null ? null : request.note()),
+                images(request == null ? null : request.images()), now, now);
         records.save(value);
         facts.recordCreated(LifeEventType.EXERCISE_RECORDED, "exercise", value.id(),
                 copy.lifeExerciseType(type.name()), summary(value), startTime,
@@ -53,7 +54,7 @@ public final class ExerciseService {
                 duration,
                 request.intensity() == null ? old.intensity() : intensity(request.intensity()),
                 request.note() == null ? old.note() : clean(request.note()),
-                old.createdAt(), Instant.now());
+                request.images() == null ? old.images() : images(request.images()), old.createdAt(), Instant.now());
         records.save(value);
         facts.recordUpdated(LifeEventType.EXERCISE_RECORDED, "exercise", id,
                 copy.lifeExerciseType(value.type().name()), summary(value), value.startTime(),
@@ -71,8 +72,13 @@ public final class ExerciseService {
         return value.durationMinutes() + " min · " + copy.lifeExerciseIntensity(value.intensity().name());
     }
     private Map<String, Object> metadata(ExerciseRecord value) {
-        return Map.of("durationMinutes", value.durationMinutes(), "intensity", value.intensity().name());
+        Map<String, Object> metadata = new java.util.HashMap<>();
+        metadata.put("durationMinutes", value.durationMinutes()); metadata.put("intensity", value.intensity().name());
+        if (!value.images().isEmpty()) metadata.put("images", value.images());
+        return metadata;
     }
+    private List<String> images(List<String> images) { return images == null ? List.of() : images.stream()
+            .filter(path -> path != null && !path.isBlank()).map(String::trim).toList(); }
     private ExerciseType type(String type) {
         try { return ExerciseType.valueOf(type == null ? "OTHER" : type.trim().toUpperCase()); }
         catch (IllegalArgumentException ignored) { return ExerciseType.OTHER; }

@@ -77,6 +77,14 @@ class MealAndExerciseServiceTest {
         assertThat(event.occurredAt()).isEqualTo(Instant.parse("2026-08-29T12:16:00Z"));
     }
 
+    @Test void exerciseImagesCanBeEdited(){
+        var value = exercises.create(new ExerciseRequest("WALK", Instant.parse("2026-08-29T12:16:00Z"),
+                30, "LOW", "", List.of("/uploads/walk-1.jpg", "/uploads/walk-2.jpg")));
+        exercises.update(value.id(), new ExerciseRequest(null, null, null, null, null, List.of("/uploads/walk-2.jpg")));
+        assertThat(exercises.get(value.id()).images()).containsExactly("/uploads/walk-2.jpg");
+        assertThat(w.lifeEvents.all().getFirst().metadata()).containsEntry("images", List.of("/uploads/walk-2.jpg"));
+    }
+
     @Test void illegalExerciseDurationsAreRejected(){
         assertThatThrownBy(() -> exercises.create(new ExerciseRequest("WALK", null, 0, null, null)))
                 .hasMessageContaining("1 ~ 1440");

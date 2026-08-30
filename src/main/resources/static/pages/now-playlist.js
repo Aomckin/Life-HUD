@@ -5,8 +5,8 @@ import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=0
 /**
  * PlaylistBoard — the horizontal immersive wall for the 「现在。」歌单.
  * Songs are hung on a background stage at persisted normalized positions;
- * playCount drives the size level; the layout is deterministic (anchor slots
- * + slot-seeded jitter), never random across refreshes.
+ * playCount drives the size level. Layouts feel loose and spontaneous, while
+ * remaining deterministic after they have been persisted.
  */
 
 const minutes = seconds => {
@@ -34,37 +34,37 @@ const LEVEL_BOX = {
 
 /** Predefined hang points (normalized top-left + rank of the biggest level they host). */
 const ANCHORS = [
-  // scattered hang points — deliberately irregular, never a 3x3 grid;
-  // everything sits below the header zone (y >= ~0.12)
-  {x:.32, y:.34, rank:4},
-  {x:.02, y:.42, rank:3}, {x:.67, y:.36, rank:3},
-  {x:.05, y:.12, rank:2}, {x:.47, y:.08, rank:2}, {x:.75, y:.14, rank:2},
-  {x:.02, y:.76, rank:1}, {x:.32, y:.80, rank:1}, {x:.66, y:.72, rank:1},
-  {x:.88, y:.44, rank:0},
-  {x:.20, y:.16, rank:0}, {x:.87, y:.78, rank:0}, {x:.50, y:.84, rank:0}
+  // Curated irregular points: generous gaps, uneven baselines, no visible grid.
+  // Larger cards get the quieter central points; small labels can reach edges.
+  {x:.28,y:.30,rank:4}, {x:.55,y:.49,rank:4},
+  {x:.04,y:.38,rank:3}, {x:.61,y:.24,rank:3}, {x:.16,y:.65,rank:3}, {x:.70,y:.68,rank:3},
+  {x:.07,y:.11,rank:2}, {x:.36,y:.08,rank:2}, {x:.72,y:.10,rank:2}, {x:.42,y:.72,rank:2},
+  {x:.02,y:.77,rank:1}, {x:.23,y:.82,rank:1}, {x:.53,y:.84,rank:1}, {x:.79,y:.80,rank:1},
+  {x:.18,y:.18,rank:0}, {x:.48,y:.19,rank:0}, {x:.84,y:.18,rank:0}, {x:.88,y:.35,rank:0},
+  {x:.78,y:.47,rank:0}, {x:.34,y:.51,rank:0}, {x:.08,y:.55,rank:0}, {x:.88,y:.61,rank:0},
+  {x:.59,y:.64,rank:0}, {x:.31,y:.68,rank:0}, {x:.91,y:.76,rank:0}, {x:.64,y:.88,rank:0}
 ];
 
 /** Deterministic per-slot jitter (never Math.random) for the scattered feel. */
-function jitter(slot, salt, spread) {
-  return (((slot * 53 + salt * 29) % (spread * 2 + 1)) - spread) / 700;
+function seededUnit(seed) {
+  const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
 }
-function rotationFor(slot) {
-  return ((slot * 41) % 9) - 4; // -4° ~ +4°
+function jitter(slot, salt, axis, spread) {
+  return (seededUnit(slot * 97 + salt * 31 + axis * 17) * 2 - 1) * spread;
+}
+function rotationFor(slot, salt) {
+  return Math.round((seededUnit(slot * 67 + salt * 43) * 8 - 4) * 10) / 10;
 }
 
 /** First free anchor whose rank fits the level, scanning from `salt` so a
  *  non-zero salt rotates the assignment and yields a visibly new arrangement. */
 function pickAnchor(used, rank, salt) {
-  const n = ANCHORS.length;
-  for (let step = 0; step < n; step++) {
-    const i = (salt + step) % n;
-    if (!used.has(i) && ANCHORS[i].rank >= rank) return i;
-  }
-  for (let step = 0; step < n; step++) {
-    const i = (salt + step) % n;
-    if (!used.has(i)) return i;
-  }
-  return -1;
+  const fitting = ANCHORS.map((anchor,index)=>({anchor,index}))
+    .filter(({anchor,index})=>!used.has(index) && anchor.rank>=rank);
+  const available = fitting.length ? fitting : ANCHORS.map((anchor,index)=>({anchor,index})).filter(({index})=>!used.has(index));
+  if (!available.length) return -1;
+  return available[Math.floor(seededUnit(salt) * available.length)].index;
 }
 
 /** Assign anchors to songs that have no wall position yet; deterministic and stable. */
@@ -78,15 +78,15 @@ export function ensureLayout(songs, salt = 0) {
   const out = songs.map(s => ({...s}));
   for (const song of order) {
     const level = sizeLevel(song.playCount);
-    let chosen = pickAnchor(used, LEVEL_RANK[level], salt);
+    let chosen = pickAnchor(used, LEVEL_RANK[level], salt + song.slot * 101);
     if (chosen < 0) chosen = 0;
     used.add(chosen);
     const anchor = ANCHORS[chosen];
     const index = out.findIndex(s => s.slot === song.slot);
     out[index] = {...out[index],
-      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, 1 + salt, 30))),
-      posY: Math.min(.90, Math.max(.02, anchor.y + jitter(song.slot, 2 + salt, 20))),
-      rotationDeg: rotationFor(song.slot),
+      posX: Math.min(.96, Math.max(.01, anchor.x + jitter(song.slot, salt, 1, .035))),
+      posY: Math.min(.90, Math.max(.06, anchor.y + jitter(song.slot, salt, 2, .026))),
+      rotationDeg: rotationFor(song.slot, salt),
       zIndex: song.playCount > 0 ? 20 + song.slot : 10 + song.slot,
       _anchor: chosen
     };
@@ -119,12 +119,13 @@ export function renderBoard(container, options) {
   const usedAnchors = new Set(songs.map(anchorIndexOf));
   const emptySlots = [];
   const taken = new Set(usedAnchors);
+  const layoutSeed = songs.reduce((sum,song) => sum
+    + Math.round((song.posX ?? 0) * 997)
+    + Math.round((song.posY ?? 0) * 991), songs.length * 59);
   for (let slot = 1; slot <= 10; slot++) {
     if (songs.some(s => s.slot === slot)) continue;
-    const candidates = ANCHORS.map((a, i) => ({a, i})).filter(({i}) => !taken.has(i));
-    if (!candidates.length) break;
-    candidates.sort((p, q) => p.a.rank - q.a.rank); // outer / low-rank spots first
-    const chosen = candidates[0].i;
+    const chosen = pickAnchor(taken, 0, slot * 137 + layoutSeed);
+    if (chosen < 0) break;
     taken.add(chosen);
     emptySlots.push({slot, anchor: chosen});
   }
@@ -159,7 +160,9 @@ export function renderBoard(container, options) {
   };
   const emptySlotCard = ({slot, anchor}) => {
     const a = ANCHORS[anchor];
-    const style = `left:calc(${a.x} * (100% - 170px));top:calc(${a.y} * (100% - 70px));--i:${slot}`;
+    const x = Math.min(.94,Math.max(.02,a.x+jitter(slot,layoutSeed,3,.022)));
+    const y = Math.min(.91,Math.max(.08,a.y+jitter(slot,layoutSeed,4,.018)));
+    const style = `left:calc(${x} * (100% - 150px));top:calc(${y} * (100% - 64px));--i:${slot};transform:rotate(${rotationFor(slot,layoutSeed)*.45}deg)`;
     return `<button class="board-empty-slot" style="${style}" data-song-add="${slot}">
       <span>${String(slot).padStart(2,"0")}</span>${c.addSong}</button>`;
   };

@@ -98,14 +98,14 @@ export const ritualCopy = {
   categoryLabel: "类别（晨间 / 夜间 / 创作…）",
   triggerTimeLabel: "触发时间（可选）",
   enabledLabel: "启用",
-  stepsTitle: "步骤",
-  addStep: "＋ 添加步骤",
+  stepsTitle: "仪式片段",
+  addStep: "＋ 添加仪式片段",
   stepTypeLabel: "类型",
   stepTitleLabel: "标题",
   stepContentLabel: "内容 / 提示",
-  stepDurationLabel: "秒",
+  stepDurationLabel: "持续时间（秒）",
   stepUrlLabel: "链接（可选）",
-  stepRequiredLabel: "必做",
+  stepRequiredLabel: "需要确认后继续",
   removeStep: "移除",
   save: "保存仪式",
   cancel: "取消",
@@ -129,7 +129,7 @@ export const ritualCopy = {
   notePlaceholder: "写点什么…",
   openLink: "打开链接",
   executionsEmpty: "还没有执行记录。",
-  noSteps: "这个仪式还没有步骤，编辑后添加。"
+  noSteps: "还没有仪式片段，编辑后添加。"
 };
 
 export const nowCopy = {

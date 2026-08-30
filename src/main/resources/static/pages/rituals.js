@@ -1,211 +1,42 @@
-import { api } from "../api/client.js?v=0.6.1";
-import { ritualCopy as c } from "../content/copy.js?v=0.6.1";
-import { empty, error, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.6.2";
+import { ritualCopy as c } from "../content/copy.js?v=0.6.2";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js";
 
-const time = value => new Date(value).toLocaleString("zh-CN", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
-const stepTypeLabels = {TEXT:"提示",CHECK:"确认",TIMER:"计时",LINK:"链接",MUSIC_HINT:"音乐",NOTE:"记录"};
-let running = null; // {execution, steps, index}
+const labels={TEXT:"提示",CHECK:"确认",TIMER:"计时",LINK:"链接",MUSIC_HINT:"音乐",NOTE:"记录"};
+let running=null;
 
-export async function rituals(root) {
-  if (running) return renderRunner(root);
-  root.innerHTML = '<section class="panel">正在整理仪式…</section>';
-  try {
-    const rituals = await api.rituals.all();
-    const details = await Promise.all(rituals.map(r => api.rituals.detail(r.id)));
-    render(root, details);
-  } catch (reason) { root.innerHTML = error(reason.message); }
+export async function rituals(root){
+  if(running)return renderRunner(root);
+  document.querySelector("#app")?.classList.remove("ritual-mode");
+  root.innerHTML='<section class="panel">正在整理仪式…</section>';
+  try{const all=await api.rituals.all();render(root,await Promise.all(all.map(x=>api.rituals.detail(x.id))));}
+  catch(e){root.innerHTML=error(e.message);}
 }
 
-function render(root, details) {
-  const enabled = details.filter(d => d.ritual.enabled);
-  const disabled = details.filter(d => !d.ritual.enabled);
-  const card = d => {
-    const r = d.ritual;
-    const last = d.executions.find(e => e.status === "COMPLETED");
-    return `<article class="card ritual-card"><div class="ritual-card-body"><div class="ritual-badges"><span class="badge">${escapeHtml(r.category || "仪式")}</span>
-      ${r.triggerTime?`<span class="badge">${escapeHtml(String(r.triggerTime).slice(0,5))}</span>`:""}
-      </div><h3>${escapeHtml(r.name)}</h3><p>${escapeHtml(r.description || "")}</p>
-      <small>${d.steps.length ? `${d.steps.length} 个步骤 · ${last?`上次完成 ${time(last.completedAt)}`:"还没有完成过"}` : c.noSteps}</small></div>
-      <div class="row-actions ritual-actions">
-        ${r.enabled && d.steps.length?`<button class="button button-primary" data-start="${r.id}">${c.start}</button>`:""}
-        <button class="text-link" data-edit="${r.id}">${c.edit}</button>
-        ${r.enabled?`<button class="text-link" data-disable="${r.id}">${c.disable}</button>`:`<button class="text-link" data-enable="${r.id}">${c.enableAction}</button>`}
-        <button class="text-link danger-link" data-delete="${r.id}">${"删除"}</button>
-      </div></article>`;
-  };
-  root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Ritual</div><h2>进入一种状态</h2></div><button class="button button-primary" id="new-ritual">${c.newRitual}</button></div>
-    <div class="ritual-grid">${enabled.map(card).join("")||empty(c.empty)}</div>
-  </section>
-  ${disabled.length?`<section class="panel"><div class="section-head"><h2>${c.disabledTitle}</h2></div><div class="ritual-grid">${disabled.map(card).join("")}</div></section>`:""}
-  <form class="panel milestone-form ritual-form-panel" id="ritual-form" hidden>
-    <div class="section-head"><h2 id="ritual-form-title">${c.newRitual}</h2></div>
-    <label class="field"><span>${c.nameLabel}</span><input id="ritual-name" maxlength="60" required></label>
-    <div class="milestone-form-grid">
-      <label class="field"><span>${c.descriptionLabel}</span><input id="ritual-description" maxlength="120"></label>
-      <label class="field"><span>${c.categoryLabel}</span><input id="ritual-category" maxlength="30" placeholder="晨间 / 夜间 / 创作…"></label>
-    </div>
-    <div class="milestone-form-grid">
-      <label class="field"><span>${c.triggerTimeLabel}</span><input id="ritual-time" type="time"></label>
-      <label class="check-field"><input id="ritual-enabled" type="checkbox" checked> ${c.enabledLabel}</label>
-    </div>
-    <div class="section-head"><h3>${c.stepsTitle}</h3><button class="text-link" type="button" id="add-step">${c.addStep}</button></div>
-    <div id="step-editor"></div>
-    <div class="row-actions ritual-form-actions"><button class="button button-primary" type="submit">${c.save}</button><button class="button button-ghost" type="button" id="cancel-ritual">${c.cancel}</button></div>
-  </form></div>`;
-
-  const stepEditor = root.querySelector("#step-editor");
-  const addStepRow = (step = {}) => {
-    const row = document.createElement("div");
-    row.className = "step-row";
-    row.innerHTML = `<select class="step-type">${Object.entries(stepTypeLabels).map(([id,label])=>`<option value="${id}" ${step.type===id?"selected":""}>${label}</option>`).join("")}</select>
-      <input class="step-title" placeholder="${c.stepTitleLabel}" maxlength="60" value="${escapeHtml(step.title||"")}">
-      <input class="step-content" placeholder="${c.stepContentLabel}" maxlength="200" value="${escapeHtml(step.content||"")}">
-      <input class="step-duration" type="number" min="0" placeholder="${c.stepDurationLabel}" value="${step.durationSeconds||""}">
-      <input class="step-url" placeholder="${c.stepUrlLabel}" value="${escapeHtml(step.url||"")}">
-      <label class="check-field"><input type="checkbox" class="step-required" ${step.required!==false?"checked":""}> ${c.stepRequiredLabel}</label>
-      <button class="text-link danger-link" type="button">${c.removeStep}</button>`;
-    row.querySelector("button").addEventListener("click", () => row.remove());
-    stepEditor.append(row);
-  };
-  root.querySelector("#add-step").addEventListener("click", () => addStepRow());
-
-  const form = root.querySelector("#ritual-form");
-  let editingId = null;
-  root.querySelector("#new-ritual").addEventListener("click", () => {
-    editingId = null; form.reset(); root.querySelector("#ritual-enabled").checked = true;
-    root.querySelector("#ritual-form-title").textContent = c.newRitual;
-    stepEditor.innerHTML = ""; addStepRow(); form.hidden = false;
-    form.scrollIntoView({behavior:"smooth", block:"start"}); root.querySelector("#ritual-name").focus();
-  });
-  root.querySelector("#cancel-ritual").addEventListener("click", () => { editingId = null; form.hidden = true; });
-
-  form.onsubmit = async event => {
-    event.preventDefault();
-    const steps = [...stepEditor.querySelectorAll(".step-row")].map((row, index) => ({
-      type: row.querySelector(".step-type").value,
-      title: row.querySelector(".step-title").value.trim(),
-      content: row.querySelector(".step-content").value.trim(),
-      durationSeconds: Number(row.querySelector(".step-duration").value) || 0,
-      url: row.querySelector(".step-url").value.trim(),
-      sortOrder: index,
-      required: row.querySelector(".step-required").checked
-    })).filter(step => step.title);
-    try {
-      const body = {name: v("ritual-name"), description: v("ritual-description"), category: v("ritual-category"),
-        triggerTime: v("ritual-time") || null, enabled: root.querySelector("#ritual-enabled").checked, steps};
-      if (editingId) await api.rituals.update(editingId, body); else await api.rituals.create(body);
-      toast(editingId ? "仪式已更新" : "仪式已创建"); editingId = null; rituals(root);
-    } catch (reason) { toast(reason.message, true); }
-  };
-
-  root.querySelectorAll("[data-start]").forEach(button => button.addEventListener("click", async () => {
-    try {
-      const execution = await api.rituals.start(button.dataset.start);
-      const view = await api.rituals.execution(execution.id);
-      running = {execution: view.execution, steps: view.steps, index: 0};
-      renderRunner(root);
-    } catch (reason) { toast(reason.message, true); }
-  }));
-  root.querySelectorAll("[data-edit]").forEach(button => button.addEventListener("click", () => openEdit(button.dataset.edit)));
-  root.querySelectorAll("[data-disable]").forEach(button => button.addEventListener("click", async () => {
-    await api.rituals.disable(button.dataset.disable); rituals(root);
-  }));
-  root.querySelectorAll("[data-enable]").forEach(button => button.addEventListener("click", async () => {
-    await api.rituals.enable(button.dataset.enable); rituals(root);
-  }));
-  root.querySelectorAll("[data-delete]").forEach(button => button.addEventListener("click", async () => {
-    if (!confirm(c.deleteConfirm)) return;
-    try { await api.rituals.remove(button.dataset.delete); rituals(root); }
-    catch (reason) { toast(reason.message, true); }
-  }));
-
-  function v(id) { return root.querySelector("#" + id)?.value.trim() || ""; }
-  async function openEdit(id) {
-    const detail = await api.rituals.detail(id);
-    const r = detail.ritual;
-    editingId = id;
-    form.reset();
-    root.querySelector("#ritual-form-title").textContent = `编辑「${r.name}」`;
-    root.querySelector("#ritual-name").value = r.name;
-    root.querySelector("#ritual-description").value = r.description || "";
-    root.querySelector("#ritual-category").value = r.category || "";
-    root.querySelector("#ritual-time").value = r.triggerTime || "";
-    root.querySelector("#ritual-enabled").checked = r.enabled;
-    stepEditor.innerHTML = "";
-    detail.steps.forEach(step => addStepRow({type: step.type, title: step.title, content: step.content,
-      durationSeconds: step.durationSeconds, url: step.url, required: step.required}));
-    form.hidden = false;
-    form.scrollIntoView({behavior:"smooth", block:"start"});
-  }
+function render(root,details){
+  const card=d=>{const r=d.ritual,last=d.executions.find(x=>x.status==="COMPLETED");return `<article class="card ritual-card"><div class="ritual-card-body"><div class="ritual-badges"><span class="badge">${escapeHtml(r.category||"仪式")}</span>${r.triggerTime?`<span class="badge">${escapeHtml(String(r.triggerTime).slice(0,5))}</span>`:""}${r.enabled?"":'<span class="badge">已停用</span>'}</div><h3>${escapeHtml(r.name)}</h3><p>${escapeHtml(r.description||"给自己一个进入状态的信号。")}</p><small>${d.steps.length} 个仪式片段${last?" · 最近完成过":" · 等待第一次开始"}</small></div><div class="row-actions ritual-actions">${r.enabled&&d.steps.length?`<button class="button button-primary" data-start="${r.id}">${c.start}</button>`:""}<button class="text-link" data-edit="${r.id}">${c.edit}</button>${r.enabled?`<button class="text-link" data-disable="${r.id}">${c.disable}</button>`:`<button class="text-link" data-enable="${r.id}">${c.enableAction}</button>`}<button class="text-link danger-link" data-delete="${r.id}">删除</button></div></article>`};
+  const enabled=details.filter(x=>x.ritual.enabled),disabled=details.filter(x=>!x.ritual.enabled);
+  root.innerHTML=`<div class="direction-page ritual-page"><section class="panel ritual-hero"><div class="section-head"><div><div class="eyebrow">v0.6.2 · Ritual</div><h2>进入一种状态</h2><p>用几个有节奏的动作，为此刻划出一道边界。</p></div><button class="button button-primary" id="new-ritual">${c.newRitual}</button></div><div class="ritual-grid">${enabled.map(card).join("")||empty(c.empty)}</div></section>${disabled.length?`<section class="panel"><div class="section-head"><h2>${c.disabledTitle}</h2></div><div class="ritual-grid">${disabled.map(card).join("")}</div></section>`:""}
+  <form class="panel ritual-form-panel" id="ritual-form" hidden><div class="section-head"><div><div class="eyebrow">Ritual Editor</div><h2 id="form-title">${c.newRitual}</h2></div></div><div class="ritual-basics"><label class="field ritual-name-field"><span>${c.nameLabel}</span><input id="ritual-name" maxlength="60" required></label><label class="field"><span>${c.descriptionLabel}</span><input id="ritual-description" maxlength="120" placeholder="我想通过它进入怎样的状态？"></label><label class="field"><span>${c.categoryLabel}</span><input id="ritual-category" maxlength="30" placeholder="晨间 / 夜间 / 创作…"></label><label class="field"><span>${c.triggerTimeLabel}</span><input id="ritual-time" type="time"></label><label class="check-field"><input id="ritual-enabled" type="checkbox" checked> ${c.enabledLabel}</label></div><section class="fragment-section"><div class="section-head"><div><h3>${c.stepsTitle}</h3><p>一次只写下一个自然的动作，其余设置需要时再展开。</p></div></div><div id="step-editor" class="fragment-list"></div><button class="button button-ghost add-fragment" type="button" id="add-step">${c.addStep}</button></section><div class="row-actions ritual-form-actions"><button class="button button-primary" type="submit">${c.save}</button><button class="button button-ghost" type="button" id="cancel-ritual">${c.cancel}</button></div></form></div>`;
+  const editor=root.querySelector("#step-editor"),form=root.querySelector("#ritual-form");let editing=null;
+  function add(s={}){const row=document.createElement("article");row.className="fragment-row";row.innerHTML=`<div class="fragment-summary"><span class="fragment-grip">☰</span><input class="step-title" aria-label="片段标题" placeholder="例如：拉开窗帘，让早晨进来" maxlength="60" value="${escapeHtml(s.title||"")}"><div class="fragment-controls"><button class="icon-button up" type="button" title="上移">↑</button><button class="icon-button down" type="button" title="下移">↓</button><button class="text-link toggle" type="button">高级设置</button><button class="icon-button danger-link remove" type="button" title="删除">×</button></div></div><div class="fragment-advanced" hidden><label class="field"><span>${c.stepTypeLabel}</span><select class="step-type">${Object.entries(labels).map(([k,v])=>`<option value="${k}" ${s.type===k?"selected":""}>${v}</option>`).join("")}</select></label><label class="field fragment-content"><span>${c.stepContentLabel}</span><textarea class="step-content" rows="2" maxlength="200">${escapeHtml(s.content||"")}</textarea></label><label class="field"><span>${c.stepDurationLabel}</span><input class="step-duration" type="number" min="0" value="${s.durationSeconds||""}"></label><label class="field"><span>${c.stepUrlLabel}</span><input class="step-url" type="url" value="${escapeHtml(s.url||"")}"></label><label class="check-field"><input class="step-required" type="checkbox" ${s.required!==false?"checked":""}> ${c.stepRequiredLabel}</label></div>`;
+    row.querySelector(".toggle").onclick=e=>{const a=row.querySelector(".fragment-advanced");a.hidden=!a.hidden;e.currentTarget.textContent=a.hidden?"高级设置":"收起设置"};row.querySelector(".remove").onclick=()=>row.remove();row.querySelector(".up").onclick=()=>row.previousElementSibling?.before(row);row.querySelector(".down").onclick=()=>row.nextElementSibling?.after(row);editor.append(row);}
+  const value=id=>root.querySelector("#"+id)?.value.trim()||"";
+  function open(){editing=null;form.reset();root.querySelector("#ritual-enabled").checked=true;root.querySelector("#form-title").textContent=c.newRitual;editor.innerHTML="";add();form.hidden=false;form.scrollIntoView({behavior:"smooth"});root.querySelector("#ritual-name").focus();}
+  root.querySelector("#new-ritual").onclick=open;root.querySelector("#add-step").onclick=()=>add();root.querySelector("#cancel-ritual").onclick=()=>{editing=null;form.hidden=true};
+  form.onsubmit=async e=>{e.preventDefault();const steps=[...editor.querySelectorAll(".fragment-row")].map((r,i)=>({type:r.querySelector(".step-type").value,title:r.querySelector(".step-title").value.trim(),content:r.querySelector(".step-content").value.trim(),durationSeconds:Number(r.querySelector(".step-duration").value)||0,url:r.querySelector(".step-url").value.trim(),sortOrder:i,required:r.querySelector(".step-required").checked})).filter(x=>x.title);try{const body={name:value("ritual-name"),description:value("ritual-description"),category:value("ritual-category"),triggerTime:value("ritual-time")||null,enabled:root.querySelector("#ritual-enabled").checked,steps};editing?await api.rituals.update(editing,body):await api.rituals.create(body);toast(editing?"仪式已更新":"仪式已创建");editing=null;rituals(root)}catch(x){toast(x.message,true)}};
+  root.querySelectorAll("[data-start]").forEach(b=>b.onclick=()=>{const d=details.find(x=>x.ritual.id===b.dataset.start);running={phase:"intro",ritual:d.ritual,execution:null,steps:d.steps,index:0};renderRunner(root)});
+  root.querySelectorAll("[data-edit]").forEach(b=>b.onclick=async()=>{try{const d=await api.rituals.detail(b.dataset.edit),r=d.ritual;editing=r.id;form.reset();root.querySelector("#form-title").textContent=`编辑「${r.name}」`;root.querySelector("#ritual-name").value=r.name;root.querySelector("#ritual-description").value=r.description||"";root.querySelector("#ritual-category").value=r.category||"";root.querySelector("#ritual-time").value=r.triggerTime||"";root.querySelector("#ritual-enabled").checked=r.enabled;editor.innerHTML="";d.steps.forEach(add);form.hidden=false;form.scrollIntoView({behavior:"smooth"})}catch(x){toast(x.message,true)}});
+  root.querySelectorAll("[data-disable]").forEach(b=>b.onclick=async()=>{await api.rituals.disable(b.dataset.disable);rituals(root)});root.querySelectorAll("[data-enable]").forEach(b=>b.onclick=async()=>{await api.rituals.enable(b.dataset.enable);rituals(root)});root.querySelectorAll("[data-delete]").forEach(b=>b.onclick=async()=>{if(await confirmDialog(c.deleteConfirm)){try{await api.rituals.remove(b.dataset.delete);rituals(root)}catch(x){toast(x.message,true)}}});
 }
 
-async function renderRunner(root) {
-  const {execution, steps, index} = running;
-  const step = steps[index];
-  const result = execution.stepResults.find(r => r.stepId === step.id) || {};
-  const total = steps.length;
-  root.innerHTML = `<div class="direction-page"><section class="panel ritual-runner">
-    <div class="runner-head"><h2>${escapeHtml(execution.ritualName)}</h2><span class="badge">${c.runnerProgress(index, total)}</span></div>
-    <div class="runner-progress"><span style="width:${Math.round(index / total * 100)}%"></span></div>
-    <div class="runner-step">
-      <span class="badge">${stepTypeLabels[step.type] || step.type}${step.required?"":" · 可跳过"}</span>
-      <h3>${escapeHtml(step.title)}</h3>
-      ${step.content?`<p>${escapeHtml(step.content)}</p>`:""}
-      ${step.type==="TIMER"?`<p class="runner-timer" data-seconds="${step.durationSeconds}">${step.durationSeconds}s</p>`:""}
-      ${step.type==="NOTE"?`<textarea id="runner-note" rows="3" placeholder="${c.notePlaceholder}">${escapeHtml(result.note||"")}</textarea>`:""}
-      ${step.url?`<a class="button button-secondary" href="${escapeHtml(step.url)}" target="_blank" rel="noopener">${c.openLink}</a>`:""}
-    </div>
-    <div class="row-actions runner-actions">
-      <button class="button button-ghost" id="runner-prev" ${index===0?"disabled":""}>${c.prevStep}</button>
-      ${step.required||index===total-1?`<button class="button button-primary" id="runner-next">${index===total-1?c.finishRitual:c.stepDone}</button>`
-        :`<button class="button button-secondary" id="runner-skip">${c.skipStep}</button><button class="button button-primary" id="runner-next">${c.stepDone}</button>`}
-      <button class="text-link danger-link" id="runner-cancel">${c.cancelRitual}</button>
-    </div>
-    ${execution.note?`<small>${escapeHtml(execution.note)}</small>`:""}
-  </section></div>`;
-
-  let timerHandle = null;
-  if (step.type === "TIMER") {
-    const display = root.querySelector(".runner-timer");
-    let left = step.durationSeconds;
-    timerHandle = window.setInterval(() => {
-      left = Math.max(0, left - 1);
-      display.textContent = `${left}s`;
-      if (left === 0) window.clearInterval(timerHandle);
-    }, 1000);
-  }
-
-  const saveStep = async (done, note) => {
-    try { running.execution = await api.rituals.step(execution.id, step.id, {done, note: note ?? null}); }
-    catch (reason) { toast(reason.message, true); }
-  };
-  const go = index => { running.index = Math.max(0, Math.min(total - 1, index)); renderRunner(root); };
-
-  root.querySelector("#runner-prev").addEventListener("click", () => { if (timerHandle) window.clearInterval(timerHandle); go(index - 1); });
-  root.querySelector("#runner-next").addEventListener("click", async () => {
-    if (timerHandle) window.clearInterval(timerHandle);
-    const note = root.querySelector("#runner-note")?.value ?? null;
-    await saveStep(true, note);
-    if (index === total - 1) return finish();
-    go(index + 1);
-  });
-  root.querySelector("#runner-skip")?.addEventListener("click", () => { if (timerHandle) window.clearInterval(timerHandle); go(index + 1); });
-  root.querySelector("#runner-cancel").addEventListener("click", async () => {
-    if (!confirm(c.cancelConfirm)) return;
-    if (timerHandle) window.clearInterval(timerHandle);
-    await api.rituals.cancelExecution(execution.id);
-    running = null; rituals(root);
-  });
-
-  async function finish() {
-    const pending = steps.filter(s => s.required).filter(s => {
-      const r = running.execution.stepResults.find(x => x.stepId === s.id);
-      return !r || r.status !== "DONE";
-    });
-    if (pending.length && !confirm(c.requiredPending)) return;
-    try {
-      await api.rituals.completeExecution(execution.id, running.execution.note || "");
-      toast("仪式完成"); running = null; rituals(root);
-    } catch (reason) { toast(reason.message, true); }
-  }
+async function renderRunner(root){
+  document.querySelector("#app")?.classList.add("ritual-mode");const r=running.ritual;
+  if(running.phase==="intro"){root.innerHTML=`<section class="ritual-immersive"><div class="ritual-intro"><time>${r.triggerTime?escapeHtml(String(r.triggerTime).slice(0,5)):new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"})}</time><div class="ritual-flame">✦</div><h1>${escapeHtml(r.name)}</h1><p>${escapeHtml(r.description||"准备好后，就从第一个动作开始。")}</p><button class="button button-primary ritual-enter" id="begin">开始</button><button class="text-link" id="exit">暂不开始</button></div></section>`;root.querySelector("#exit").onclick=()=>{running=null;rituals(root)};root.querySelector("#begin").onclick=async e=>{e.currentTarget.disabled=true;try{const ex=await api.rituals.start(r.id),view=await api.rituals.execution(ex.id);running.execution=view.execution;running.steps=view.steps;running.phase="step";renderRunner(root)}catch(x){e.currentTarget.disabled=false;toast(x.message,true)}};return}
+  if(running.phase==="complete"){root.innerHTML=`<section class="ritual-immersive"><div class="ritual-intro ritual-complete"><div class="ritual-flame">✦</div><p class="eyebrow">Ritual Complete</p><h1>${escapeHtml(r.name)}，完成。</h1><p>状态已经切换。带着这一刻，继续生活。</p><button class="button button-primary ritual-enter" id="home">进入 Life HUD</button></div></section>`;root.querySelector("#home").onclick=()=>{running=null;rituals(root)};return}
+  const {execution,steps,index}=running,step=steps[index],total=steps.length,result=execution.stepResults.find(x=>x.stepId===step.id)||{};
+  root.innerHTML=`<section class="ritual-immersive"><div class="ritual-stage"><header><span>${escapeHtml(execution.ritualName)}</span><strong>${c.runnerProgress(index,total)}</strong></header><div class="runner-progress"><span style="width:${Math.round((index+1)/total*100)}%"></span></div><div class="runner-step"><span class="runner-kicker">${labels[step.type]||step.type}${step.required?"":" · 可跳过"}</span><h1>${escapeHtml(step.title)}</h1>${step.content?`<p>${escapeHtml(step.content)}</p>`:""}${step.type==="TIMER"?`<p class="runner-timer">${format(step.durationSeconds)}</p>`:""}${step.type==="NOTE"?`<textarea id="note" rows="3" placeholder="${c.notePlaceholder}">${escapeHtml(result.note||"")}</textarea>`:""}${step.url?`<a class="button button-secondary" href="${escapeHtml(step.url)}" target="_blank" rel="noopener">${c.openLink}</a>`:""}</div><footer class="runner-actions"><button class="button button-ghost" id="prev" ${index===0?"disabled":""}>${c.prevStep}</button>${!step.required&&index<total-1?`<button class="text-link" id="skip">${c.skipStep}</button>`:""}<button class="button button-primary" id="next">${index===total-1?c.finishRitual:"继续"}</button><button class="text-link danger-link runner-cancel" id="cancel">中途退出</button></footer></div></section>`;
+  let timer=null,left=step.durationSeconds;if(step.type==="TIMER")timer=setInterval(()=>{left=Math.max(0,left-1);root.querySelector(".runner-timer").textContent=format(left);if(!left)clearInterval(timer)},1000);const stop=()=>timer&&clearInterval(timer),go=i=>{stop();running.index=Math.max(0,Math.min(total-1,i));renderRunner(root)};
+  root.querySelector("#prev").onclick=()=>go(index-1);root.querySelector("#skip")?.addEventListener("click",()=>go(index+1));root.querySelector("#next").onclick=async()=>{stop();try{running.execution=await api.rituals.step(execution.id,step.id,{done:true,note:root.querySelector("#note")?.value??null});if(index<total-1)return go(index+1);await api.rituals.completeExecution(execution.id,running.execution.note||"");running.phase="complete";renderRunner(root)}catch(x){toast(x.message,true)}};root.querySelector("#cancel").onclick=async()=>{if(!await confirmDialog(c.cancelConfirm))return;stop();try{await api.rituals.cancelExecution(execution.id);running=null;rituals(root)}catch(x){toast(x.message,true)}};
 }
+function format(s){s=Math.max(0,Number(s)||0);return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}

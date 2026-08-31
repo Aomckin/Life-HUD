@@ -2,6 +2,7 @@ package io.github.aomckin.lifehud.service;
 
 import io.github.aomckin.lifehud.domain.*;
 import io.github.aomckin.lifehud.dto.DashboardSummary;
+import io.github.aomckin.lifehud.dto.DashboardCompanions;
 import io.github.aomckin.lifehud.dto.FocusSessionView;
 import io.github.aomckin.lifehud.dto.agent.AgentContext;
 import io.github.aomckin.lifehud.repository.*;
@@ -27,6 +28,7 @@ public final class AgentContextService {
     private final GrowthRecordRepository growthRecords; private final GrowthSnapshotService snapshots;
     private final GrowthTitleService titles;
     private final DashboardHeadlineService headlines;
+    private final DashboardSelectionService dashboardSelections;
 
     public AgentContextService(LifeDateService dates, Player player, LevelService levels, FocusService focus,
             DailyTaskManager daily, SpecialTaskManager special, DreamRepository dreams, GoalRepository goals,
@@ -35,12 +37,12 @@ public final class AgentContextService {
             CheckInRepository checkIns, LifeRecordRepository lifeRecords, JournalEntryRepository journals,
             MediaRepository media, LifeEventRepository events, TimelineService timeline,
             GrowthRecordRepository growthRecords, GrowthSnapshotService snapshots, GrowthTitleService titles,
-            DashboardHeadlineService headlines) {
+            DashboardHeadlineService headlines, DashboardSelectionService dashboardSelections) {
         this.dates=dates;this.player=player;this.levels=levels;this.focus=focus;this.daily=daily;this.special=special;
         this.dreams=dreams;this.goals=goals;this.dreamMilestones=dreamMilestones;this.rituals=rituals;
         this.ritualExecutions=ritualExecutions;this.sleeps=sleeps;this.meals=meals;this.exercises=exercises;
         this.checkIns=checkIns;this.lifeRecords=lifeRecords;this.journals=journals;this.media=media;
-        this.events=events;this.timeline=timeline;this.growthRecords=growthRecords;this.snapshots=snapshots;this.titles=titles;this.headlines=headlines;
+        this.events=events;this.timeline=timeline;this.growthRecords=growthRecords;this.snapshots=snapshots;this.titles=titles;this.headlines=headlines;this.dashboardSelections=dashboardSelections;
     }
 
     public AgentContext.Today today() {
@@ -64,7 +66,15 @@ public final class AgentContextService {
     public AgentContext.JournalResponse journalResponse(int limit){int safe=range(limit,1,100,"limit");return new AgentContext.JournalResponse(SCHEMA,dates.now(),journals.all().stream().sorted(Comparator.comparing(JournalEntry::occurredAt).reversed()).limit(safe).toList(),timeline.timeline(null,null,null,null,null,1,safe));}
     public AgentContext.MediaResponse mediaResponse(){return new AgentContext.MediaResponse(SCHEMA,dates.now(),media());}
     public AgentContext.GrowthResponse growthResponse(){return new AgentContext.GrowthResponse(SCHEMA,dates.now(),growth());}
-    public DashboardSummary dashboard(){AgentContext.Today v=today();return new DashboardSummary(v.generatedAt(),v.date(),headlines.random(),headlines.all(),v.status(),v.focus(),v.tasks(),life(v.date()),v.dreams(),v.rituals(),v.media(),v.timeline());}
+    public DashboardSummary dashboard(){AgentContext.Today v=today();DashboardSelections selected=dashboardSelections.get();return new DashboardSummary(v.generatedAt(),v.date(),headlines.random(),headlines.all(),v.status(),v.focus(),v.tasks(),life(v.date()),v.dreams(),v.rituals(),v.media(),selected,companions(selected),v.timeline());}
+
+    private DashboardCompanions companions(DashboardSelections selected){
+        Dream dream=dreams.find(selected.dreamId()).orElse(null);Ritual ritual=rituals.find(selected.ritualId()).orElse(null);DashboardCompanions.Media chosen=null;
+        if("ANIME".equals(selected.mediaType()))chosen=media.anime().stream().filter(v->v.id().equals(selected.mediaId())).findFirst().map(v->new DashboardCompanions.Media(v.id(),"ANIME",v.title(),"番剧 · "+v.currentEpisode()+" / "+v.totalEpisodes())).orElse(null);
+        else if("GAME".equals(selected.mediaType()))chosen=media.games().stream().filter(v->v.id().equals(selected.mediaId())).findFirst().map(v->new DashboardCompanions.Media(v.id(),"GAME",v.title(),"游戏 · "+v.totalPlayTimeMinutes()+" min")).orElse(null);
+        else if(!selected.mediaId().isBlank())chosen=media.items().stream().filter(v->v.id().equals(selected.mediaId())).findFirst().map(v->new DashboardCompanions.Media(v.id(),v.type().name(),v.title(),v.type().name()+" · "+v.status().name())).orElse(null);
+        return new DashboardCompanions(dream,ritual,chosen);
+    }
 
     private AgentContext.Status status(){return new AgentContext.Status(player.energy,levels.level(player.exp),player.exp,
             titles.currentName(),latest(checkIns.all(),CheckIn::time),focus.current());}

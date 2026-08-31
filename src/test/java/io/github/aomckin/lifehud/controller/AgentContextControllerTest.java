@@ -12,6 +12,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes=LifeHudApplication.class)
@@ -39,8 +40,27 @@ class AgentContextControllerTest {
     }
 
     @Test void rejectsUnboundedRangeAndLimit() throws Exception {
-        mvc.perform(get("/api/agent/context/recent?days=31")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/agent/context/journal?limit=101")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/agent/context/recent?days=31")).andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("days 必须在 1 到 30 之间"))
+                .andExpect(jsonPath("$.path").value("/api/agent/context/recent"));
+        mvc.perform(get("/api/agent/context/journal?limit=101")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("limit 必须在 1 到 100 之间"));
+        mvc.perform(get("/api/agent/context/recent?days=not-a-number")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("请求格式或字段值无效"));
+    }
+
+    @Test void dashboardSelectionsStartEmptyAndRejectMissingTargets() throws Exception {
+        mvc.perform(get("/api/dashboard/selections")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.dreamId").value(""))
+                .andExpect(jsonPath("$.ritualId").value(""))
+                .andExpect(jsonPath("$.mediaId").value(""));
+        mvc.perform(put("/api/dashboard/selections/dream").contentType("application/json")
+                        .content("{\"id\":\"missing\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.detail").value("展示对象不存在"));
     }
 
     @Test void resolvesEquippedTitleIdToCatalogName() throws Exception {

@@ -1,7 +1,7 @@
-import { api } from "../api/client.js?v=0.8.0";
-import { nowCopy as c } from "../content/copy.js?v=0.8.0";
-import { renderBoard } from "./now-playlist.js?v=0.8.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.8.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { nowCopy as c } from "../content/copy.js?v=1.0.0";
+import { renderBoard } from "./now-playlist.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 const minutes = seconds => {

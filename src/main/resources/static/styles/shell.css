@@ -124,6 +124,12 @@
   width: 100%;
   max-width: var(--app-canvas-max);
   margin-inline: auto;
+  animation: page-arrive 200ms var(--ease-emphasized) both;
+}
+
+@keyframes page-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .topbar {

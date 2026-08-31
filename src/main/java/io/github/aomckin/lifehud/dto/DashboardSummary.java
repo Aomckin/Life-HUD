@@ -10,4 +10,6 @@ public record DashboardSummary(Instant generatedAt, LocalDate date, String headl
                                AgentContext.Focus focus, AgentContext.Tasks tasks,
                                AgentContext.Life life, AgentContext.Dreams dreams,
                                AgentContext.Rituals rituals, AgentContext.Media media,
+                               io.github.aomckin.lifehud.domain.DashboardSelections selections,
+                               DashboardCompanions companions,
                                java.util.List<io.github.aomckin.lifehud.domain.TimelineItem> timeline) { }

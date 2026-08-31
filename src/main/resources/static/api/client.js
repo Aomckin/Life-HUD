@@ -30,6 +30,8 @@ const remove = url => request(url, {method: "DELETE"});
 export const api = {
   dashboard: {
     summary: () => request("/api/dashboard"),
+    selections: () => request("/api/dashboard/selections"),
+    select: (slot, id, type = "") => put(`/api/dashboard/selections/${slot}`, {id, type}),
     addHeadline: text => post("/api/dashboard/headlines", {text}),
     removeHeadline: id => remove(`/api/dashboard/headlines/${id}`)
   },

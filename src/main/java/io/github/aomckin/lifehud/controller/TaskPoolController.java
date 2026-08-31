@@ -50,14 +50,16 @@ public final class TaskPoolController {
     @PutMapping("/daily/{id}")
     public DailyTask updateDaily(@PathVariable String id, @RequestBody DefinitionRequest request) {
         requireName(request);
+        requireDaily(id);
         return dailyTasks.updateDefinition(id, request.name().trim(), orZero(request.energy()), orZero(request.exp()));
     }
     @DeleteMapping("/daily/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteDaily(@PathVariable String id) { dailyTasks.removeDefinition(id); }
+    public void deleteDaily(@PathVariable String id) { requireDaily(id); dailyTasks.removeDefinition(id); }
     @PostMapping("/daily/{id}/enabled")
     public DailyTask setDailyEnabled(@PathVariable String id, @RequestBody EnabledRequest request) {
+        DailyTask task = requireDaily(id);
         dailyTasks.setEnabled(id, request.enabled());
-        return dailyTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst().orElseThrow();
+        return task;
     }
 
     @PostMapping("/special") @ResponseStatus(HttpStatus.CREATED)
@@ -68,14 +70,16 @@ public final class TaskPoolController {
     @PutMapping("/special/{id}")
     public SpecialTask updateSpecial(@PathVariable String id, @RequestBody DefinitionRequest request) {
         requireName(request);
+        requireSpecial(id);
         return specialTasks.updateDefinition(id, request.name().trim(), orZero(request.exp()));
     }
     @DeleteMapping("/special/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteSpecial(@PathVariable String id) { specialTasks.removeDefinition(id); }
+    public void deleteSpecial(@PathVariable String id) { requireSpecial(id); specialTasks.removeDefinition(id); }
     @PostMapping("/special/{id}/enabled")
     public SpecialTask setSpecialEnabled(@PathVariable String id, @RequestBody EnabledRequest request) {
+        SpecialTask task = requireSpecial(id);
         specialTasks.setEnabled(id, request.enabled());
-        return specialTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst().orElseThrow();
+        return task;
     }
 
     private Map<String,Object> definition(String source, String id, String name, int energy, int exp,
@@ -91,4 +95,14 @@ public final class TaskPoolController {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "任务名称不能为空");
     }
     private int orZero(Integer value) { return value == null ? 0 : Math.max(0, value); }
+    private DailyTask requireDaily(String id) {
+        return dailyTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst()
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "每日任务不存在"));
+    }
+    private SpecialTask requireSpecial(String id) {
+        return specialTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst()
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "特殊任务不存在"));
+    }
 }

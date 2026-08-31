@@ -19,8 +19,9 @@ class AudioStorageServiceTest {
     JsonFileStore files; AudioStorageService audio;
 
     @BeforeEach void setup() throws Exception {
-        files = new JsonFileStore(new com.fasterxml.jackson.databind.ObjectMapper(), temp);
-        audio = new AudioStorageService(files);
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        files = new JsonFileStore(mapper, temp);
+        audio = new AudioStorageService(files,new UploadStorageService(files,mapper));
     }
 
     /** Missing tags fall back to filename / 未知艺术家 instead of guessing from the filename. */
@@ -53,6 +54,14 @@ class AudioStorageServiceTest {
     @Test void rejectsNonAudioExtensions() {
         MockMultipartFile file = new MockMultipartFile("file", "song.txt", "text/plain", new byte[] {1});
         assertThatThrownBy(() -> audio.store(file, 1)).hasMessageContaining("MP3 / FLAC");
+    }
+
+    @Test void reusesAnExistingFileWhenOnlyTheUploadNameDiffers() {
+        byte[] content={1,2,3,4};
+        NowSong first=audio.store(new MockMultipartFile("file","first.mp3","audio/mpeg",content),1);
+        NowSong second=audio.store(new MockMultipartFile("file","renamed.mp3","audio/mpeg",content),2);
+        assertThat(second.filePath()).isEqualTo(first.filePath());
+        assertThat(temp.resolve("uploads").toFile().listFiles()).hasSize(1);
     }
 
     /** Builds a minimal MP3: an ID3v2.3 tag (TIT2/TPE1/TALB/APIC) followed by one MPEG frame. */

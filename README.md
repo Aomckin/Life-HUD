@@ -1,4 +1,40 @@
-# Life HUD v0.8.1 · Dashboard HUD 化
+# Life HUD
+
+一套本地运行、单用户、以可信生活事实为核心的个人 Life HUD。
+
+`Focus · Tasks · Dreams · Ritual · Life · Media · Journal · Now · Growth`
+
+Life HUD 记录一个人如何行动、专注、休息、生活、娱乐和成长，并把业务记录组织为统一的 `LifeEvent`、Timeline、Dashboard 与 Growth。它本身不包含 LLM、Planner、Memory 或 Agent Runtime；外部 Agent 通过稳定 HTTP API 读取和操作同一份事实。
+
+## 运行
+
+需要 Java 21：
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+访问 <http://localhost:8025>。默认数据目录是启动工作目录下的 `data/`；可用 `lifehud.data-dir` 或 `LIFEHUD_DATA_DIR` 指定其他位置。升级或迁移前请阅读 [备份与恢复](docs/BACKUP_AND_RESTORE.md)。
+
+## Agent 接入
+
+- [API 总入口](docs/API_INDEX.md)
+- [Agent Context API](docs/AGENT_CONTEXT_API.md)：`/api/agent/context/*` 只读语义聚合
+- [Agent Action API](docs/AGENT_ACTION_API.md)：复用 Business API 写入事实
+
+当前 API 无鉴权，仅适合本机或可信私有网络，禁止直接暴露到公网。Life HUD 是事实与业务系统；权限确认、自然语言理解、重试和工作流属于外部 Agent。
+
+## 数据边界
+
+用户事实以 JSON 持久化，上传图片、封面、壁纸和音乐保存在同一数据目录的 `uploads/`。仓库只包含首次启动模板，不应提交真实 `data/`、媒体或备份。旧数据无需清档升级；损坏的 JSON 不会被静默覆盖。
+
+## 当前开发状态
+
+当前版本为 **Life HUD v1.0.0 · First Stable Release**。Agent Interface、内容与交互、稳定性、数据恢复和正式版 Release Gate 已完成。
+
+## Release history
+
+### v0.8.1 · Dashboard HUD 化
 
 v0.8.1 收拢 Dashboard 的独立卡片：成长状态与 Check-in 合并为主状态舱，Focus / Task / Sleep / Meal 合并为一条今日脉搏；Dream、Ritual、Media 在同一陪伴舱中分别使用航向、日光节律和播放终端语义。状态舱以每次打开时随机抽取的「今日文案」为主标题，日期降级为普通信息，页面底部提供文案库入口。所有面板降低实体白底、改用轻透边界与局部玻璃，让 Summer Sky 壁纸参与页面层次而不只是剩余空白。
 

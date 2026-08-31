@@ -17,6 +17,6 @@ public final class DashboardHeadlineService {
     public List<DashboardHeadline> all(){return repository.all();}
     public String random(){List<DashboardHeadline> values=all();return values.isEmpty()?DEFAULT:values.get(ThreadLocalRandom.current().nextInt(values.size())).text();}
     public DashboardHeadline add(String text){String value=text==null?"":text.trim();if(value.isBlank())throw bad("文案不能为空");if(value.length()>80)throw bad("文案不能超过 80 个字符");if(all().stream().anyMatch(v->v.text().equals(value)))throw bad("这句文案已经存在");return repository.save(new DashboardHeadline(UUID.randomUUID().toString(),value,Instant.now()));}
-    public void remove(String id){if(!repository.remove(id))throw new ResponseStatusException(HttpStatus.NOT_FOUND,"文案不存在");}
+    public void remove(String id){if(id!=null&&id.startsWith("default-"))throw bad("内置文案不能删除");if(!repository.remove(id))throw new ResponseStatusException(HttpStatus.NOT_FOUND,"文案不存在");}
     private ResponseStatusException bad(String text){return new ResponseStatusException(HttpStatus.BAD_REQUEST,text);}
 }

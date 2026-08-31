@@ -21,7 +21,7 @@ class GrowthControllerTest {
     @Autowired MockMvc mvc; @Autowired ObjectMapper mapper;
 
     @Test void growthMilestoneSnapshotAndCustomTitleApisWork() throws Exception {
-        mvc.perform(get("/api/growth")).andExpect(status().isOk()).andExpect(jsonPath("$.version").value("0.8.1"));
+        mvc.perform(get("/api/growth")).andExpect(status().isOk()).andExpect(jsonPath("$.version").value("1.0.0"));
         String milestone=mvc.perform(post("/api/milestones").contentType("application/json").content("{\"title\":\"Life HUD v0.4\",\"occurredAt\":\"2026-08-29\",\"category\":\"项目\",\"pinned\":true}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.pinned").value(true)).andReturn().getResponse().getContentAsString();
         String milestoneId=mapper.readTree(milestone).path("id").asText();

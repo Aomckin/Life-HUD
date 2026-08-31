@@ -1,4 +1,4 @@
-import { toast } from "../components/ui.js?v=0.7.0";
+import { toast } from "../components/ui.js?v=1.0.0";
 
 /** Lets every existing image file input accept clipboard images without changing its upload flow. */
 export function enableImagePaste() {

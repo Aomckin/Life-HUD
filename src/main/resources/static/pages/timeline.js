@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 /**
  * /journal — the life river. One backend aggregation (/api/timeline), grouped by
@@ -75,7 +75,7 @@ function render(root) {
       </form>
     </section>`;
   root.innerHTML = `<div class="timeline-page">
-    <section class="panel timeline-intro"><div class="eyebrow">v0.6.1 · Journal</div>
+    <section class="panel timeline-intro"><div class="eyebrow">Journal</div>
       <h1>发生过的事,按时间留在这里。</h1>
       <p>生活记录、专注、任务、日记——都汇进同一条河。</p></section>
     ${composer}

@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=0.7.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { statusLabels, milestoneStatusLabels, directionCopy as c } from "../content/copy.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 let selectedId = location.hash.slice(1) || "";
@@ -19,7 +19,7 @@ export async function dreams(root) {
 function renderList(root, list) {
   const groups = ["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"];
   const visible = list.filter(d => d.status === filter);
-  root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">v0.5 · Direction</div><h2>我正在追逐什么</h2></div><button class="button button-primary" id="new-dream">${c.newDream}</button></div>
+  root.innerHTML = `<div class="direction-page"><section class="panel"><div class="section-head"><div><div class="eyebrow">Direction</div><h2>我正在追逐什么</h2></div><button class="button button-primary" id="new-dream">${c.newDream}</button></div>
   <nav class="growth-tabs status-tabs">${groups.map(s=>`<button class="${filter===s?"active":""}" data-filter="${s}">${statusLabels[s]} ${list.filter(d=>d.status===s).length}</button>`).join("")}</nav>
   <div class="dream-grid">${visible.map(d=>`
     <article class="card dream-card" data-open="${d.id}">
@@ -76,7 +76,7 @@ function renderList(root, list) {
 async function renderDetail(root, id) {
   root.innerHTML = '<section class="panel">正在展开这个梦想…</section>';
   try {
-    const detail = await api.dreams.detail(id);
+    const [detail,selections] = await Promise.all([api.dreams.detail(id),api.dashboard.selections()]);
     const linked = await api.taskDirections.all();
     const dream = detail.dream;
     const linkedTasks = [...linked.daily, ...linked.special].filter(t =>
@@ -93,6 +93,7 @@ async function renderDetail(root, id) {
         <small>${dream.targetDate?`目标 ${date(dream.targetDate)} · `:""}${milestones.length?`${doneMilestones} / ${milestones.length} 里程碑`:"还没有拆里程碑"}</small></div>
       </div>
       <div class="row-actions dream-actions">
+        <button class="button button-ghost" data-act="dashboard" ${selections.dreamId===id?"disabled":""}>${selections.dreamId===id?"已在 Dashboard 展示":"展示在 Dashboard"}</button>
         ${dream.status!=="COMPLETED"?`<button class="button button-primary" data-act="complete">${c.complete}</button>`:""}
         ${dream.status==="ACTIVE"?`<button class="button button-ghost" data-act="pause">${c.pause}</button>`:""}
         ${dream.status==="PAUSED"?`<button class="button button-ghost" data-act="resume">${c.resume}</button>`:""}
@@ -137,7 +138,8 @@ async function renderDetail(root, id) {
     root.querySelectorAll("[data-act]").forEach(button=>button.addEventListener("click",async()=>{
       const act=button.dataset.act;
       try{
-        if(act==="complete")await api.dreams.complete(id);
+        if(act==="dashboard"){await api.dashboard.select("dream",id);toast("Dashboard 航向已更新");return renderDetail(root,id);}
+        else if(act==="complete")await api.dreams.complete(id);
         else if(act==="pause")await api.dreams.pause(id);
         else if(act==="resume")await api.dreams.resume(id);
         else if(act==="archive"){if(!(await confirmDialog(c.archiveConfirm)))return;await api.dreams.archive(id);}

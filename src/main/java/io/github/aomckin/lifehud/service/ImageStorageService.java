@@ -2,12 +2,8 @@ package io.github.aomckin.lifehud.service;
 
 import io.github.aomckin.lifehud.repository.JsonFileStore;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,14 +18,15 @@ public final class ImageStorageService {
     private static final Set<String> ALLOWED = Set.of("image/png", "image/jpeg", "image/webp", "image/gif");
     private static final long MAX_BYTES = 64L * 1024 * 1024; // matches the multipart limit in application.yml
     public static final String PUBLIC_PREFIX = "/uploads/";
-    private final JsonFileStore files;
+    private final UploadStorageService uploads;
 
-    public ImageStorageService(JsonFileStore files) { this.files = files; }
+    public ImageStorageService(JsonFileStore files,UploadStorageService uploads) { this.uploads = uploads; }
 
     /** Stores an upload and returns its public URL path (e.g. /uploads/<uuid>.png). */
     public String store(MultipartFile upload) {
         if (upload == null || upload.isEmpty()) throw bad("没有收到文件");
-        if (upload.getSize() > MAX_BYTES) throw bad("图片不能超过 8MB");
+        if (upload.getSize() > MAX_BYTES)
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "图片不能超过 64MB");
         String contentType = upload.getContentType() == null ? "" : upload.getContentType().toLowerCase(Locale.ROOT);
         String name = upload.getOriginalFilename() == null ? "" : upload.getOriginalFilename().toLowerCase(Locale.ROOT);
         // Browsers send real image MIME types, but some clients only send octet-stream — fall back to the extension.
@@ -37,14 +34,7 @@ public final class ImageStorageService {
             throw bad("只支持 PNG / JPG / WebP / GIF 图片");
         String extension = ALLOWED.contains(contentType) ? extensionFromMime(contentType) : extensionOf(name);
         try {
-            Path directory = files.resolve("uploads");
-            Files.createDirectories(directory);
-            Path target = directory.resolve(UUID.randomUUID() + extension).normalize();
-            if (!target.startsWith(directory)) throw bad("非法的存储路径");
-            try (var input = upload.getInputStream()) {
-                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-            return PUBLIC_PREFIX + target.getFileName();
+            return uploads.store(upload.getBytes(),extension);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "图片保存失败", e);
         }

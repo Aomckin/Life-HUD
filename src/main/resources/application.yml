@@ -8,4 +8,5 @@ spring:
       max-file-size: 64MB
       max-request-size: 128MB
 server:
+  address: 127.0.0.1
   port: 8025

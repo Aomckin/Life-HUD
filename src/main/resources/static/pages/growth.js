@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { limits, growthCopy, entertainmentCategories, entertainmentCopy } from "../content/copy.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { limits, growthCopy, entertainmentCategories, entertainmentCopy } from "../content/copy.js?v=1.0.0";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 let activeTab = location.hash.slice(1) || "overview";
@@ -25,7 +25,7 @@ export async function growth(root) {
 
 function render(root, overview, achievements, milestones, titles, entertainment, energyHistory) {
   const tabs = [["overview","Overview"],["achievements","Achievements"],["milestones","Milestones"],["titles","Titles"]];
-  root.innerHTML = `<div class="growth-page"><section class="panel growth-hero"><div><div class="eyebrow">v0.4 · Growth</div><h1>一路走来的刻度。</h1><p>生活不是为了升级。这里让已经发生的行动、阶段和重要时刻被看见。</p></div><div class="growth-level-orb"><span>Level</span><strong>${overview.level}</strong><small>${overview.totalExp} total EXP</small></div></section><nav class="growth-tabs" aria-label="成长页面">${tabs.map(([id,label])=>`<button class="${activeTab===id?"active":""}" data-tab="${id}">${label}</button>`).join("")}</nav><div id="growth-content"></div></div>`;
+  root.innerHTML = `<div class="growth-page"><section class="panel growth-hero"><div><div class="eyebrow">Growth</div><h1>一路走来的刻度。</h1><p>生活不是为了升级。这里让已经发生的行动、阶段和重要时刻被看见。</p></div><div class="growth-level-orb"><span>Level</span><strong>${overview.level}</strong><small>${overview.totalExp} total EXP</small></div></section><nav class="growth-tabs" aria-label="成长页面">${tabs.map(([id,label])=>`<button class="${activeTab===id?"active":""}" data-tab="${id}">${label}</button>`).join("")}</nav><div id="growth-content"></div></div>`;
   root.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => { activeTab=button.dataset.tab; history.replaceState({},"",`/growth#${activeTab}`); render(root,overview,achievements,milestones,titles,entertainment,energyHistory); }));
   const content=root.querySelector("#growth-content");
   if(activeTab==="achievements") renderAchievements(content,achievements);

@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 /**
  * /life — today's input panel. High-frequency entry: short modal forms, sensible
@@ -45,7 +45,7 @@ function render(root, latest, todayItems) {
   const quick = [["check-in", "记一次状态"], ["meal", "记一餐"], ["sleep", "记睡眠"], ["exercise", "记运动"], ["record", "其他记录"]];
   root.innerHTML = `<div class="life-page">
     <section class="panel life-hero">
-      <div class="section-head"><div><div class="eyebrow">v0.6 · Life</div>
+      <div class="section-head"><div><div class="eyebrow">Life</div>
         <h2>今天的生活,从这里进来。</h2></div>
         <a class="text-link" href="/journal" data-link>去时间线看看 →</a></div>
       <div class="life-hero-grid">

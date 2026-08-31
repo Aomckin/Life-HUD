@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { nowCopy as c } from "../content/copy.js?v=0.7.0";
-import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { nowCopy as c } from "../content/copy.js?v=1.0.0";
+import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 /**
  * PlaylistBoard — the horizontal immersive wall for the 「现在。」歌单.

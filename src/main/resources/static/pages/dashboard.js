@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.8.1";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.8.1";
+import { api } from "../api/client.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 const clock=value=>value?new Intl.DateTimeFormat("zh-CN",{hour:"2-digit",minute:"2-digit"}).format(new Date(value)):"—";
 const minutes=value=>value>=60?`${Math.floor(value/60)}h ${value%60}min`:`${value||0} min`;
@@ -13,9 +13,9 @@ export async function dashboard(root){
 
 function render(root,data){
   const s=data.status,check=s.checkIn,active=s.activeFocus,life=data.life;
-  const meal=life.meals?.[0],dream=data.dreams.active?.[0];
-  const ritualDone=data.rituals.completedToday?.[0],ritual=ritualDone||data.rituals.available?.[0];
-  const media=recentMedia(data.media);
+  const meal=life.meals?.[0],dream=data.companions?.dream||data.dreams.active?.[0];
+  const selectedRitual=data.companions?.ritual,ritualDone=data.rituals.completedToday?.find(v=>v.ritualId===(selectedRitual?.id||data.selections?.ritualId))||(!selectedRitual&&data.rituals.completedToday?.[0]),ritual=selectedRitual||ritualDone||data.rituals.available?.[0];
+  const media=data.companions?.media?{title:data.companions.media.title,detail:data.companions.media.detail}:recentMedia(data.media,data.selections);
   root.querySelector(".dashboard-hud").innerHTML=`
     <section class="hud-cockpit">
       <div class="hud-cockpit-copy"><div class="hud-kicker"><span class="hud-live-dot"></span> 此刻 · NOW <time>${clock(data.generatedAt)}</time></div>
@@ -39,7 +39,7 @@ function render(root,data){
 
     <section class="hud-companions">
       <a class="hud-companion hud-dream" href="/dreams" data-link><span class="hud-symbol">✦</span><div><small>DREAM · 航向</small><strong>${escapeHtml(dream?.title||"等待一个方向")}</strong><p>${escapeHtml(dream?.meaning||"把远方放进今天")}</p></div><i>→</i></a>
-      <a class="hud-companion hud-ritual" href="/rituals" data-link><span class="hud-symbol">☀</span><div><small>RITUAL · 节律</small><strong>${escapeHtml(ritual?(ritual.ritualName||ritual.name):"尚未进入仪式")}</strong><p>${ritualDone?`今日完成 · ${clock(ritualDone.completedAt)}`:"为状态留一个入口"}</p></div><i>→</i></a>
+      <a class="hud-companion hud-ritual" href="/rituals" data-link><span class="hud-symbol">◈</span><div><small>RITUAL · 仪式</small><strong>${escapeHtml(ritual?(ritual.ritualName||ritual.name):"尚未进入仪式")}</strong><p>${ritualDone?`今日完成 · ${clock(ritualDone.completedAt)}`:"为状态留一个入口"}</p></div><i>→</i></a>
       <a class="hud-companion hud-media" href="/media" data-link><span class="hud-symbol">▶</span><div><small>MEDIA · 陪伴</small><strong>${escapeHtml(media.title)}</strong><p>${escapeHtml(media.detail)}</p></div><i>→</i></a>
     </section>
 
@@ -49,7 +49,7 @@ function render(root,data){
       <summary><span>今日文案</span><small>管理状态舱随机标题</small></summary>
       <div class="hud-copy-manager-body">
         <form class="hud-copy-form"><input name="text" maxlength="80" placeholder="写一句想在今天看见的话" required><button class="button button-primary" type="submit">添加</button></form>
-        <div class="hud-copy-list">${data.headlines?.length?data.headlines.map(v=>`<div><span>${escapeHtml(v.text)}</span><button class="text-link danger-link" type="button" data-remove-headline="${v.id}">删除</button></div>`).join(""):`<p class="hud-copy-empty">还没有自定义文案，当前会显示默认句子。</p>`}</div>
+        <div class="hud-copy-list">${data.headlines?.length?data.headlines.map(v=>`<div><span>${escapeHtml(v.text)}</span>${v.id.startsWith("default-")?`<small class="badge">内置</small>`:`<button class="text-link danger-link" type="button" data-remove-headline="${v.id}">删除</button>`}</div>`).join(""):`<p class="hud-copy-empty">还没有可用文案。</p>`}</div>
       </div>
     </details>`;
   bindHeadlineManager(root);
@@ -62,5 +62,5 @@ function bindHeadlineManager(root){
 
 const readout=(label,value,kind)=>`<div class="hud-readout hud-${kind}"><span>${label}</span><strong>${escapeHtml(String(value))}</strong></div>`;
 const metric=(label,value,path,symbol)=>`<a class="hud-metric" href="${path}" data-link><span class="hud-metric-symbol">${symbol}</span><small>${label}</small><strong>${value}</strong></a>`;
-function recentMedia(media){const game=media.gameSessions?.[0],anime=media.animeSessions?.[0];if(game){const item=media.playingGames?.find(v=>v.id===game.gameId);return{title:item?.title||"最近一次游戏",detail:`游玩 ${minutes(game.durationMinutes)}`};}if(anime){const item=media.watchingAnime?.find(v=>v.id===anime.animeId);return{title:item?.title||"最近一次观看",detail:`看到 EP${anime.episodeEnd}`};}const current=media.playingGames?.[0]||media.watchingAnime?.[0]||media.items?.[0];return current?{title:current.title,detail:"正在陪伴"}:{title:"最近没有媒体 Session",detail:"留一点空白也很好"};}
+function recentMedia(media,selection){const chosen=selection?.mediaType==="GAME"?media.playingGames?.find(v=>v.id===selection.mediaId):selection?.mediaType==="ANIME"?media.watchingAnime?.find(v=>v.id===selection.mediaId):media.items?.find(v=>v.id===selection?.mediaId);if(chosen)return{title:chosen.title,detail:"正在陪伴"};const game=media.gameSessions?.[0],anime=media.animeSessions?.[0];if(game){const item=media.playingGames?.find(v=>v.id===game.gameId);return{title:item?.title||"最近一次游戏",detail:`游玩 ${minutes(game.durationMinutes)}`};}if(anime){const item=media.watchingAnime?.find(v=>v.id===anime.animeId);return{title:item?.title||"最近一次观看",detail:`看到 EP${anime.episodeEnd}`};}const current=media.playingGames?.[0]||media.watchingAnime?.[0]||media.items?.[0];return current?{title:current.title,detail:"正在陪伴"}:{title:"最近没有媒体 Session",detail:"留一点空白也很好"};}
 function timeline(items){return items?.length?items.map(v=>`<article class="hud-event"><time>${clock(v.occurredAt)}</time><span></span><div><strong>${escapeHtml(v.title)}</strong><p>${escapeHtml(v.summary||v.type)}</p></div></article>`).join(""):empty("今天还没有留下足迹。");}

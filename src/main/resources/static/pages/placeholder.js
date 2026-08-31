@@ -1,4 +1,4 @@
-import { api } from '../api/client.js?v=0.7.0';
+import { api } from '../api/client.js?v=1.0.0';
 import { empty, error, escapeHtml, toast } from '../components/ui.js';
 
 const labels = {
@@ -13,7 +13,7 @@ const labels = {
 
 export async function placeholder(root, route) {
   if (route === '/tasks') return tasks(root);
-  root.innerHTML = `<section class='panel placeholder'><div class='eyebrow'>Life HUD v0.4.0</div><h1>${labels[route]}</h1><p>这个入口已经接入 Summer Sky Shell。完整体验会在后续版本写进这片天空。</p>${empty('现在先把注意力留给今天。')}</section>`;
+  root.innerHTML = `<section class='panel placeholder'><div class='eyebrow'>Life HUD v1.0.0</div><h1>${labels[route]}</h1><p>这个入口暂时无法加载，请刷新页面或检查前后端版本是否一致。</p>${empty('当前没有可显示的内容。')}</section>`;
 }
 
 async function tasks(root) {

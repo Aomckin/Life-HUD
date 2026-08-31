@@ -32,7 +32,9 @@ public final class LifeEventRepository {
     public synchronized List<LifeEvent> all() {
         if (!files.exists(FILE_NAME)) return List.of();
         try { return mapper.convertValue(files.read(FILE_NAME), EVENTS); }
-        catch (IllegalArgumentException exception) { throw new IllegalStateException("???? LifeEvent ??", exception); }
+        catch (IllegalArgumentException exception) {
+            throw new IllegalStateException("无法读取数据文件: " + FILE_NAME, exception);
+        }
     }
 
     public synchronized boolean contains(String id) {

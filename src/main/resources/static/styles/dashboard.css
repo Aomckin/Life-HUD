@@ -424,6 +424,12 @@
 .dashboard-hud { gap:clamp(18px,2.4vw,32px); perspective:1200px; }
 .hud-loading { padding:40px;color:var(--text-secondary); }
 .hud-cockpit,.hud-today-strip,.hud-companions,.hud-timeline { position:relative;min-width:0; }
+.hud-cockpit,.hud-today-strip,.hud-companions,.hud-timeline,.hud-copy-manager { animation:hud-layer-arrive 240ms var(--ease-emphasized) both; }
+.hud-today-strip { animation-delay:45ms; }
+.hud-companions { animation-delay:90ms; }
+.hud-timeline { animation-delay:135ms; }
+.hud-copy-manager { animation-delay:160ms; }
+@keyframes hud-layer-arrive { from { opacity:0;transform:translateY(8px); } to { opacity:1;transform:none; } }
 .hud-cockpit { display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.55fr);gap:clamp(28px,5vw,72px);align-items:center;min-height:340px;padding:clamp(36px,5vw,72px);overflow:hidden;border:1px solid rgb(255 255 255 / 58%);border-radius:30px;background:linear-gradient(118deg,rgb(239 249 255 / 78%),rgb(218 240 252 / 46%) 56%,rgb(255 255 255 / 22%));box-shadow:inset 0 1px 0 rgb(255 255 255 / 80%),0 30px 80px rgb(31 94 132 / 13%);backdrop-filter:blur(12px) saturate(1.08); }
 .hud-cockpit::after { position:absolute;right:-120px;bottom:-190px;width:470px;height:470px;border:1px solid rgb(255 255 255 / 38%);border-radius:50%;box-shadow:0 0 0 42px rgb(255 255 255 / 7%),0 0 0 96px rgb(255 255 255 / 5%);content:"";pointer-events:none; }
 .hud-cockpit-copy,.hud-status { position:relative;z-index:1; }

@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
@@ -31,9 +30,9 @@ import java.util.UUID;
 @Service
 public final class AudioStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("mp3", "flac");
-    private final JsonFileStore files;
+    private final JsonFileStore files;private final UploadStorageService uploads;
 
-    public AudioStorageService(JsonFileStore files) { this.files = files; }
+    public AudioStorageService(JsonFileStore files,UploadStorageService uploads) { this.files = files;this.uploads=uploads; }
 
     public NowSong store(MultipartFile upload, int slot) {
         if (upload == null || upload.isEmpty()) throw bad("没有收到音频文件");
@@ -41,16 +40,10 @@ public final class AudioStorageService {
         String extension = extensionOf(original);
         if (!ALLOWED_EXTENSIONS.contains(extension)) throw bad("只支持 MP3 / FLAC 音频文件");
         try {
-            Path directory = files.resolve("uploads");
-            Files.createDirectories(directory);
-            String storedName = UUID.randomUUID() + "." + extension;
-            Path target = directory.resolve(storedName).normalize();
-            if (!target.startsWith(directory)) throw bad("非法的存储路径");
-            try (var input = upload.getInputStream()) {
-                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
-            }
+            String storedPath=uploads.store(upload.getBytes(),"."+extension);
+            Path target=uploads.resolvePublic(storedPath);
             Metadata metadata = readMetadata(target, baseName(original));
-            return new NowSong(slot, "/uploads/" + storedName, original, metadata.title(), metadata.artist(),
+            return new NowSong(slot, storedPath, original, metadata.title(), metadata.artist(),
                     metadata.album(), metadata.durationSeconds(), metadata.coverPath(), extension.toUpperCase(Locale.ROOT),
                     0, "", null, null, null, 0, Instant.now(), Instant.now());
         } catch (IOException e) {
@@ -78,10 +71,7 @@ public final class AudioStorageService {
                 Artwork artwork = tag.getFirstArtwork();
                 if (artwork != null && artwork.getBinaryData() != null) {
                     String imageExtension = imageExtensionOf(artwork.getMimeType());
-                    String coverName = UUID.randomUUID() + imageExtension;
-                    Path coverTarget = files.resolve("uploads").resolve(coverName).normalize();
-                    Files.write(coverTarget, artwork.getBinaryData());
-                    coverPath = "/uploads/" + coverName;
+                    coverPath=uploads.store(artwork.getBinaryData(),imageExtension);
                 }
             }
         } catch (Exception ignored) {

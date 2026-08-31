@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { taskCopy as c } from "../content/copy.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { taskCopy as c } from "../content/copy.js?v=1.0.0";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 let dreamsCache = [];
@@ -41,7 +41,7 @@ function render(root) {
 
   root.innerHTML = `<div class="direction-page">
     <section class="panel tasks-header">
-      <div class="tasks-head-text"><div class="eyebrow">v0.5 · Action Desk</div>
+      <div class="tasks-head-text"><div class="eyebrow">Action Desk</div>
         <h2>${c.title}</h2>
         <p>${total ? (remaining > 0 ? `今天还有 <strong>${remaining}</strong> 件事` : c.allDoneToday) : c.emptyTasks}</p></div>
       <div class="tasks-progress">

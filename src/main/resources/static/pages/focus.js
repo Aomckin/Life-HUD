@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=1.0.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
 
 const MODE_LABELS = {IRON_CURTAIN: "铁幕", POMODORO: "番茄", FREE: "自由专注"};
 const STATUS_LABELS = {RUNNING: "专注中", PAUSED: "已暂停", COMPLETED: "已完成", INTERRUPTED: "已中断"};
@@ -94,7 +94,7 @@ function startTemplate() {
   return `<section class="panel focus-start-card focus-enter">
     <div class="focus-intro"><div class="eyebrow">专注 · Focus</div><h1>现在，认真做一件事。</h1><p>选一种适合此刻的节奏。计时器只负责记住时间，不替你决定什么时候停下。</p></div>
     <form id="focus-start-form" class="focus-form">
-      <label class="field focus-title-field"><span>今天准备做什么？</span><input id="focus-title" name="title" maxlength="120" placeholder="例如：开发 Life HUD v0.3" autofocus></label>
+      <label class="field focus-title-field"><span>今天准备做什么？</span><input id="focus-title" name="title" maxlength="120" placeholder="例如：完成今天最重要的一件事" autofocus></label>
       <fieldset class="mode-picker"><legend>模式</legend>
         <label><input type="radio" name="mode" value="IRON_CURTAIN" checked><span><strong>铁幕</strong><small>长时间、低干扰</small></span></label>
         <label><input type="radio" name="mode" value="POMODORO"><span><strong>番茄</strong><small>有计划，也可超时</small></span></label>

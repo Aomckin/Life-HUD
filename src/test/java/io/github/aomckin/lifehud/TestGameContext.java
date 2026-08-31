@@ -13,6 +13,7 @@ import io.github.aomckin.lifehud.repository.GrowthRecordRepository;
 import io.github.aomckin.lifehud.repository.GrowthStatsRepository;
 import io.github.aomckin.lifehud.repository.FocusSessionRepository;
 import io.github.aomckin.lifehud.repository.MilestoneRepository;
+import io.github.aomckin.lifehud.repository.MediaRepository;
 import io.github.aomckin.lifehud.repository.PlayerRepository;
 import io.github.aomckin.lifehud.service.*;
 import java.util.List;
@@ -69,7 +70,8 @@ public final class TestGameContext extends GameCore {
         GrowthCopy growthCopy = new GrowthCopy(json);
         GrowthCatalog growthCatalog = new GrowthCatalog(json, mapper);
         GrowthEngine growth = new GrowthEngine(new GrowthRules(new GrowthEconomy(json), growthCopy, config),
-                growthRecords, player, playerService, players, levels, lifeEvents, growthStats, growthCatalog, growthCopy);
+                growthRecords, player, playerService, players, levels, lifeEvents, growthStats, growthCatalog, growthCopy,
+                new AchievementEvaluator(lifeEventRepository,new MediaRepository(json,mapper),new LifeDateService()));
         engineHolder[0] = growth;
         TaskService task = new TaskService(daily, special, logs, queries, lifeEvents, growthCopy);
         ShopService shopService = new ShopService(shop, daily, special, logs, queries); TitleService title = new TitleService(titles, queries);

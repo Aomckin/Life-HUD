@@ -125,7 +125,7 @@ class GrowthEngineTest {
         var stats=new GrowthStatsService(new GrowthStatsRepository(data.json,data.mapper),focus,lifeRepo,milestones);
         var copy=new GrowthCopy(data.json);var catalog=new GrowthCatalog(data.json,data.mapper);
         var gameConfig=new io.github.aomckin.lifehud.core.GameConfig((com.fasterxml.jackson.databind.node.ObjectNode)data.json.read("config.json"));
-        var engine=new GrowthEngine(new GrowthRules(new GrowthEconomy(data.json),copy,gameConfig),records,player,playerService,data.players,levels,events,stats,catalog,copy);
+        var engine=new GrowthEngine(new GrowthRules(new GrowthEconomy(data.json),copy,gameConfig),records,player,playerService,data.players,levels,events,stats,catalog,copy,new AchievementEvaluator(lifeRepo,new MediaRepository(data.json,data.mapper),new LifeDateService()));
         return new Context(player,events,engine,records,lifeRepo);
     }
     private record Context(Player player,LifeEventService events,GrowthEngine engine,GrowthRecordRepository records,LifeEventRepository lifeEvents) { }

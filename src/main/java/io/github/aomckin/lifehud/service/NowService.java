@@ -46,7 +46,8 @@ public final class NowService {
                 clean(request.playlistBackgroundImage()), clean(request.playlistTitle()), clean(request.playlistSubtitle()),
                 validSongs(request.favoriteSongs()), request.currentGames(), request.currentAnime(),
                 request.currentBooks(), request.currentDreamIds(), request.currentGoalIds(),
-                clean(request.favoriteQuote()), request.images(), request.content(), Instant.now());
+                clean(request.favoriteQuote()), request.images(), request.content(),
+                request.favoriteQuotes(), request.thoughts(), Instant.now());
         repository.saveState(value);
         recordStateChanges(previous, value);
         return value;
@@ -175,7 +176,7 @@ public final class NowService {
         NowState value = new NowState(state.stageTitle(), state.theme(), path, state.playlistTitle(),
                 state.playlistSubtitle(), state.favoriteSongs(), state.currentGames(), state.currentAnime(),
                 state.currentBooks(), state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(),
-                state.images(), state.content(), Instant.now());
+                state.images(), state.content(), state.favoriteQuotes(), state.thoughts(), Instant.now());
         repository.saveState(value);
         events.record(LifeEventType.NOW_BACKGROUND_CHANGED, "now", "舞台背景",
                 copy.nowBackgroundSetDescription(), List.of("now"), backgroundMetadata(oldPath, path));
@@ -188,7 +189,7 @@ public final class NowService {
         NowState value = new NowState(state.stageTitle(), state.theme(), "", state.playlistTitle(),
                 state.playlistSubtitle(), state.favoriteSongs(), state.currentGames(), state.currentAnime(),
                 state.currentBooks(), state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(),
-                state.images(), state.content(), Instant.now());
+                state.images(), state.content(), state.favoriteQuotes(), state.thoughts(), Instant.now());
         repository.saveState(value);
         if (!oldPath.isBlank()) events.record(LifeEventType.NOW_BACKGROUND_CHANGED, "now", "舞台背景",
                 copy.nowBackgroundClearedDescription(), List.of("now"), backgroundMetadata(oldPath, ""));
@@ -203,7 +204,7 @@ public final class NowService {
         return new NowState(state.stageTitle(), state.theme(), state.playlistBackgroundImage(), state.playlistTitle(),
                 state.playlistSubtitle(), songs, state.currentGames(), state.currentAnime(), state.currentBooks(),
                 state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(), state.images(),
-                state.content(), Instant.now());
+                state.content(), state.favoriteQuotes(), state.thoughts(), Instant.now());
     }
 
     private NowState withoutSong(NowState state, int slot) {
@@ -211,7 +212,7 @@ public final class NowService {
         return new NowState(state.stageTitle(), state.theme(), state.playlistBackgroundImage(), state.playlistTitle(),
                 state.playlistSubtitle(), songs, state.currentGames(), state.currentAnime(), state.currentBooks(),
                 state.currentDreamIds(), state.currentGoalIds(), state.favoriteQuote(), state.images(),
-                state.content(), Instant.now());
+                state.content(), state.favoriteQuotes(), state.thoughts(), Instant.now());
     }
 
     private void validateSlot(int slot) {
@@ -241,7 +242,7 @@ public final class NowService {
                 state.favoriteSongs(), state.currentGames(), state.currentAnime(), state.currentBooks(),
                 state.currentDreamIds().stream().map(this::dreamRef).flatMap(Optional::stream).toList(),
                 state.currentGoalIds().stream().map(this::goalRef).flatMap(Optional::stream).toList(),
-                state.favoriteQuote(), state.images(), state.content(), now);
+                state.favoriteQuote(), state.images(), state.content(), state.favoriteQuotes(), state.thoughts(), now);
         repository.saveSnapshot(value);
         events.record(LifeEventType.NOW_SNAPSHOT_CREATED, "now", value.stageTitle().isBlank() ? "现在。" : value.stageTitle(),
                 copy.nowSnapshotCreatedDescription(), List.of("now"), snapshotMetadata(value));

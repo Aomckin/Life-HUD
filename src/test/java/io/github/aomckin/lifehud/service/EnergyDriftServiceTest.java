@@ -87,7 +87,8 @@ class EnergyDriftServiceTest {
             @Override public GrowthEngine getIfUnique(){return holder[0];}
         });
         var engine=new GrowthEngine(new GrowthRules(new GrowthEconomy(support.json),copy,gameConfig),records,player,
-                playerService,support.players,levels,events,stats,catalog,copy);
+                playerService,support.players,levels,events,stats,catalog,copy,
+                new AchievementEvaluator(lifeRepo,new MediaRepository(support.json,support.mapper),new LifeDateService()));
         holder[0]=engine;
         var drift=new EnergyDriftService(player,support.players,events,copy,support.json);
         return new Context(support,player,drift,records,lifeRepo);

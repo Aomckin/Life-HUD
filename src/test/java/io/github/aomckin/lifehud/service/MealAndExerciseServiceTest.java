@@ -82,7 +82,7 @@ class MealAndExerciseServiceTest {
                 30, "LOW", "", List.of("/uploads/walk-1.jpg", "/uploads/walk-2.jpg")));
         exercises.update(value.id(), new ExerciseRequest(null, null, null, null, null, List.of("/uploads/walk-2.jpg")));
         assertThat(exercises.get(value.id()).images()).containsExactly("/uploads/walk-2.jpg");
-        assertThat(w.lifeEvents.all().getFirst().metadata()).containsEntry("images", List.of("/uploads/walk-2.jpg"));
+        assertThat(w.lifeEvents.all().stream().filter(v->v.type()==LifeEventType.EXERCISE_RECORDED).findFirst().orElseThrow().metadata()).containsEntry("images", List.of("/uploads/walk-2.jpg"));
     }
 
     @Test void illegalExerciseDurationsAreRejected(){

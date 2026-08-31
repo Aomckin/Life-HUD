@@ -66,7 +66,8 @@ public final class V05TestWiring {
             @Override public GrowthEngine getIfUnique() { return holder[0]; }
         });
         var engine = new GrowthEngine(new GrowthRules(new GrowthEconomy(data.json), copy, gameConfig), records,
-                player, playerService, data.players, levels, events, stats, catalog, copy);
+                player, playerService, data.players, levels, events, stats, catalog, copy,
+                new AchievementEvaluator(lifeRepo,new MediaRepository(data.json,data.mapper),new LifeDateService()));
         holder[0] = engine;
         var dreamRepo = new DreamRepository(data.json, data.mapper);
         var goalRepo = new GoalRepository(data.json, data.mapper);

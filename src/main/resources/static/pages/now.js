@@ -1,7 +1,7 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { nowCopy as c } from "../content/copy.js?v=0.7.0";
-import { renderBoard } from "./now-playlist.js?v=0.7.0";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
+import { api } from "../api/client.js?v=0.8.0";
+import { nowCopy as c } from "../content/copy.js?v=0.8.0";
+import { renderBoard } from "./now-playlist.js?v=0.8.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.8.0";
 
 const date = value => value ? new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"short",day:"numeric"}).format(new Date(value)) : "";
 const minutes = seconds => {
@@ -51,8 +51,18 @@ function renderStage(root) {
         ${item.subtitle?`<small>${escapeHtml(item.subtitle)}</small>`:""}
         ${item.note?`<small class="muted">${escapeHtml(item.note)}</small>`:""}
       </article>`).join("");
+    const addLabel = items.length ? c.addMoreItemLabels[key] : c.addItemLabels[key];
     return `${body}${editIndex === "new" ? itemEditor(key, -1, {title:"",subtitle:"",note:""}) : ""}
-      <button class="text-link" data-add-item="${key}">${c.addItemLabels[key]}</button>`;
+      <button class="text-link now-item-add" data-add-item="${key}">${addLabel}</button>`;
+  };
+  const textCollection = (key, quote = false) => {
+    const values = current[key] || [];
+    const editIndex = editing.texts?.[key];
+    const cards = values.map((value,index) => editIndex === index
+      ? `<form class="now-text-editor" data-text-editor="${key}|${index}"><textarea rows="3" maxlength="500" required>${escapeHtml(value)}</textarea><div class="row-actions"><button class="button button-secondary" type="submit">${c.itemSave}</button><button class="text-link" type="button" data-cancel-text>${c.itemCancel}</button><button class="text-link danger-link" type="button" data-remove-text="${key}|${index}">删除</button></div></form>`
+      : `<article class="now-text-card ${quote?"snapshot-quote":"snapshot-content"}" data-edit-text-item="${key}|${index}">${quote?"“":""}${escapeHtml(value)}${quote?"”":""}</article>`).join("");
+    const editor = editIndex === "new" ? `<form class="now-text-editor" data-text-editor="${key}|-1"><textarea rows="3" maxlength="500" placeholder="${quote?c.quotePlaceholder:c.contentPlaceholder}" required></textarea><div class="row-actions"><button class="button button-secondary" type="submit">${c.itemSave}</button><button class="text-link" type="button" data-cancel-text>${c.itemCancel}</button></div></form>` : "";
+    return `${cards}${editor}<button class="text-link now-item-add" data-add-text="${key}">＋ ${values.length?"继续添加":"添加一条"}</button>`;
   };
 
   const dreamCards = current.currentDreamIds
@@ -82,13 +92,13 @@ function renderStage(root) {
 
     <section class="panel board-panel"><div id="playlist-board"></div></section>
     <section class="now-three-grid">
-      ${listKeys.map(key => `<section class="panel"><div class="section-head"><h2>${c.lists[key]}</h2></div>
+      ${listKeys.map(key => `<section class="panel"><div class="section-head"><div><h2>${c.lists[key]}</h2><small class="now-list-hint">可添加多个</small></div><span class="badge">${current[key].length} 个</span></div>
         <div class="now-item-cards">${itemCards(key)}</div></section>`).join("")}
     </section>
 
     <section class="panel"><div class="section-head"><h2>${c.currentDreams} / ${c.currentGoals}</h2>
       ${picker?`<button class="text-link" id="close-picker">${c.done}</button>`
-        :`<button class="text-link" id="open-picker">${c.chooseDreams}</button>`}</div>
+        :`<button class="text-link" id="open-picker">${c.chooseDreams} / 方向</button>`}</div>
       ${picker?`<div class="now-checks" id="direction-picker">
           <h3>${c.currentDreams}</h3>
           ${dreamsList.filter(d=>d.status==="ACTIVE").map(d=>`<label class="check-field"><input type="checkbox" data-pick-dream="${d.id}" ${current.currentDreamIds.includes(d.id)?"checked":""}> ${escapeHtml(d.title)}</label>`).join("")||empty(c.dreamsEmpty)}
@@ -100,18 +110,12 @@ function renderStage(root) {
         : empty(c.dreamsEmpty))}
     </section>
 
-    <section class="panel"><div class="section-head"><h2>${c.quoteLabel}</h2>
-      <button class="text-link" data-edit-text="quote">${c.edit}</button></div>
-      ${editing.quote?`<div><textarea id="edit-quote" rows="2" maxlength="200" placeholder="${c.quotePlaceholder}">${escapeHtml(current.favoriteQuote)}</textarea>
-        <div class="row-actions"><button class="button button-primary" id="save-quote">${c.save}</button></div></div>`
-      : (current.favoriteQuote?`<p class="snapshot-quote big">“${escapeHtml(current.favoriteQuote)}”</p>`:empty(c.quotePlaceholder))}
+    <section class="panel"><div class="section-head"><div><h2>${c.quoteLabel}</h2><small class="now-list-hint">可添加多个</small></div><span class="badge">${current.favoriteQuotes.length} 条</span></div>
+      <div class="now-text-list">${textCollection("favoriteQuotes",true)}</div>
     </section>
 
-    <section class="panel"><div class="section-head"><h2>${c.contentLabel}</h2>
-      <button class="text-link" data-edit-text="content">${c.edit}</button></div>
-      ${editing.content?`<div><textarea id="edit-content" rows="5" placeholder="${c.contentPlaceholder}">${escapeHtml(current.content)}</textarea>
-        <div class="row-actions"><button class="button button-primary" id="save-content">${c.save}</button></div></div>`
-      : (current.content?`<p class="snapshot-content">${escapeHtml(current.content)}</p>`:empty(c.contentPlaceholder))}
+    <section class="panel"><div class="section-head"><div><h2>${c.contentLabel}</h2><small class="now-list-hint">可添加多个</small></div><span class="badge">${current.thoughts.length} 条</span></div>
+      <div class="now-text-list">${textCollection("thoughts")}</div>
     </section>
 
     <section class="panel"><div class="section-head"><h2>${c.images}</h2></div>
@@ -151,7 +155,8 @@ function collectState() {
     favoriteSongs: current.favoriteSongs,
     currentGames: current.currentGames, currentAnime: current.currentAnime, currentBooks: current.currentBooks,
     currentDreamIds: current.currentDreamIds, currentGoalIds: current.currentGoalIds,
-    favoriteQuote: current.favoriteQuote, images: current.images, content: current.content
+    favoriteQuote: current.favoriteQuotes[0] || "", favoriteQuotes: current.favoriteQuotes,
+    images: current.images, content: current.thoughts[0] || "", thoughts: current.thoughts
   };
 }
 
@@ -210,22 +215,22 @@ function bind(root) {
   root.querySelectorAll("[data-pick-dream]").forEach(input => input.addEventListener("change", async () => {
     const id = input.dataset.pickDream;
     const ids = input.checked ? [...current.currentDreamIds, id] : current.currentDreamIds.filter(v => v !== id);
-    picker = null;
     await saveText(root, {currentDreamIds: ids});
+    picker = "dreams";
   }));
   root.querySelectorAll("[data-pick-goal]").forEach(input => input.addEventListener("change", async () => {
     const id = input.dataset.pickGoal;
     const ids = input.checked ? [...current.currentGoalIds, id] : current.currentGoalIds.filter(v => v !== id);
-    picker = null;
     await saveText(root, {currentGoalIds: ids});
+    picker = "dreams";
   }));
 
-  /* quote / content */
-  root.querySelectorAll("[data-edit-text]").forEach(button => button.addEventListener("click", () => {
-    editing[button.dataset.editText] = true; renderStage(root);
-  }));
-  root.querySelector("#save-quote")?.addEventListener("click", () => saveText(root, {favoriteQuote: root.querySelector("#edit-quote").value.trim()}));
-  root.querySelector("#save-content")?.addEventListener("click", () => saveText(root, {content: root.querySelector("#edit-content").value}));
+  /* quote / thought collections */
+  root.querySelectorAll("[data-add-text]").forEach(button => button.addEventListener("click",()=>{editing.texts={[button.dataset.addText]:"new"};renderStage(root);}));
+  root.querySelectorAll("[data-edit-text-item]").forEach(card=>card.addEventListener("click",()=>{const [key,index]=card.dataset.editTextItem.split("|");editing.texts={[key]:Number(index)};renderStage(root);}));
+  root.querySelectorAll("[data-text-editor]").forEach(form=>form.addEventListener("submit",async event=>{event.preventDefault();const [key,raw]=form.dataset.textEditor.split("|");const value=form.querySelector("textarea").value.trim();if(!value)return;const values=[...(current[key]||[])];if(Number(raw)>=0)values[Number(raw)]=value;else values.push(value);editing={};await saveText(root,{[key]:values});}));
+  root.querySelectorAll("[data-cancel-text]").forEach(button=>button.addEventListener("click",()=>{editing={};renderStage(root);}));
+  root.querySelectorAll("[data-remove-text]").forEach(button=>button.addEventListener("click",async()=>{const [key,raw]=button.dataset.removeText.split("|");if(!(await confirmDialog("删除这条内容？")))return;editing={};await saveText(root,{[key]:current[key].filter((_,i)=>i!==Number(raw))});}));
 
   /* images: local preview now, upload on save */
   root.querySelector("#now-image-input")?.addEventListener("change", event => {
@@ -282,7 +287,7 @@ function renderSnapshots(root) {
       <article class="card snapshot-card" data-view="${s.id}">
         <div class="snapshot-head"><strong>${escapeHtml(s.stageTitle || "现在。")}</strong>
           <small>${date(s.createdAt)} · ${escapeHtml(s.theme || "")}</small></div>
-        ${s.favoriteQuote?`<p class="snapshot-quote">“${escapeHtml(s.favoriteQuote)}”</p>`:""}
+        ${(s.favoriteQuotes||[]).slice(0,2).map(value=>`<p class="snapshot-quote">“${escapeHtml(value)}”</p>`).join("")}
         <div class="row-actions snapshot-meta">
           ${s.favoriteSongs.length?`<span class="badge">${c.songsLabel(s.favoriteSongs.length)}</span>`:""}
           ${s.images.slice(0,3).map(img=>`<img class="snapshot-thumb" src="${escapeHtml(img)}" alt="">`).join("")}
@@ -312,14 +317,14 @@ function renderSnapshot(root, snapshot) {
     <button class="text-link" id="back-now">${c.backToCurrent}</button></div>
     <small>${date(snapshot.createdAt)}</small>
     ${snapshot.favoriteSongs.length?`<div id="snapshot-playlist-board"></div>`:""}
-    ${snapshot.favoriteQuote?`<p class="snapshot-quote big">“${escapeHtml(snapshot.favoriteQuote)}”</p>`:""}
+    ${(snapshot.favoriteQuotes||[]).map(value=>`<p class="snapshot-quote big">“${escapeHtml(value)}”</p>`).join("")}
     <div class="snapshot-grid">
       ${[["currentGames",snapshot.currentGames],["currentAnime",snapshot.currentAnime],["currentBooks",snapshot.currentBooks]]
         .map(([key, items])=>items.length?`<div><h3>${c.lists[key]}</h3><ul>${itemList(items)}</ul></div>`:"").join("")}
       ${snapshot.currentDreams.length?`<div><h3>${c.currentDreams}</h3><ul>${snapshot.currentDreams.map(d=>`<li>${escapeHtml(d.snapshotTitle)}</li>`).join("")}</ul></div>`:""}
       ${snapshot.currentGoals.length?`<div><h3>${c.currentGoals}</h3><ul>${snapshot.currentGoals.map(g=>`<li>${escapeHtml(g.snapshotTitle)}</li>`).join("")}</ul></div>`:""}
     </div>
-    ${snapshot.content?`<p class="snapshot-content">${escapeHtml(snapshot.content)}</p>`:""}
+    ${(snapshot.thoughts||[]).map(value=>`<p class="snapshot-content">${escapeHtml(value)}</p>`).join("")}
     ${snapshot.images.length?`<div class="now-gallery">${snapshot.images.map(img=>`<div class="gallery-item"><img src="${escapeHtml(img)}" alt=""></div>`).join("")}</div>`:""}
   </section></div>`;
   const boardEl = root.querySelector("#snapshot-playlist-board");

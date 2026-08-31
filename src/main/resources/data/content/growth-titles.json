@@ -3,5 +3,8 @@
   {"id": "night_voyager", "name": "夜航者", "description": "曾在长夜里保持自己的航向。", "sourceType": "ACHIEVEMENT", "sourceId": "long_night", "hidden": true, "custom": false},
   {"id": "hundred_hours", "name": "百时专注", "description": "一百小时的有效专注已经留下。", "sourceType": "ACHIEVEMENT", "sourceId": "focus_hundred_hours", "hidden": false, "custom": false},
   {"id": "life_recorder", "name": "生活记录者", "description": "认真保存生活留下的痕迹。", "sourceType": "ACHIEVEMENT", "sourceId": "events_hundred", "hidden": false, "custom": false},
-  {"id": "milestone_keeper", "name": "里程碑收藏家", "description": "知道哪些时刻值得被留下。", "sourceType": "ACHIEVEMENT", "sourceId": "milestone_first", "hidden": false, "custom": false}
+  {"id": "milestone_keeper", "name": "里程碑收藏家", "description": "知道哪些时刻值得被留下。", "sourceType": "ACHIEVEMENT", "sourceId": "milestone_first", "hidden": false, "custom": false},
+  {"id":"dreamer","name":"追梦人","description":"已经把愿望写成了方向。","sourceType":"ACHIEVEMENT","sourceId":"dream_first","hidden":false,"custom":false},
+  {"id":"rhythm_keeper","name":"节律守望者","description":"用仪式为生活建立节律。","sourceType":"ACHIEVEMENT","sourceId":"ritual_ten","hidden":false,"custom":false},
+  {"id":"life_observer","name":"生活观察者","description":"连续看见并记录自己的生活。","sourceType":"ACHIEVEMENT","sourceId":"life_seven_days","hidden":false,"custom":false}
 ]

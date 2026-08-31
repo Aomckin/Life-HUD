@@ -1,5 +1,5 @@
 import { sidebar, routes } from './modules/navigation.js';
-import { dashboard } from './pages/dashboard.js?v=0.7.0';
+import { dashboard } from './pages/dashboard.js?v=0.8.0';
 import { placeholder } from './pages/placeholder.js';
 import { settings } from './pages/settings.js';
 import { focus } from './pages/focus.js?v=0.7.0';
@@ -7,7 +7,7 @@ import { growth } from './pages/growth.js?v=0.7.0';
 import { timeline } from './pages/timeline.js?v=0.7.0';
 import { dreams } from './pages/dreams.js?v=0.7.0';
 import { rituals } from './pages/rituals.js?v=0.7.0';
-import { now } from './pages/now.js?v=0.7.0';
+import { now } from './pages/now.js?v=0.8.0';
 import { life } from './pages/life.js?v=0.7.0';
 import { tasks } from './pages/tasks.js?v=0.7.0';
 import { media } from './pages/media.js?v=0.7.0';

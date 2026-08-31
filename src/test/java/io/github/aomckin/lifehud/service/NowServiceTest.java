@@ -125,6 +125,40 @@ class NowServiceTest {
         assertThat(w.now.clearBackground().playlistBackgroundImage()).isEmpty();
     }
 
+    @Test void gamesAnimeAndBooksPersistMultipleItemsAndFreezeInSnapshot(){
+        NowState base=w.now.current();
+        NowState many=new NowState("多线并行","","","","",base.favoriteSongs(),
+                List.of(new NowItem("舞萌 DX","金框",""),new NowItem("星露谷物语","第一年夏天","慢慢玩")),
+                List.of(new NowItem("幼女战记","EP.4",""),new NowItem("胆大党","EP.8","")),
+                List.of(new NowItem("献给阿尔吉侬的花束","42%",""),new NowItem("百年孤独","第二章","")),
+                List.of(),List.of(),"",List.of(),"",null);
+        NowState saved=w.now.update(many);
+        assertThat(saved.currentGames()).extracting(NowItem::title).containsExactly("舞萌 DX","星露谷物语");
+        assertThat(saved.currentAnime()).hasSize(2);assertThat(saved.currentBooks()).hasSize(2);
+        NowSnapshot snapshot=w.now.createSnapshot();
+        assertThat(snapshot.currentGames()).hasSize(2);assertThat(snapshot.currentAnime()).hasSize(2);
+        assertThat(snapshot.currentBooks()).extracting(NowItem::title).containsExactly("献给阿尔吉侬的花束","百年孤独");
+    }
+
+    @Test void quotesAndThoughtsPersistMultipleValuesAndLegacyStringsRemainReadable(){
+        NowState base=w.now.current();
+        NowState request=new NowState("多声部","","","","",base.favoriteSongs(),List.of(),List.of(),List.of(),
+                List.of(),List.of(),"旧兼容首句",List.of(),"旧兼容首段",
+                List.of("第一句","第二句"),List.of("第一段","第二段"),null);
+        NowState saved=w.now.update(request);
+        assertThat(saved.favoriteQuotes()).containsExactly("第一句","第二句");
+        assertThat(saved.thoughts()).containsExactly("第一段","第二段");
+        assertThat(saved.favoriteQuote()).isEqualTo("第一句");assertThat(saved.content()).isEqualTo("第一段");
+        NowSnapshot snapshot=w.now.createSnapshot();
+        assertThat(snapshot.favoriteQuotes()).containsExactly("第一句","第二句");
+        assertThat(snapshot.thoughts()).containsExactly("第一段","第二段");
+
+        NowState legacy=new NowState("旧存档","","","","",List.of(),List.of(),List.of(),List.of(),List.of(),List.of(),
+                "只有一句",List.of(),"只有一段",null);
+        assertThat(legacy.favoriteQuotes()).containsExactly("只有一句");
+        assertThat(legacy.thoughts()).containsExactly("只有一段");
+    }
+
     @Test void imageChangesRecordEachConcretePathForTimelineMedia(){
         w.now.update(stateWithImages(List.of("/uploads/first.png","/uploads/second.png")));
         w.now.update(stateWithImages(List.of("/uploads/second.png","/uploads/third.png")));

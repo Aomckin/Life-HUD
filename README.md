@@ -1,4 +1,8 @@
-# Life HUD v0.7.0 · Media / 宅宅生活档案
+# Life HUD v0.8.0 · Integration / 今日驾驶舱
+
+v0.8 把已有生活事实连接成同一份上下文：`GET /api/dashboard` 驱动 Today 四层驾驶舱；`/api/agent/context/*` 提供带 `schemaVersion: "1"` 的十个强类型只读视图；统一日期边界保证补录事实不会误算到今天。Growth 新增统一 `AchievementEvaluator`，由 LifeEvent 与只读业务档案判断 Direction、Ritual、Life、Focus、Media 和综合生活成就，幂等解锁 Achievement / Title，同时保持 Focus / Task → Energy、娱乐 SPEND → EXP 的原核心循环。
+
+## v0.7.0 · Media / 宅宅生活档案
 
 v0.7 让 Life HUD 从“知道娱乐了多久”走到“知道是什么作品陪伴过自己”。`/media` 提供番剧、游戏、书、漫画、电影与其他作品的收藏墙：Anime 记录集数进度，MediaGame 由每次 Session 重算累计时长，Book / Manga / Movie / Other 保持轻量档案。作品支持封面、状态、评分、备注与详情足迹，390px 下自动单列。
 

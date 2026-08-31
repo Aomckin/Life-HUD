@@ -1,159 +1,44 @@
-import { api } from "../api/client.js?v=0.7.0";
-import { modeLabels, growthCopy } from "../content/copy.js?v=0.7.0";
+import { api } from "../api/client.js?v=0.8.0";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
-const formatDate = value => new Intl.DateTimeFormat("zh-CN", {
-  month: "long",
-  day: "numeric",
-  weekday: "short",
-  hour: "2-digit",
-  minute: "2-digit"
-}).format(value ? new Date(value) : new Date());
-
-const progress = state => {
-  const values = String(state.exp_text || "").match(/(\d+)\s*\/\s*(\d+)/);
-  return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0;
-};
-
-const energyProgress = state => {
-  const values = String(state.energy_text || "").match(/(\d+)\s*\/\s*(\d+)/);
-  return values ? Math.min(100, Math.round(Number(values[1]) / Number(values[2]) * 100)) : 0;
-};
+const clock = value => value ? new Intl.DateTimeFormat("zh-CN", {hour:"2-digit",minute:"2-digit"}).format(new Date(value)) : "—";
+const minutes = value => value >= 60 ? `${Math.floor(value / 60)}h ${value % 60}min` : `${value || 0} min`;
+const dateText = value => new Intl.DateTimeFormat("zh-CN", {month:"long",day:"numeric",weekday:"long"}).format(new Date(`${value}T12:00:00`));
+const link = (path, label) => `<a href="${path}" data-link>${label}</a>`;
 
 export async function dashboard(root) {
-  root.innerHTML = [
-    '<div class="dashboard">',
-    '<section class="panel hero">',
-    '<div class="hero-copy"><div class="eyebrow" id="today-date">今天</div><div class="hero-time" id="today-time"></div><h1>把今天过得清澈一点。</h1><p>这里保留正在发生的生活：你的能量、进度、待完成的事，以及最近留下的痕迹。</p></div>',
-    '<div class="hero-actions"><div class="hero-status"><span>此刻的状态</span><strong id="hero-energy">正在读取…</strong><span id="hero-title">Life HUD</span></div><button class="button button-primary" data-go="/focus">开始一次专注</button><button class="button button-secondary" data-go="/tasks">看看今天的任务</button></div>',
-    '</section>',
-    '<section class="metric-grid" id="metrics"><div class="card metric">正在同步今天的状态…</div></section>',
-    '<section class="dashboard-grid">',
-    '<section class="panel content-card"><div class="section-head"><h2>今天的任务</h2><a href="/tasks" data-link>查看全部</a></div><div id="today-tasks"></div></section>',
-    '<section class="panel content-card"><div class="section-head"><h2>最近发生</h2><span class="badge">LifeEvent</span></div><div id="recent-events"></div></section>',
-    '</section></div>'
-  ].join("");
-
-  root.querySelector("#today-date").textContent = formatDate();
-  root.querySelector("#today-time").textContent = new Intl.DateTimeFormat("zh-CN", {
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(new Date());
-
-  root.querySelectorAll("[data-go]").forEach(button => {
-    button.addEventListener("click", () => window.navigate(button.dataset.go));
-  });
-
-  try {
-    const [state, events, currentFocus, focusToday, growth] = await Promise.all([
-      api.state(), api.events(), api.focus.current(), api.focus.today(), api.growth.overview()
-    ]);
-    renderHero(root, state, currentFocus, growth);
-    renderMetrics(root, state, currentFocus, focusToday, growth);
-    renderTasks(root, state);
-    renderEvents(root, events);
-  } catch (reason) {
-    root.querySelector("#metrics").innerHTML = error(reason.message);
-    root.querySelector("#today-tasks").innerHTML = error("任务暂时无法读取");
-    root.querySelector("#recent-events").innerHTML = error("事件暂时无法读取");
-    toast(reason.message, true);
-  }
+  root.innerHTML = `<div class="dashboard dashboard-v2"><section class="panel cockpit-now"><div><div class="eyebrow">此刻 · NOW</div><div class="hero-time" id="today-clock"></div><h1 id="today-date">今天</h1><p>正在聚合今天的自己…</p></div></section><section id="dashboard-content"></section></div>`;
+  try { render(root, await api.dashboard.summary()); }
+  catch (reason) { root.querySelector("#dashboard-content").innerHTML=error(reason.message);toast(reason.message,true); }
 }
 
-const MODE_LABELS = modeLabels;
-const formatFocusTime = seconds => {
-  const total = Math.max(0, Math.floor(seconds || 0));
-  if (total > 0 && total < 60) return "<1min";
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor(total % 3600 / 60);
-  return hours ? `${hours}h ${minutes}min` : `${minutes}min`;
-};
+function render(root, data) {
+  const s=data.status, check=s.checkIn, active=s.activeFocus;
+  root.querySelector("#today-date").textContent=dateText(data.date);
+  root.querySelector("#today-clock").textContent=clock(data.generatedAt);
+  root.querySelector(".cockpit-now p").innerHTML=check
+    ? `心情 <strong>${check.mood}</strong> · 精力 <strong>${check.energy}</strong> · 疲劳 <strong>${check.fatigue}</strong> · 专注欲望 <strong>${check.focusDesire}</strong>`
+    : link("/life","今天还没有记录状态 →");
+  root.querySelector(".cockpit-now").insertAdjacentHTML("beforeend",`<div class="now-growth"><div><span>Energy</span><strong>${s.energy}</strong></div><div><span>Level</span><strong>Lv.${s.level}</strong></div><div><span>EXP</span><strong>${s.exp}</strong></div><div><span>Title</span><strong>${escapeHtml(s.title||"尚未装备")}</strong></div></div>`);
 
-function renderHero(root, state, currentFocus, growth) {
-  root.querySelector("#hero-energy").textContent = currentFocus
-    ? `${MODE_LABELS[currentFocus.mode]} · ${currentFocus.title}`
-    : `Energy ${growth.energy} / ${growth.energyMax}`;
-  root.querySelector("#hero-title").textContent = currentFocus
-    ? `${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`
-    : (growth.currentTitle || "今天由你决定");
-  if (currentFocus) root.querySelector('[data-go="/focus"]').textContent = "返回当前 Focus";
+  const life=data.life, meal=life.meals?.[0], dream=data.dreams.active?.[0], ritual=data.rituals.completedToday?.[0]||data.rituals.available?.[0];
+  const recentMedia=data.media.gameSessions?.[0]||data.media.animeSessions?.[0];
+  root.querySelector("#dashboard-content").innerHTML=`
+    <section class="today-layer"><div class="section-head"><div><div class="eyebrow">今天 · TODAY</div><h2>今日事实</h2></div></div><div class="fact-grid">
+      ${fact("Focus",active?`进行中 · ${escapeHtml(active.title)}`:minutes(data.focus.effectiveMinutes),"/focus")}
+      ${fact("Task",`${data.tasks.completed} / ${data.tasks.completed+data.tasks.remaining}`,"/tasks")}
+      ${fact("Sleep",life.sleep?minutes(life.sleep.durationMinutes):"暂无记录","/life")}
+      ${fact("Meal",meal?`${meal.mealType} · ${clock(meal.time)}`:"暂无记录","/life")}
+    </div></section>
+    <section class="direction-layer"><div class="section-head"><div><div class="eyebrow">方向与陪伴</div><h2>正在往哪里走</h2></div></div><div class="companion-grid">
+      ${summary("✦ 当前 Dream",dream?.title||"还没有进行中的 Dream","/dreams")}
+      ${summary("☀ Ritual",ritual?(ritual.ritualName||ritual.name):"今天还没有 Ritual","/rituals")}
+      ${summary("🎮 最近陪伴",recentMedia?mediaLabel(recentMedia,data.media):"最近没有媒体 Session","/media")}
+    </div></section>
+    <section class="panel footprint-layer"><div class="section-head"><div><div class="eyebrow">今天的足迹</div><h2>Timeline</h2></div>${link("/journal","查看完整 Journal")}</div><div class="footprint-list">${timeline(data.timeline)}</div></section>`;
 }
 
-function renderMetrics(root, state, currentFocus, focusToday, growth) {
-  const energy = `${growth.energy} / ${growth.energyMax}`;
-  const level = `Lv.${growth.level}`;
-  const exp = `${growth.currentExp} / ${growth.requiredExp}`;
-  const title = escapeHtml(growth.currentTitle || "称号仍在积累");
-  const expProgress = Math.min(100, Math.round(growth.currentExp / growth.requiredExp * 100));
-  const currentEnergy = Math.min(100, Math.round(growth.energy / growth.energyMax * 100));
-  const energyFlow = (growth.todayEnergyEarn || growth.todayEnergySpend)
-    ? `今日 +${growth.todayEnergyEarn || 0} / −${growth.todayEnergySpend || 0}`
-    : growthCopy.energyFlowEmpty;
-  const expNote = growth.todayExpDelta ? `今日 +${growth.todayExpDelta} · 长期积累` : growthCopy.expAccumulating;
-
-  root.querySelector("#metrics").innerHTML = [
-    '<article class="card card-hover metric metric-energy growth-link" data-growth="overview"><div class="metric-label">能量 · Energy</div><div class="metric-value">' + energy + '</div><div class="progress" aria-label="当前能量"><span style="width:' + currentEnergy + '%"></span></div><div class="metric-status">' + energyFlow + '</div></article>',
-    '<article class="card card-hover metric metric-level growth-link" data-growth="overview"><div class="metric-label">等级 · Level</div><div class="metric-value">' + level + '</div><div class="metric-note">距下一阶段 ' + growth.expToNext + ' EXP · ' + title + '</div></article>',
-    '<article class="card card-hover metric metric-exp growth-link" data-growth="overview"><div class="metric-label">经验 · EXP</div><div class="metric-value">' + exp + '</div><div class="progress" aria-label="当前经验进度"><span style="width:' + expProgress + '%"></span></div><div class="metric-note">' + expNote + '</div></article>',
-    currentFocus
-      ? '<article class="card card-hover metric metric-focus is-active"><div class="metric-label">正在 Focus</div><div class="metric-value metric-focus-title" title="' + escapeHtml(currentFocus.title) + '">' + escapeHtml(currentFocus.title) + '</div><div class="metric-note">' + escapeHtml(`${MODE_LABELS[currentFocus.mode]} · ${formatFocusTime(currentFocus.actualSeconds)} · ${currentFocus.status === "PAUSED" ? "已暂停" : "专注中"}`) + '</div><button class="metric-focus-action" type="button">返回 Focus →</button></article>'
-      : '<article class="card card-hover metric metric-focus"><div class="metric-label">专注 · Focus</div><div class="metric-value">' + formatFocusTime(focusToday.totalSeconds) + '</div><div class="metric-note">' + (focusToday.sessionCount ? `今日 ${focusToday.sessionCount} 次 Session` : "今天还没有留下专注时间") + '</div><button class="metric-focus-action" type="button">开始 Focus →</button></article>'
-  ].join("");
-  root.querySelector(".metric-focus-action").addEventListener("click", () => window.navigate("/focus"));
-  root.querySelectorAll("[data-growth]").forEach(card => card.addEventListener("click", () => window.navigate(`/growth#${card.dataset.growth}`)));
-}
-
-function renderTasks(root, state) {
-  const tasks = Array.isArray(state.active_task_views) ? state.active_task_views : [];
-  const taskList = tasks.slice(0, 4).map(task => [
-    '<div class="task-item"><div><strong>',
-    escapeHtml(task.name || task.id || "任务"),
-    '</strong><div class="event-meta">',
-    escapeHtml(task.detail_text || task.reward_text || ""),
-    '</div></div><button class="button button-secondary" data-task="',
-    escapeHtml(JSON.stringify(task.command_payload || {})),
-    '" ',
-    task.button_state === "normal" ? "" : "disabled",
-    '>',
-    escapeHtml(task.button_text || "完成"),
-    '</button></div>'
-  ].join("")).join("");
-
-  root.querySelector("#today-tasks").innerHTML = taskList
-    ? '<div class="task-list">' + taskList + '</div>'
-    : empty("今天还没有任务，留一点空白也很好。");
-
-  root.querySelectorAll("[data-task]").forEach(button => {
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      try {
-        const beforeGrowth = await api.growth.overview();
-        const result = await api.command("COMPLETE_DAILY_TASK", JSON.parse(button.dataset.task));
-        const afterGrowth = await api.growth.overview();
-        const exp = afterGrowth.totalExp - beforeGrowth.totalExp;
-        const energy = afterGrowth.energy - beforeGrowth.energy;
-        toast(`${result.message || "已完成"}${exp ? ` · EXP +${exp}` : ""}${energy ? ` · Energy ${energy > 0 ? "+" : ""}${energy}` : ""}`);
-        window.navigate("/dashboard", true);
-      } catch (reason) {
-        toast(reason.message, true);
-        button.disabled = false;
-      }
-    });
-  });
-}
-
-function renderEvents(root, events) {
-  const eventList = events.map(event => [
-    '<div class="event-item"><span class="event-dot"></span><div class="event-main"><strong>',
-    escapeHtml(event.title),
-    '</strong><div class="event-meta">',
-    escapeHtml(event.content || event.type),
-    ' · ',
-    formatDate(event.occurredAt),
-    '</div></div></div>'
-  ].join("")).join("");
-
-  root.querySelector("#recent-events").innerHTML = eventList
-    ? '<div class="event-list">' + eventList + '</div>'
-    : empty("今天还没有记录。完成一次任务或专注后，它会出现在这里。");
-}
+const fact=(label,value,path)=>`<a class="card fact-card" href="${path}" data-link><span>${label}</span><strong>${value}</strong><small>查看详情 →</small></a>`;
+const summary=(label,value,path)=>`<a class="card companion-card" href="${path}" data-link><span>${label}</span><strong>${escapeHtml(value)}</strong></a>`;
+function timeline(items){return items?.length?items.map(v=>`<article class="footprint"><time>${clock(v.occurredAt)}</time><span class="event-dot"></span><div><strong>${escapeHtml(v.title)}</strong><p>${escapeHtml(v.summary||v.type)}</p></div></article>`).join(""):empty("今天还没有留下足迹。");}
+function mediaLabel(item,media){const game=media.playingGames?.find(v=>v.id===item.gameId);if(game)return `${game.title} · ${minutes(item.durationMinutes)}`;const anime=media.watchingAnime?.find(v=>v.id===item.animeId);return anime?`${anime.title} · EP${item.episodeEnd}`:"一段最近的陪伴";}

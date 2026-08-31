@@ -171,6 +171,11 @@ export const nowCopy = {
     currentAnime: "＋ 添加当前番剧",
     currentBooks: "＋ 添加当前书"
   },
+  addMoreItemLabels: {
+    currentGames: "＋ 继续添加游戏",
+    currentAnime: "＋ 继续添加番剧",
+    currentBooks: "＋ 继续添加书"
+  },
   itemTitle: "标题",
   itemSubtitle: "补充（如 看到 EP.4）",
   itemNote: "备注（可选）",

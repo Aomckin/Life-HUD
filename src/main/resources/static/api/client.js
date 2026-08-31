@@ -28,6 +28,7 @@ const put = (url, body) => request(url, {
 const remove = url => request(url, {method: "DELETE"});
 
 export const api = {
+  dashboard: {summary: () => request("/api/dashboard")},
   state: () => request("/state"),
   events: (limit = 8) => request(`/api/life-events?limit=${limit}`),
   removeEvent: id => remove(`/api/life-events/${id}`),

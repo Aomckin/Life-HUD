@@ -76,6 +76,6 @@ class SleepServiceTest {
                 Instant.parse("2026-08-29T07:00:00Z"), 4, "NIGHT", "", List.of("/uploads/sleep.jpg")));
         sleep.update(record.id(), new SleepRequest(null, null, 5, null, null));
         assertThat(sleep.get(record.id()).images()).containsExactly("/uploads/sleep.jpg");
-        assertThat(w.lifeEvents.all().getFirst().metadata()).containsEntry("images", List.of("/uploads/sleep.jpg"));
+        assertThat(w.lifeEvents.all().stream().filter(v->v.type()==LifeEventType.SLEEP_RECORDED).findFirst().orElseThrow().metadata()).containsEntry("images", List.of("/uploads/sleep.jpg"));
     }
 }

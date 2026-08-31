@@ -50,7 +50,7 @@ class GameControllerTest {
     @Test void homeAndStaticAssetsAreServed() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/static/v0.2.html"));
         mvc.perform(get("/static/v0.2.html")).andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Life HUD v0.7.0")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Life HUD v0.8.0")));
         mvc.perform(get("/static/app-v02.js")).andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("pages/growth.js")));
         mvc.perform(get("/static/styles/growth.css")).andExpect(status().isOk());

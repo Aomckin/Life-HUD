@@ -164,6 +164,12 @@
 .now-item-card .muted { color:var(--text-muted); }
 .now-item-editor { display:grid; gap:var(--space-2); padding:var(--space-3); border:1px solid var(--sky-300); border-radius:var(--radius-md); background:var(--surface-glass); }
 .now-item-editor input { min-height:34px; }
+.now-list-hint { display:block; margin-top:3px; color:var(--text-muted); font-weight:var(--font-weight-regular); }
+.now-item-add { width:fit-content; margin-top:var(--space-1); }
+.now-text-list { display:grid; gap:var(--space-3); }
+.now-text-card { margin:0; padding:var(--space-3) var(--space-4); border:1px solid var(--border-soft); border-radius:var(--radius-md); background:var(--surface-elevated); cursor:pointer; white-space:pre-wrap; }
+.now-text-card:hover { border-color:var(--sky-400); }
+.now-text-editor { display:grid; gap:var(--space-2); }
 
 .dream-chip { padding:var(--space-4); display:grid; gap:var(--space-1); }
 .dream-chip small { color:var(--text-muted); }

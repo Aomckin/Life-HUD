@@ -106,7 +106,8 @@ class EntertainmentServiceTest {
             @Override public GrowthEngine getIfUnique(){return holder[0];}
         });
         var engine=new GrowthEngine(new GrowthRules(new GrowthEconomy(data.json),copy,gameConfig),records,player,
-                playerService,data.players,levels,events,stats,catalog,copy);
+                playerService,data.players,levels,events,stats,catalog,copy,
+                new AchievementEvaluator(lifeRepo,new MediaRepository(data.json,data.mapper),new LifeDateService()));
         holder[0]=engine;
         var ledger=new EnergyLedgerService(events,records);
         var entertainment=new EntertainmentRecordService(new EntertainmentRecordRepository(data.json,data.mapper),events,ledger,copy);

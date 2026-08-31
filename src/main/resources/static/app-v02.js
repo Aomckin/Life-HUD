@@ -1,5 +1,5 @@
 import { sidebar, routes } from './modules/navigation.js';
-import { dashboard } from './pages/dashboard.js?v=0.8.0';
+import { dashboard } from './pages/dashboard.js?v=0.8.1';
 import { placeholder } from './pages/placeholder.js';
 import { settings } from './pages/settings.js';
 import { focus } from './pages/focus.js?v=0.7.0';

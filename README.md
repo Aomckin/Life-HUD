@@ -1,6 +1,12 @@
-# Life HUD v0.8.0 · Integration / 今日驾驶舱
+# Life HUD v0.8.1 · Dashboard HUD 化
+
+v0.8.1 收拢 Dashboard 的独立卡片：成长状态与 Check-in 合并为主状态舱，Focus / Task / Sleep / Meal 合并为一条今日脉搏；Dream、Ritual、Media 在同一陪伴舱中分别使用航向、日光节律和播放终端语义。状态舱以每次打开时随机抽取的「今日文案」为主标题，日期降级为普通信息，页面底部提供文案库入口。所有面板降低实体白底、改用轻透边界与局部玻璃，让 Summer Sky 壁纸参与页面层次而不只是剩余空白。
+
+## v0.8.0 · Integration / 今日驾驶舱
 
 v0.8 把已有生活事实连接成同一份上下文：`GET /api/dashboard` 驱动 Today 四层驾驶舱；`/api/agent/context/*` 提供带 `schemaVersion: "1"` 的十个强类型只读视图；统一日期边界保证补录事实不会误算到今天。Growth 新增统一 `AchievementEvaluator`，由 LifeEvent 与只读业务档案判断 Direction、Ritual、Life、Focus、Media 和综合生活成就，幂等解锁 Achievement / Title，同时保持 Focus / Task → Energy、娱乐 SPEND → EXP 的原核心循环。
+
+外部 Agent 对接端点、响应结构、字段语义与兼容策略见 [Agent Context API](docs/AGENT_CONTEXT_API.md)。
 
 ## v0.7.0 · Media / 宅宅生活档案
 

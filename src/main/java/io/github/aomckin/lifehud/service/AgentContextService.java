@@ -26,6 +26,7 @@ public final class AgentContextService {
     private final MediaRepository media; private final LifeEventRepository events; private final TimelineService timeline;
     private final GrowthRecordRepository growthRecords; private final GrowthSnapshotService snapshots;
     private final GrowthTitleService titles;
+    private final DashboardHeadlineService headlines;
 
     public AgentContextService(LifeDateService dates, Player player, LevelService levels, FocusService focus,
             DailyTaskManager daily, SpecialTaskManager special, DreamRepository dreams, GoalRepository goals,
@@ -33,12 +34,13 @@ public final class AgentContextService {
             SleepRecordRepository sleeps, MealRecordRepository meals, ExerciseRecordRepository exercises,
             CheckInRepository checkIns, LifeRecordRepository lifeRecords, JournalEntryRepository journals,
             MediaRepository media, LifeEventRepository events, TimelineService timeline,
-            GrowthRecordRepository growthRecords, GrowthSnapshotService snapshots, GrowthTitleService titles) {
+            GrowthRecordRepository growthRecords, GrowthSnapshotService snapshots, GrowthTitleService titles,
+            DashboardHeadlineService headlines) {
         this.dates=dates;this.player=player;this.levels=levels;this.focus=focus;this.daily=daily;this.special=special;
         this.dreams=dreams;this.goals=goals;this.dreamMilestones=dreamMilestones;this.rituals=rituals;
         this.ritualExecutions=ritualExecutions;this.sleeps=sleeps;this.meals=meals;this.exercises=exercises;
         this.checkIns=checkIns;this.lifeRecords=lifeRecords;this.journals=journals;this.media=media;
-        this.events=events;this.timeline=timeline;this.growthRecords=growthRecords;this.snapshots=snapshots;this.titles=titles;
+        this.events=events;this.timeline=timeline;this.growthRecords=growthRecords;this.snapshots=snapshots;this.titles=titles;this.headlines=headlines;
     }
 
     public AgentContext.Today today() {
@@ -62,7 +64,7 @@ public final class AgentContextService {
     public AgentContext.JournalResponse journalResponse(int limit){int safe=range(limit,1,100,"limit");return new AgentContext.JournalResponse(SCHEMA,dates.now(),journals.all().stream().sorted(Comparator.comparing(JournalEntry::occurredAt).reversed()).limit(safe).toList(),timeline.timeline(null,null,null,null,null,1,safe));}
     public AgentContext.MediaResponse mediaResponse(){return new AgentContext.MediaResponse(SCHEMA,dates.now(),media());}
     public AgentContext.GrowthResponse growthResponse(){return new AgentContext.GrowthResponse(SCHEMA,dates.now(),growth());}
-    public DashboardSummary dashboard(){AgentContext.Today v=today();return new DashboardSummary(v.generatedAt(),v.date(),v.status(),v.focus(),v.tasks(),life(v.date()),v.dreams(),v.rituals(),v.media(),v.timeline());}
+    public DashboardSummary dashboard(){AgentContext.Today v=today();return new DashboardSummary(v.generatedAt(),v.date(),headlines.random(),headlines.all(),v.status(),v.focus(),v.tasks(),life(v.date()),v.dreams(),v.rituals(),v.media(),v.timeline());}
 
     private AgentContext.Status status(){return new AgentContext.Status(player.energy,levels.level(player.exp),player.exp,
             titles.currentName(),latest(checkIns.all(),CheckIn::time),focus.current());}

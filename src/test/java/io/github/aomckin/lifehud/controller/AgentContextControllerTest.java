@@ -29,7 +29,8 @@ class AgentContextControllerTest {
                 .andExpect(jsonPath("$.generatedAt").exists()).andExpect(jsonPath("$.date").exists())
                 .andExpect(jsonPath("$.timeline").isArray());
         mvc.perform(get("/api/dashboard")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.generatedAt").exists()).andExpect(jsonPath("$.focus").exists());
+                .andExpect(jsonPath("$.generatedAt").exists()).andExpect(jsonPath("$.headline").isString())
+                .andExpect(jsonPath("$.headlines").isArray()).andExpect(jsonPath("$.focus").exists());
     }
 
     @Test void exposesAllReadOnlyContextViews() throws Exception {

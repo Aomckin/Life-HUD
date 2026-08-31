@@ -1,44 +1,66 @@
-import { api } from "../api/client.js?v=0.8.0";
-import { empty, error, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.8.1";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.8.1";
 
-const clock = value => value ? new Intl.DateTimeFormat("zh-CN", {hour:"2-digit",minute:"2-digit"}).format(new Date(value)) : "—";
-const minutes = value => value >= 60 ? `${Math.floor(value / 60)}h ${value % 60}min` : `${value || 0} min`;
-const dateText = value => new Intl.DateTimeFormat("zh-CN", {month:"long",day:"numeric",weekday:"long"}).format(new Date(`${value}T12:00:00`));
-const link = (path, label) => `<a href="${path}" data-link>${label}</a>`;
+const clock=value=>value?new Intl.DateTimeFormat("zh-CN",{hour:"2-digit",minute:"2-digit"}).format(new Date(value)):"—";
+const minutes=value=>value>=60?`${Math.floor(value/60)}h ${value%60}min`:`${value||0} min`;
+const dateText=value=>new Intl.DateTimeFormat("zh-CN",{month:"long",day:"numeric",weekday:"long"}).format(new Date(`${value}T12:00:00`));
+const link=(path,label)=>`<a href="${path}" data-link>${label}</a>`;
 
-export async function dashboard(root) {
-  root.innerHTML = `<div class="dashboard dashboard-v2"><section class="panel cockpit-now"><div><div class="eyebrow">此刻 · NOW</div><div class="hero-time" id="today-clock"></div><h1 id="today-date">今天</h1><p>正在聚合今天的自己…</p></div></section><section id="dashboard-content"></section></div>`;
-  try { render(root, await api.dashboard.summary()); }
-  catch (reason) { root.querySelector("#dashboard-content").innerHTML=error(reason.message);toast(reason.message,true); }
+export async function dashboard(root){
+  root.innerHTML='<div class="dashboard dashboard-v2 dashboard-hud"><section class="hud-loading">正在校准今日状态舱…</section></div>';
+  try{render(root,await api.dashboard.summary());}catch(reason){root.querySelector(".dashboard-hud").innerHTML=error(reason.message);toast(reason.message,true);}
 }
 
-function render(root, data) {
-  const s=data.status, check=s.checkIn, active=s.activeFocus;
-  root.querySelector("#today-date").textContent=dateText(data.date);
-  root.querySelector("#today-clock").textContent=clock(data.generatedAt);
-  root.querySelector(".cockpit-now p").innerHTML=check
-    ? `心情 <strong>${check.mood}</strong> · 精力 <strong>${check.energy}</strong> · 疲劳 <strong>${check.fatigue}</strong> · 专注欲望 <strong>${check.focusDesire}</strong>`
-    : link("/life","今天还没有记录状态 →");
-  root.querySelector(".cockpit-now").insertAdjacentHTML("beforeend",`<div class="now-growth"><div><span>Energy</span><strong>${s.energy}</strong></div><div><span>Level</span><strong>Lv.${s.level}</strong></div><div><span>EXP</span><strong>${s.exp}</strong></div><div><span>Title</span><strong>${escapeHtml(s.title||"尚未装备")}</strong></div></div>`);
+function render(root,data){
+  const s=data.status,check=s.checkIn,active=s.activeFocus,life=data.life;
+  const meal=life.meals?.[0],dream=data.dreams.active?.[0];
+  const ritualDone=data.rituals.completedToday?.[0],ritual=ritualDone||data.rituals.available?.[0];
+  const media=recentMedia(data.media);
+  root.querySelector(".dashboard-hud").innerHTML=`
+    <section class="hud-cockpit">
+      <div class="hud-cockpit-copy"><div class="hud-kicker"><span class="hud-live-dot"></span> 此刻 · NOW <time>${clock(data.generatedAt)}</time></div>
+        <h1>${escapeHtml(data.headline)}</h1>
+        <p class="hud-date">${dateText(data.date)}</p>
+        <div class="hud-checkin">${check?`<span>心情 <b>${check.mood}</b></span><span>精力 <b>${check.energy}</b></span><span>疲劳 <b>${check.fatigue}</b></span><span>专注欲望 <b>${check.focusDesire}</b></span>`:link("/life","今天还没有记录状态 →")}</div>
+        ${active?`<a class="hud-active-focus" href="/focus" data-link><span>FOCUS ACTIVE</span><strong>${escapeHtml(active.title)}</strong><small>${minutes(active.effectiveMinutes)} · 返回专注 →</small></a>`:""}
+      </div>
+      <div class="hud-status" aria-label="成长状态">
+        ${readout("Energy",s.energy,"energy")}${readout("Level",`Lv.${s.level}`,"level")}${readout("EXP",s.exp,"exp")}${readout("Title",s.title||"尚未装备","title")}
+      </div>
+    </section>
 
-  const life=data.life, meal=life.meals?.[0], dream=data.dreams.active?.[0], ritual=data.rituals.completedToday?.[0]||data.rituals.available?.[0];
-  const recentMedia=data.media.gameSessions?.[0]||data.media.animeSessions?.[0];
-  root.querySelector("#dashboard-content").innerHTML=`
-    <section class="today-layer"><div class="section-head"><div><div class="eyebrow">今天 · TODAY</div><h2>今日事实</h2></div></div><div class="fact-grid">
-      ${fact("Focus",active?`进行中 · ${escapeHtml(active.title)}`:minutes(data.focus.effectiveMinutes),"/focus")}
-      ${fact("Task",`${data.tasks.completed} / ${data.tasks.completed+data.tasks.remaining}`,"/tasks")}
-      ${fact("Sleep",life.sleep?minutes(life.sleep.durationMinutes):"暂无记录","/life")}
-      ${fact("Meal",meal?`${meal.mealType} · ${clock(meal.time)}`:"暂无记录","/life")}
-    </div></section>
-    <section class="direction-layer"><div class="section-head"><div><div class="eyebrow">方向与陪伴</div><h2>正在往哪里走</h2></div></div><div class="companion-grid">
-      ${summary("✦ 当前 Dream",dream?.title||"还没有进行中的 Dream","/dreams")}
-      ${summary("☀ Ritual",ritual?(ritual.ritualName||ritual.name):"今天还没有 Ritual","/rituals")}
-      ${summary("🎮 最近陪伴",recentMedia?mediaLabel(recentMedia,data.media):"最近没有媒体 Session","/media")}
-    </div></section>
-    <section class="panel footprint-layer"><div class="section-head"><div><div class="eyebrow">今天的足迹</div><h2>Timeline</h2></div>${link("/journal","查看完整 Journal")}</div><div class="footprint-list">${timeline(data.timeline)}</div></section>`;
+    <section class="hud-today-strip" aria-label="今日指标">
+      <div class="hud-strip-label"><span>TODAY</span><strong>今日脉搏</strong></div>
+      ${metric("Focus",active?"进行中":minutes(data.focus.effectiveMinutes),"/focus","◎")}
+      ${metric("Task",`${data.tasks.completed} / ${data.tasks.completed+data.tasks.remaining}`,"/tasks","✓")}
+      ${metric("Sleep",life.sleep?minutes(life.sleep.durationMinutes):"暂无记录","/life","☾")}
+      ${metric("Meal",meal?`${meal.mealType} · ${clock(meal.time)}`:"暂无记录","/life","◌")}
+    </section>
+
+    <section class="hud-companions">
+      <a class="hud-companion hud-dream" href="/dreams" data-link><span class="hud-symbol">✦</span><div><small>DREAM · 航向</small><strong>${escapeHtml(dream?.title||"等待一个方向")}</strong><p>${escapeHtml(dream?.meaning||"把远方放进今天")}</p></div><i>→</i></a>
+      <a class="hud-companion hud-ritual" href="/rituals" data-link><span class="hud-symbol">☀</span><div><small>RITUAL · 节律</small><strong>${escapeHtml(ritual?(ritual.ritualName||ritual.name):"尚未进入仪式")}</strong><p>${ritualDone?`今日完成 · ${clock(ritualDone.completedAt)}`:"为状态留一个入口"}</p></div><i>→</i></a>
+      <a class="hud-companion hud-media" href="/media" data-link><span class="hud-symbol">▶</span><div><small>MEDIA · 陪伴</small><strong>${escapeHtml(media.title)}</strong><p>${escapeHtml(media.detail)}</p></div><i>→</i></a>
+    </section>
+
+    <section class="hud-timeline"><header><div><small>FOOTPRINTS</small><h2>今天的足迹</h2></div>${link("/journal","完整 Journal →")}</header><div class="hud-timeline-list">${timeline(data.timeline)}</div></section>
+
+    <details class="hud-copy-manager">
+      <summary><span>今日文案</span><small>管理状态舱随机标题</small></summary>
+      <div class="hud-copy-manager-body">
+        <form class="hud-copy-form"><input name="text" maxlength="80" placeholder="写一句想在今天看见的话" required><button class="button button-primary" type="submit">添加</button></form>
+        <div class="hud-copy-list">${data.headlines?.length?data.headlines.map(v=>`<div><span>${escapeHtml(v.text)}</span><button class="text-link danger-link" type="button" data-remove-headline="${v.id}">删除</button></div>`).join(""):`<p class="hud-copy-empty">还没有自定义文案，当前会显示默认句子。</p>`}</div>
+      </div>
+    </details>`;
+  bindHeadlineManager(root);
 }
 
-const fact=(label,value,path)=>`<a class="card fact-card" href="${path}" data-link><span>${label}</span><strong>${value}</strong><small>查看详情 →</small></a>`;
-const summary=(label,value,path)=>`<a class="card companion-card" href="${path}" data-link><span>${label}</span><strong>${escapeHtml(value)}</strong></a>`;
-function timeline(items){return items?.length?items.map(v=>`<article class="footprint"><time>${clock(v.occurredAt)}</time><span class="event-dot"></span><div><strong>${escapeHtml(v.title)}</strong><p>${escapeHtml(v.summary||v.type)}</p></div></article>`).join(""):empty("今天还没有留下足迹。");}
-function mediaLabel(item,media){const game=media.playingGames?.find(v=>v.id===item.gameId);if(game)return `${game.title} · ${minutes(item.durationMinutes)}`;const anime=media.watchingAnime?.find(v=>v.id===item.animeId);return anime?`${anime.title} · EP${item.episodeEnd}`:"一段最近的陪伴";}
+function bindHeadlineManager(root){
+  root.querySelector(".hud-copy-form")?.addEventListener("submit",async event=>{event.preventDefault();const input=event.currentTarget.elements.text;try{await api.dashboard.addHeadline(input.value);toast("今日文案已添加");dashboard(root);}catch(reason){toast(reason.message,true);}});
+  root.querySelectorAll("[data-remove-headline]").forEach(button=>button.addEventListener("click",async()=>{if(!(await confirmDialog("删除这句今日文案？")))return;try{await api.dashboard.removeHeadline(button.dataset.removeHeadline);toast("今日文案已删除");dashboard(root);}catch(reason){toast(reason.message,true);}}));
+}
+
+const readout=(label,value,kind)=>`<div class="hud-readout hud-${kind}"><span>${label}</span><strong>${escapeHtml(String(value))}</strong></div>`;
+const metric=(label,value,path,symbol)=>`<a class="hud-metric" href="${path}" data-link><span class="hud-metric-symbol">${symbol}</span><small>${label}</small><strong>${value}</strong></a>`;
+function recentMedia(media){const game=media.gameSessions?.[0],anime=media.animeSessions?.[0];if(game){const item=media.playingGames?.find(v=>v.id===game.gameId);return{title:item?.title||"最近一次游戏",detail:`游玩 ${minutes(game.durationMinutes)}`};}if(anime){const item=media.watchingAnime?.find(v=>v.id===anime.animeId);return{title:item?.title||"最近一次观看",detail:`看到 EP${anime.episodeEnd}`};}const current=media.playingGames?.[0]||media.watchingAnime?.[0]||media.items?.[0];return current?{title:current.title,detail:"正在陪伴"}:{title:"最近没有媒体 Session",detail:"留一点空白也很好"};}
+function timeline(items){return items?.length?items.map(v=>`<article class="hud-event"><time>${clock(v.occurredAt)}</time><span></span><div><strong>${escapeHtml(v.title)}</strong><p>${escapeHtml(v.summary||v.type)}</p></div></article>`).join(""):empty("今天还没有留下足迹。");}

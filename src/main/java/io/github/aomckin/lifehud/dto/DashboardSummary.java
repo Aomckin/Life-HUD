@@ -5,7 +5,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 /** Human-facing projection of the same aggregation used by Agent Context. */
-public record DashboardSummary(Instant generatedAt, LocalDate date, AgentContext.Status status,
+public record DashboardSummary(Instant generatedAt, LocalDate date, String headline,
+                               java.util.List<io.github.aomckin.lifehud.domain.DashboardHeadline> headlines, AgentContext.Status status,
                                AgentContext.Focus focus, AgentContext.Tasks tasks,
                                AgentContext.Life life, AgentContext.Dreams dreams,
                                AgentContext.Rituals rituals, AgentContext.Media media,

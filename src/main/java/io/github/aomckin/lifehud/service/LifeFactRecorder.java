@@ -41,6 +41,12 @@ public final class LifeFactRecorder {
         events.findBySource(type, sourceId).ifPresent(event -> events.delete(event.id()));
     }
 
+    /** Records a standalone business activity that should remain as timeline history. */
+    public void recordActivity(LifeEventType type, String source, String title, String content,
+                               Instant occurredAt, List<String> tags, Map<String, Object> metadata) {
+        events.recordAt(type, source, title, content, occurredAt, tags, metadata);
+    }
+
     private Map<String, Object> withSource(Map<String, Object> metadata, String sourceId) {
         java.util.Map<String, Object> merged = new java.util.HashMap<>(metadata == null ? Map.of() : metadata);
         merged.put("sourceId", sourceId);

@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.1";
-import { limits, growthCopy, entertainmentCategories, entertainmentCopy } from "../content/copy.js?v=0.6.1";
+import { api } from "../api/client.js?v=0.7.0";
+import { limits, growthCopy, entertainmentCategories, entertainmentCopy } from "../content/copy.js?v=0.7.0";
 import { empty, error, escapeHtml, toast } from "../components/ui.js";
 
 let activeTab = location.hash.slice(1) || "overview";

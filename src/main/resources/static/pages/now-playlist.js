@@ -1,6 +1,6 @@
-import { api } from "../api/client.js?v=0.6.1-delete1";
-import { nowCopy as c } from "../content/copy.js?v=0.6.1";
-import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
+import { api } from "../api/client.js?v=0.7.0";
+import { nowCopy as c } from "../content/copy.js?v=0.7.0";
+import { confirmDialog, empty, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
 
 /**
  * PlaylistBoard — the horizontal immersive wall for the 「现在。」歌单.
@@ -16,10 +16,10 @@ const minutes = seconds => {
 
 /** playCount → visual size level; boundaries are product tuning knobs. */
 export function sizeLevel(playCount) {
-  if (playCount >= 50) return "featured";
-  if (playCount >= 30) return "xl";
-  if (playCount >= 15) return "large";
-  if (playCount >= 5) return "medium";
+  if (playCount >= 1000) return "featured";
+  if (playCount >= 300) return "xl";
+  if (playCount >= 100) return "large";
+  if (playCount >= 20) return "medium";
   return "small";
 }
 const LEVEL_RANK = {small: 0, medium: 1, large: 2, xl: 3, featured: 4};
@@ -294,7 +294,7 @@ function openSongEditor(container, song, options) {
         <label class="text-link">${c.songReplace}<input type="file" data-replace accept=".mp3,.flac,audio/mpeg,audio/flac" hidden></label>
       </div>
       <form class="board-modal-form">
-        <label class="field"><span>${c.titleLabel}</span><input name="title" maxlength="80" value="${escapeHtml(song.title)}" required></label>
+        <label class="field"><span>${c.titleLabel || "歌名"}</span><input name="title" maxlength="80" value="${escapeHtml(song.title)}" required></label>
         <label class="field"><span>艺术家</span><input name="artist" maxlength="80" value="${escapeHtml(song.artist)}"></label>
         <label class="field"><span>专辑</span><input name="album" maxlength="80" value="${escapeHtml(song.album)}"></label>
         <div class="milestone-form-grid">
@@ -304,8 +304,8 @@ function openSongEditor(container, song, options) {
         <label class="field"><span>${c.noteEditorLabel}</span><textarea name="note" rows="3" maxlength="120"
           placeholder="${c.noteEditorPlaceholder}">${escapeHtml(song.note)}</textarea></label>
         <div class="row-actions">
-          <button class="button button-primary" type="submit">${c.save}</button>
-          <button class="button button-ghost" type="button" data-close>${c.cancel}</button>
+          <button class="button button-primary" type="submit">${c.save || "保存当前状态"}</button>
+          <button class="button button-ghost" type="button" data-close>${c.cancel || "取消"}</button>
         </div>
       </form>
     </div></div>`;

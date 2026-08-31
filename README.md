@@ -1,4 +1,12 @@
-# Life HUD v0.6.2 · Ritual / 仪式交互重构
+# Life HUD v0.7.0 · Media / 宅宅生活档案
+
+v0.7 让 Life HUD 从“知道娱乐了多久”走到“知道是什么作品陪伴过自己”。`/media` 提供番剧、游戏、书、漫画、电影与其他作品的收藏墙：Anime 记录集数进度，MediaGame 由每次 Session 重算累计时长，Book / Manga / Movie / Other 保持轻量档案。作品支持封面、状态、评分、备注与详情足迹，390px 下自动单列。
+
+Focus 历史记录支持确认后删除，并同步清理对应的时间线事件；进行中或暂停中的 Session 必须先完成或中断。`「现在。」`歌单的卡片尺寸按收听次数分档，最高档调整为 1000 次，歌曲编辑器补齐“歌名”和“取消”文案及安全回退。
+
+AnimeWatchSession 与 MediaGameSession 会通过 `LifeFactRecorder` 各自维护唯一的 `ANIME_WATCHED` / `GAME_PLAYED` LifeEvent；编辑原位更新、删除同步清理，`occurredAt` 使用真实观看或游玩时间。加入、编辑与移除任意作品档案也会分别留下 `MEDIA_ADDED` / `MEDIA_UPDATED` / `MEDIA_REMOVED` 活动。Journal 新增“媒体”筛选。Media 不自动扣 Energy、不增加 EXP，也不改动「现在。」；旧 `/api/entertainment` 与 `GameController` 保持原语义。
+
+## v0.6.2 · Ritual / 仪式交互重构
 
 v0.6.2 把 Ritual 从流程编排器重新带回“状态入口”：默认页只呈现轻量仪式卡片；新建与编辑按需展开，用户侧统一使用“仪式片段”，片段默认只显示自然语言提示，高级类型、补充内容、计时、链接与确认要求均折叠收纳，并支持增删与上下调整顺序。开始仪式后会进入弱化普通导航的沉浸执行态，经过开场、逐片段推进和明确落幕，再回到 Life HUD。后端 Ritual / Step / Execution 数据结构与旧存档保持兼容。
 

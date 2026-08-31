@@ -138,7 +138,8 @@ body.iron-curtain-active::after { background:linear-gradient(rgb(20 49 69 / calc
 .focus-history-entry>summary::-webkit-details-marker { display:none; }
 .history-segments { width:auto; margin:-4px var(--space-4) var(--space-3) 108px; }
 .manual-time-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
-.focus-history-row { display:grid; grid-template-columns:92px minmax(0,1fr) auto; align-items:center; gap:var(--space-4); padding:var(--space-4) 0; border-top:1px solid var(--border-soft); }
+.focus-history-row { display:grid; grid-template-columns:92px minmax(0,1fr) auto auto; align-items:center; gap:var(--space-4); padding:var(--space-4) 0; border-top:1px solid var(--border-soft); }
+.focus-history-delete { align-self:center; }
 .focus-history-row { transition:background var(--motion-fast) ease,padding var(--motion-fast) ease; }
 .focus-history-row:hover { margin-inline:calc(var(--space-2) * -1); padding-inline:var(--space-2); border-radius:var(--radius-sm); background:rgb(237 248 255 / 52%); }
 .focus-history-row.status-running { border-left:2px solid var(--success); padding-left:var(--space-3); }

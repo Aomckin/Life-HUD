@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.1";
-import { empty, error, escapeHtml, toast } from "../components/ui.js";
+import { api } from "../api/client.js?v=0.7.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
 
 const MODE_LABELS = {IRON_CURTAIN: "铁幕", POMODORO: "番茄", FREE: "自由专注"};
 const STATUS_LABELS = {RUNNING: "专注中", PAUSED: "已暂停", COMPLETED: "已完成", INTERRUPTED: "已中断"};
@@ -139,7 +139,7 @@ function summaryTemplate(today) {
 }
 
 function historyTemplate(history) {
-  const rows = history.map(session => { const details = (session.segments || []).map(item => { const edit = encodeURIComponent(JSON.stringify({sessionId:session.id,id:item.id,type:item.type,title:item.title,relatedTaskId:item.relatedTaskId || "",note:item.note || ""})); return `<li><span>${SEGMENT_LABELS[item.type]} · ${escapeHtml(item.title)}</span><small>${compactDuration(item.actualSeconds)}</small>${item.active ? "" : `<button class="button button-ghost segment-edit" data-edit="${edit}">编辑</button>`}</li>`; }).join(""); return `<details class="focus-history-entry status-${session.status.toLowerCase()}"><summary class="focus-history-row"><span class="focus-mode-badge mode-${session.mode.toLowerCase()}">${MODE_LABELS[session.mode]}</span><div class="focus-history-main"><strong title="${escapeHtml(session.title)}">${escapeHtml(session.title)}</strong><small>${dateTime(session.startedAt)}${session.endedAt ? ` – ${dateTime(session.endedAt)}` : " · 进行中"}</small></div><div class="focus-history-duration"><strong>${compactDuration(session.effectiveSeconds)}</strong><small>有效专注 · 实际 ${compactDuration(session.actualSeconds)}</small></div></summary>${details ? `<ul class="history-segments">${details}</ul>` : ""}</details>`; }).join("");
+  const rows = history.map(session => { const details = (session.segments || []).map(item => { const edit = encodeURIComponent(JSON.stringify({sessionId:session.id,id:item.id,type:item.type,title:item.title,relatedTaskId:item.relatedTaskId || "",note:item.note || ""})); return `<li><span>${SEGMENT_LABELS[item.type]} · ${escapeHtml(item.title)}</span><small>${compactDuration(item.actualSeconds)}</small>${item.active ? "" : `<button class="button button-ghost segment-edit" data-edit="${edit}">编辑</button>`}</li>`; }).join(""); const removable=!['RUNNING','PAUSED'].includes(session.status); return `<details class="focus-history-entry status-${session.status.toLowerCase()}"><summary class="focus-history-row"><span class="focus-mode-badge mode-${session.mode.toLowerCase()}">${MODE_LABELS[session.mode]}</span><div class="focus-history-main"><strong title="${escapeHtml(session.title)}">${escapeHtml(session.title)}</strong><small>${dateTime(session.startedAt)}${session.endedAt ? ` – ${dateTime(session.endedAt)}` : " · 进行中"}</small></div><div class="focus-history-duration"><strong>${compactDuration(session.effectiveSeconds)}</strong><small>有效专注 · 实际 ${compactDuration(session.actualSeconds)}</small></div>${removable?`<button class="text-link danger-link focus-history-delete" data-delete-focus="${session.id}">删除</button>`:""}</summary>${details ? `<ul class="history-segments">${details}</ul>` : ""}</details>`; }).join("");
   return `<section class="panel focus-history"><div class="section-head"><div><div class="eyebrow">History</div><h2>最近专注</h2></div><button class="button button-ghost" id="manual-focus">＋ 补录</button></div><form class="manual-focus-form" id="manual-focus-form" hidden><label class="field"><span>标题 / 总结</span><input id="manual-title" required maxlength="120"></label><div class="manual-time-grid"><label class="field"><span>开始</span><input id="manual-start" type="datetime-local" required></label><label class="field"><span>结束</span><input id="manual-end" type="datetime-local" required></label></div><label class="field"><span>完成了什么？</span><textarea id="manual-note" maxlength="500"></textarea></label><div><button class="button button-primary" type="submit">保存补录</button><button class="button button-ghost" type="button" id="manual-cancel">取消</button></div></form>${rows ? `<div class="focus-history-list">${rows}</div>` : empty("还没有 Focus 记录。从一次专注开始。")}</section>`;
 }
 
@@ -259,6 +259,13 @@ function bindHistory(root) {
     const note = window.prompt("备注（可留空）", item.note); if (note === null) return;
     button.disabled = true;
     try { await api.focus.updateSegment(item.sessionId, item.id, {title, type:type.trim().toUpperCase(), relatedTaskId, note}); toast("过程记录已更新"); focus(root); }
+    catch (reason) { toast(reason.message, true); button.disabled = false; }
+  }));
+  root.querySelectorAll("[data-delete-focus]").forEach(button => button.addEventListener("click", async event => {
+    event.preventDefault(); event.stopPropagation();
+    if (!(await confirmDialog("删除这条专注记录？对应的时间线事件也会移除。"))) return;
+    button.disabled = true;
+    try { await api.focus.remove(button.dataset.deleteFocus); toast("专注记录已删除"); focus(root); }
     catch (reason) { toast(reason.message, true); button.disabled = false; }
   }));
 }

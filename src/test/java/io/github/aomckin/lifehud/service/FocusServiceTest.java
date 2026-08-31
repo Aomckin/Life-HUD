@@ -173,6 +173,23 @@ class FocusServiceTest {
         assertThat(legacy.effectiveSeconds()).isEqualTo(600);
     }
 
+    @Test void completedFocusCanBeDeletedWithItsTimelineEvents() {
+        var started = focus.start(new FocusStartRequest(FocusMode.FREE, "临时测试", null, null));
+        clock.advanceSeconds(90);
+        focus.complete(started.id(), null);
+        focus.delete(started.id());
+        assertThat(focus.history(10)).isEmpty();
+        assertThat(files.read("life-events.json")).isEmpty();
+        assertThatThrownBy(() -> focus.delete(started.id())).hasMessageContaining("Focus 不存在");
+    }
+
+    @Test void emptyFocusFileIsTreatedAsNoSessions() throws Exception {
+        Files.writeString(data.resolve("focus-sessions.json"), "");
+        assertThat(focus.history(10)).isEmpty();
+        assertThat(focus.current()).isNull();
+        assertThat(focus.today().sessionCount()).isZero();
+    }
+
     private void setClockOnService() {
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
         JsonFileStore files = new JsonFileStore(mapper, data);

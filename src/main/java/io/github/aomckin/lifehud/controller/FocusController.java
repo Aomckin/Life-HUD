@@ -9,6 +9,7 @@ import io.github.aomckin.lifehud.dto.FocusManualRequest;
 import io.github.aomckin.lifehud.service.FocusService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RestController
 @RequestMapping("/api/focus")
@@ -47,5 +50,8 @@ public final class FocusController {
     @GetMapping("/today") public FocusTodayView today() { return focus.today(); }
     @GetMapping("/history") public List<FocusSessionView> history(@RequestParam(defaultValue = "30") int limit) {
         return focus.history(limit);
+    }
+    @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT) public void delete(@PathVariable String id) {
+        focus.delete(id);
     }
 }

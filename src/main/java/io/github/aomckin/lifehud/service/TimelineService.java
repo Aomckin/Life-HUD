@@ -36,6 +36,7 @@ public final class TimelineService {
                     LifeEventSourceType.TITLE, LifeEventSourceType.MILESTONE),
             "ritual", EnumSet.of(LifeEventSourceType.RITUAL),
             "now", EnumSet.of(LifeEventSourceType.NOW),
+            "media", EnumSet.of(LifeEventSourceType.MEDIA),
             "dream", EnumSet.of(LifeEventSourceType.DREAM));
 
     private final LifeEventService events;

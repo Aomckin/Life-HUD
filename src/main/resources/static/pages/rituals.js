@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.2";
-import { ritualCopy as c } from "../content/copy.js?v=0.6.2";
+import { api } from "../api/client.js?v=0.7.0";
+import { ritualCopy as c } from "../content/copy.js?v=0.7.0";
 import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js";
 
 const labels={TEXT:"提示",CHECK:"确认",TIMER:"计时",LINK:"链接",MUSIC_HINT:"音乐",NOTE:"记录"};

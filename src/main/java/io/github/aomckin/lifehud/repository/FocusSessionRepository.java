@@ -21,7 +21,7 @@ public final class FocusSessionRepository {
     public FocusSessionRepository(JsonFileStore files, ObjectMapper mapper) { this.files = files; this.mapper = mapper; }
 
     public synchronized List<FocusSession> all() {
-        if (!files.exists(FILE_NAME)) return List.of();
+        if (!files.exists(FILE_NAME) || files.readLines(FILE_NAME).stream().allMatch(String::isBlank)) return List.of();
         try { return mapper.convertValue(files.read(FILE_NAME), SESSIONS); }
         catch (IllegalArgumentException exception) { throw new IllegalStateException("无法读取 Focus 会话", exception); }
     }
@@ -41,5 +41,12 @@ public final class FocusSessionRepository {
         values.removeIf(existing -> existing.id().equals(session.id()));
         values.add(session);
         files.write(FILE_NAME, values);
+    }
+
+    public synchronized boolean delete(String id) {
+        List<FocusSession> values = new ArrayList<>(all());
+        boolean removed = values.removeIf(session -> session.id().equals(id));
+        if (removed) files.write(FILE_NAME, values);
+        return removed;
     }
 }

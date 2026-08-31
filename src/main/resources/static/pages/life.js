@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.1";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
+import { api } from "../api/client.js?v=0.7.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
 
 /**
  * /life — today's input panel. High-frequency entry: short modal forms, sensible

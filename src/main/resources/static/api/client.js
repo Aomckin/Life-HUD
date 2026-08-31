@@ -44,6 +44,13 @@ export const api = {
     update: (id, body) => patch(`/api/entertainment/${id}`, body),
     remove: id => remove(`/api/entertainment/${id}`)
   },
+  media: {
+    anime: {all: () => request("/api/media/anime"), detail: id => request(`/api/media/anime/${id}`), create: body => post("/api/media/anime", body), update: (id, body) => put(`/api/media/anime/${id}`, body), remove: id => remove(`/api/media/anime/${id}`)},
+    animeSessions: {all: id => request(`/api/media/anime/${id}/sessions`), create: (id, body) => post(`/api/media/anime/${id}/sessions`, body), update: (id, body) => put(`/api/media/anime-sessions/${id}`, body), remove: id => remove(`/api/media/anime-sessions/${id}`)},
+    games: {all: () => request("/api/media/games"), detail: id => request(`/api/media/games/${id}`), create: body => post("/api/media/games", body), update: (id, body) => put(`/api/media/games/${id}`, body), remove: id => remove(`/api/media/games/${id}`)},
+    gameSessions: {all: id => request(`/api/media/games/${id}/sessions`), create: (id, body) => post(`/api/media/games/${id}/sessions`, body), update: (id, body) => put(`/api/media/game-sessions/${id}`, body), remove: id => remove(`/api/media/game-sessions/${id}`)},
+    items: {all: type => request(`/api/media/items${type ? `?type=${type}` : ""}`), detail: id => request(`/api/media/items/${id}`), create: body => post("/api/media/items", body), update: (id, body) => put(`/api/media/items/${id}`, body), remove: id => remove(`/api/media/items/${id}`)}
+  },
   dreams: {
     all: () => request("/api/dreams"),
     detail: id => request(`/api/dreams/${id}`),
@@ -178,6 +185,7 @@ export const api = {
     manual: payload => post("/api/focus/manual", payload),
     switchSegment: (id, payload) => post(`/api/focus/${id}/segments/switch`, payload),
     updateSegment: (id, segmentId, payload) => patch(`/api/focus/${id}/segments/${segmentId}`, payload),
+    remove: id => remove(`/api/focus/${id}`),
     pause: id => post(`/api/focus/${id}/pause`),
     resume: id => post(`/api/focus/${id}/resume`),
     complete: (id, note = "") => post(`/api/focus/${id}/complete`, {note}),

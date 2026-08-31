@@ -1,5 +1,5 @@
-import { api } from "../api/client.js?v=0.6.1-delete1";
-import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.6.1";
+import { api } from "../api/client.js?v=0.7.0";
+import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=0.7.0";
 
 /**
  * /journal — the life river. One backend aggregation (/api/timeline), grouped by
@@ -9,7 +9,7 @@ import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui
 
 const GROUPS = [
   ["", "全部"], ["focus", "专注"], ["task", "任务"], ["life", "生活"],
-  ["journal", "日记"], ["growth", "成长"], ["ritual", "仪式"], ["now", "「现在。」"]
+  ["journal", "日记"], ["media", "媒体"], ["growth", "成长"], ["ritual", "仪式"], ["now", "「现在。」"]
 ];
 const SOURCE_LABELS = {
   FOCUS: "专注", TASK: "任务", RITUAL: "仪式", SLEEP: "睡眠", MEAL: "饮食", EXERCISE: "运动",
@@ -18,7 +18,7 @@ const SOURCE_LABELS = {
 };
 const SOURCE_ICONS = {
   SLEEP: "☾", MEAL: "🍚", EXERCISE: "⚡", CHECK_IN: "◐", LIFE_RECORD: "✦", JOURNAL: "✎",
-  FOCUS: "◐", TASK: "✓", RITUAL: "◇", LEVEL: "↑", ACHIEVEMENT: "✿", TITLE: "❖", MILESTONE: "◆", DREAM: "✧", NOW: "✦"
+  FOCUS: "◐", TASK: "✓", RITUAL: "◇", LEVEL: "↑", ACHIEVEMENT: "✿", TITLE: "❖", MILESTONE: "◆", DREAM: "✧", NOW: "✦", MEDIA: "▶"
 };
 const PAGE_SIZE = 50;
 

@@ -1,5 +1,7 @@
 # Life HUD 代码现状速览
 
+> **当前分支 v0.7「Media / 宅宅生活档案」（版本 0.7.0）**：新增强类型 Anime / AnimeWatchSession、MediaGame / MediaGameSession 与统一 MediaItem（BOOK / MANGA / MOVIE / OTHER），由 `MediaRepository` 分别持久化到五份 JSON。`MediaService` 校验进度、评分与时长；Anime Session 自动向前推进集数并在最终集完成，Game 总时长始终按 base + 当前 Session 求和重算。Session 创建、编辑、删除通过 `LifeFactRecorder` 维护唯一 `ANIME_WATCHED` / `GAME_PLAYED` 事件，来源为 MEDIA，发生时间使用 watchedAt / endTime；作品档案加入、编辑、移除另行记录 `MEDIA_ADDED` / `MEDIA_UPDATED` / `MEDIA_REMOVED` 历史活动，更新事件正文会列出进度、状态、评分、平台等具体前后差异。`TimelineService` 与 Journal 增加 media 来源组。`/media` 已由 placeholder 升级为响应式作品墙，包含当前陪伴 Hero、分类筛选、中文状态、封面文件/剪贴板上传、作品编辑删除、详情与快速 Session 记录。Focus 历史新增删除入口并同步清理时间线事件，空 Focus JSON 也按无记录安全读取；Now 歌单最大卡阈值调整为 1000 次，歌曲编辑文案不再出现 undefined。Media 与旧 `/api/entertainment`、Growth、`/now` 保持隔离，未修改旧 `GameController`。版本和静态资源标识升级至 0.7.0；自动化测试 168 项全部通过。
+
 > **当前分支 v0.6.2「Ritual 状态入口」**：Ritual 默认页改为轻量卡片与按需出现的编辑区；用户侧“步骤”统一为“仪式片段”，默认仅展示核心提示，高级字段折叠，支持片段增删和上下排序。执行链新增开场、隐藏普通导航的沉浸逐片段执行态、进度/上一步/继续/跳过/中途退出，以及明确落幕页；宽屏沉浸态显式脱离普通 12 列布局。复用原 Ritual API 与 JSON 字段，旧数据无需迁移。全局根滚动容器固定预留纵向滚动槽，壁纸不再因滚动条出现而横向跳变。「现在。」歌单从 13 个固定锚点扩展为 26 个不规则挂点，重新排版会改变挂点、微偏移与旋转，空槽随布局散开且视觉弱化。版本与相关静态资源缓存标识升级至 0.6.2；测试基线 158 项通过，布局算法检查确认不同随机盐下 10/10 卡片换位且坐标、旋转均在合法范围。
 
 > **当前分支 v0.6.1「让『现在。』留下具体足迹」**：Now LifeEvent 新增稳定 `LifeEventSourceType.NOW`；旧存档中 `source=now/sourceType=SYSTEM` 的事件在读取边界自动归一化，不改写用户 JSON。图片由数量差改为逐路径差异并写入 `metadata.images`，Journal 可复用缩略图与 lightbox；歌曲替换保留 before/after，歌曲移除、背景设置/替换/清除、玩看读条目、梦想/方向与快照删除均保存具体对象元数据。`TimelineService` 新增 `now` 来源组，`/journal` 新增用户可见文案严格为 `「现在。」` 的独立筛选与专属空状态；日期和日内事件统一按 occurredAt 倒序。普通 LifeEvent 支持确认后单独删除且不反向撤销业务记录，Now 各删除入口统一复用 Dreams 确认弹窗。Life 的状态、饮食、睡眠、运动和通用记录全部支持多图选择、即时预览、旧图逐张移除与追加，图片随业务记录和 LifeEvent 同步；页面修复宽屏栅格挤压、重点卡片内边距及主面板重叠。Ritual 修复表单按钮 undefined、新建/编辑提交状态串用、卡片内容与操作区挤压、无步骤误启动及窄屏步骤编辑器溢出。版本与静态资源缓存标识升级至 0.6.1。测试基线 158 项通过；桌面端与 390px 窄屏验收通过，Console 0 warning / 0 error。开发范围与验收标准见 [V0.6.1_NOW_TIMELINE_TASK.md](V0.6.1_NOW_TIMELINE_TASK.md)。
@@ -17,6 +19,10 @@
 > 下文保留 v0.3.0 的重构背景，供调用链追溯。
 
 ## 当前能力
+
+- `/api/media/anime`、`/api/media/games`、`/api/media/items` 提供作品 CRUD；Anime / Game 各有独立 Session CRUD。
+- Media 数据使用 `media-anime.json`、`media-anime-sessions.json`、`media-games.json`、`media-game-sessions.json`、`media-items.json`，文件不存在时按空集合启动。
+- `/media` 提供作品墙、详情、封面、状态/评分/备注和快速观看/游玩足迹；`/journal?sources=media` 对应前端“媒体”筛选。
 
 - Java 21 / Spring Boot 3.5.5 后端提供单页 Life HUD；浏览器通过 `GET /state` 读取状态、`POST /command` 执行命令、`GET /actions/{actionName}/duration-options` 获取受控时长选项。
 - 现有业务保持 Python 迁移版本的规则：行动、计时行动、能量/经验/等级、每日任务、特殊任务、成就、称号、商店和日志。
@@ -100,7 +106,7 @@ achievements.json
 
 ## 数据与兼容性
 
-- `actions.json`、`achievements.json`、`level.json`、`tasks.json`、`special_tasks.json`、`titles.json`、`shop.json`、`save.json`、`focus-sessions.json` 与 `life-events.json` 是当前 JSON 资产。
+- `actions.json`、`achievements.json`、`level.json`、`tasks.json`、`special_tasks.json`、`titles.json`、`shop.json`、`save.json`、`focus-sessions.json`、`life-events.json` 与五份 `media-*.json` 是当前 JSON 资产。
 - 变更 JSON 前必须保留现有字段与默认语义，优先在 repository 层添加映射兼容，而非让服务层解析文件路径、键名或 `JsonNode`。
 - `save.json` 是用户数据；不要在开发或测试期间覆写项目内真实 `data/` 存档。测试使用临时目录。
 
@@ -112,7 +118,7 @@ achievements.json
 git diff --check
 ```
 
-默认服务地址为 <http://localhost:8025>。当前基线测试：68 项通过；Focus 另经桌面端与 390px 小屏浏览器闭环验证，覆盖 Segment 切换、刷新恢复、休息续段、落幕总结、History 展开和番茄时间栏排版，Console 为 0 error / 0 warning。
+默认服务地址为 <http://localhost:8025>。当前自动化测试基线：168 项通过。
 
 ## 接手建议
 

@@ -1,111 +1,164 @@
 # Life HUD
 
-一套本地运行、单用户、以可信生活事实为核心的个人 Life HUD。
+> 一套围绕个人生活事实构建的本地 Life HUD。
+
+Life HUD 把专注、任务、方向、仪式、生活记录、媒体体验、日记与成长组织在同一个可追溯系统中。它解决的不是“再列一张待办清单”，而是让分散的生活记录成为可信、可回看、可被外部工具使用的个人事实。
+
+**当前正式版本：v1.0.0 · First Stable Release**
+
+**核心技术栈：Java 21 · Spring Boot 3.5.5 · 原生 HTML / CSS / JavaScript · JSON 本地持久化**
 
 `Focus · Tasks · Dreams · Ritual · Life · Media · Journal · Now · Growth`
 
-Life HUD 记录一个人如何行动、专注、休息、生活、娱乐和成长，并把业务记录组织为统一的 `LifeEvent`、Timeline、Dashboard 与 Growth。它本身不包含 LLM、Planner、Memory 或 Agent Runtime；外部 Agent 通过稳定 HTTP API 读取和操作同一份事实。
+![Life HUD Dashboard](docs/assets/dashboard.png)
 
-## 运行
+## 它不只是 Todo / Habit Tracker
 
-需要 Java 21：
+普通任务工具通常只关心“是否完成”。Life HUD 更关心一件事在生活中如何发生，以及它与状态、方向和长期成长如何连接：
+
+- Focus 与 Task 记录实际行动；Dream 与 Ritual 保存方向和状态入口。
+- Sleep、Meal、Exercise、Check-in、通用生活记录与 Journal 构成日常事实。
+- Media 与「现在。」保存作品体验、阶段偏好和当下记忆。
+- 所有业务记录通过 `LifeEvent` 汇入 Timeline，并由 Growth 系统进行幂等结算。
+
+系统默认只在本机运行，数据与媒体文件由用户自己持有。
+
+## 核心模块
+
+| 模块 | 作用 |
+| --- | --- |
+| **Focus System / 铁幕** | 铁幕、番茄与自由专注共用一套可暂停、恢复、完成和中断的 `FocusSession` 状态机；Segment 记录专注、休息与中断，后端保存真实有效时长。 |
+| **Dashboard** | 将当前状态、今日专注与任务、方向陪伴、媒体和最近足迹聚合为一张 Today 驾驶舱。 |
+| **Life Timeline / Journal** | 睡眠、饮食、运动、Check-in、通用记录与手动日记进入统一时间线，支持按日期、来源和类型筛选，并展示关联图片。 |
+| **「现在。」** | 保存当前阶段、十首歌的记忆墙、正在玩 / 看 / 读的内容、梦想方向、句子、图片与阶段快照。 |
+| **Media** | 管理 Anime、Game、Book、Manga、Movie 与 Other 档案；观看和游玩 Session 会留下可追溯足迹。 |
+| **Dream / Ritual** | 用 Dream → Goal → Milestone 表达长期方向；用仪式、片段与沉浸执行进入一种状态。 |
+| **Growth** | 以事实驱动 Energy、EXP、Level、Achievement、Title、Milestone 和趋势快照，避免刷新或重算造成重复奖励。 |
+
+### Focus / 铁幕
+
+![Life HUD Focus System](docs/assets/focus.png)
+
+铁幕不是另一套计时器，而是 `IRON_CURTAIN` Focus 模式的沉浸表现层。运行、暂停、切换事项和最终结算仍由同一套后端状态机负责，因此刷新页面或切换标签不会丢失真实进度。
+
+### Life Timeline / Journal
+
+![Life HUD Journal Timeline](docs/assets/journal.png)
+
+业务记录是唯一事实源：创建记录时生成事实，编辑时原位更新并提升版本，删除时同步清理对应事件。Timeline 统一使用 `occurredAt` 表达“何时发生”，补录不会被错误归到创建时间。
+
+### 「现在。」
+
+![Life HUD Now](docs/assets/now.png)
+
+![Life HUD Now · Dreams and Words](docs/assets/now-2.png)
+
+![Life HUD Now · Images and Snapshot](docs/assets/now-3.png)
+
+「现在。」不是统计页，而是一张阶段陈列页。歌曲、图片、方向与阶段快照保留具体对象信息；变化会以 `NOW` 来源进入 Journal，纯文案调整和排版则不会制造无意义事件。
+
+### Media
+
+![Life HUD Media](docs/assets/media.png)
+
+作品档案与实际观看 / 游玩记录分离。Anime 和 Game Session 维护进度、时间与唯一对应的 `LifeEvent`，书籍、漫画、电影及其他内容保持轻量记录。
+
+### Dream / Ritual
+
+![Life HUD Dream and Ritual](docs/assets/ritual-or-dream.png)
+
+Dream 保存“为什么前进”，Task 可以关联到 Dream、Goal 或 Milestone；Ritual 则保存可复用的仪式定义，并在每次开始时冻结片段快照，形成独立执行记录。
+
+## 工程与架构
+
+- **Java 21 + Spring Boot 3.5.5**：单体本地 Web 应用，HTTP API 与静态前端由同一进程提供。
+- **LifeEvent 统一事实模型**：业务域使用稳定的来源类型、来源 ID、发生时间、标签、元数据和 schema version 描述事实。
+- **GrowthEngine**：以 `eventId` 幂等处理成长结算；Focus / Task 产出 Energy，娱乐消费按实际消耗沉淀 EXP。
+- **JSON 本地持久化**：领域数据保存于用户数据目录，写入使用临时文件与原子替换；旧字段在读取边界兼容。
+- **Timeline 聚合**：Focus、Task、Life、Journal、Growth、Ritual、Dream、Now 与 Media 统一投影为按时间排序的 Timeline。
+- **图片与媒体资源管理**：图片、封面、壁纸和 MP3 / FLAC 保存在 `uploads/`，按 SHA-256 内容去重；歌曲可读取元数据与内嵌封面。
+- **Agent Context API**：提供带 `schemaVersion: "1"` 的强类型只读语义视图。
+- **Agent Action API**：外部工具复用现有业务 API 完成写入，保证校验、事件、Timeline 与 Growth 规则只有一条路径。
+
+```mermaid
+flowchart LR
+    UI[Web UI] --> API[Business API]
+    Agent[External Agent] --> Context[Agent Context API]
+    Agent --> API
+    API --> Domain[Domain Services]
+    Domain --> Facts[LifeEvent]
+    Facts --> Timeline[Timeline]
+    Facts --> Growth[GrowthEngine]
+    Domain --> Data[(JSON + uploads)]
+    Context --> Domain
+```
+
+更完整的领域边界与调用链见 [架构文档](docs/ARCHITECTURE.md)。
+
+## Agent Integration
+
+Life HUD **不内置** LLM、Planner、Prompt、Memory、Permission Engine 或 Agent Runtime。它的职责是成为可信的生活事实与业务系统，而不是在同一进程里同时承担理解、规划和工具执行。
+
+这个边界是有意设计：
+
+- 外部 Agent 通过 `GET /api/agent/context/*` 获取稳定、可解释的聚合上下文。
+- 写操作复用 Life HUD 的 Business API，不绕过领域校验，也不直接修改 JSON。
+- 权限确认、自然语言理解、工作流、重试策略和跨系统协调由外部 Agent Runtime 负责。
+- Context API 与业务写入口分离，避免“为了 Agent”复制第二套业务逻辑。
+
+> 当前 API 无鉴权，只适合本机或可信私有网络，不能直接暴露到公网。
+
+文档入口：
+
+- [API 索引](docs/API_INDEX.md)
+- [Agent Context API](docs/AGENT_CONTEXT_API.md)
+- [Agent Action API](docs/AGENT_ACTION_API.md)
+
+## Quick Start
+
+要求：**Java 21**。仓库已包含 Maven Wrapper，无需预先安装 Maven。
 
 ```powershell
+git clone https://github.com/Aomckin/Life-HUD.git
+cd Life-HUD
 .\mvnw.cmd spring-boot:run
 ```
 
-访问 <http://localhost:8025>。默认数据目录是启动工作目录下的 `data/`；可用 `lifehud.data-dir` 或 `LIFEHUD_DATA_DIR` 指定其他位置。升级或迁移前请阅读 [备份与恢复](docs/BACKUP_AND_RESTORE.md)。
+浏览器访问 <http://localhost:8025>。
 
-## Agent 接入
-
-- [API 总入口](docs/API_INDEX.md)
-- [Agent Context API](docs/AGENT_CONTEXT_API.md)：`/api/agent/context/*` 只读语义聚合
-- [Agent Action API](docs/AGENT_ACTION_API.md)：复用 Business API 写入事实
-
-当前 API 无鉴权，仅适合本机或可信私有网络，禁止直接暴露到公网。Life HUD 是事实与业务系统；权限确认、自然语言理解、重试和工作流属于外部 Agent。
-
-## 数据边界
-
-用户事实以 JSON 持久化，上传图片、封面、壁纸和音乐保存在同一数据目录的 `uploads/`。仓库只包含首次启动模板，不应提交真实 `data/`、媒体或备份。旧数据无需清档升级；损坏的 JSON 不会被静默覆盖。
-
-## 当前开发状态
-
-当前版本为 **Life HUD v1.0.0 · First Stable Release**。Agent Interface、内容与交互、稳定性、数据恢复和正式版 Release Gate 已完成。
-
-## Release history
-
-### v0.8.1 · Dashboard HUD 化
-
-v0.8.1 收拢 Dashboard 的独立卡片：成长状态与 Check-in 合并为主状态舱，Focus / Task / Sleep / Meal 合并为一条今日脉搏；Dream、Ritual、Media 在同一陪伴舱中分别使用航向、日光节律和播放终端语义。状态舱以每次打开时随机抽取的「今日文案」为主标题，日期降级为普通信息，页面底部提供文案库入口。所有面板降低实体白底、改用轻透边界与局部玻璃，让 Summer Sky 壁纸参与页面层次而不只是剩余空白。
-
-## v0.8.0 · Integration / 今日驾驶舱
-
-v0.8 把已有生活事实连接成同一份上下文：`GET /api/dashboard` 驱动 Today 四层驾驶舱；`/api/agent/context/*` 提供带 `schemaVersion: "1"` 的十个强类型只读视图；统一日期边界保证补录事实不会误算到今天。Growth 新增统一 `AchievementEvaluator`，由 LifeEvent 与只读业务档案判断 Direction、Ritual、Life、Focus、Media 和综合生活成就，幂等解锁 Achievement / Title，同时保持 Focus / Task → Energy、娱乐 SPEND → EXP 的原核心循环。
-
-外部 Agent 对接端点、响应结构、字段语义与兼容策略见 [Agent Context API](docs/AGENT_CONTEXT_API.md)。
-
-## v0.7.0 · Media / 宅宅生活档案
-
-v0.7 让 Life HUD 从“知道娱乐了多久”走到“知道是什么作品陪伴过自己”。`/media` 提供番剧、游戏、书、漫画、电影与其他作品的收藏墙：Anime 记录集数进度，MediaGame 由每次 Session 重算累计时长，Book / Manga / Movie / Other 保持轻量档案。作品支持封面、状态、评分、备注与详情足迹，390px 下自动单列。
-
-Focus 历史记录支持确认后删除，并同步清理对应的时间线事件；进行中或暂停中的 Session 必须先完成或中断。`「现在。」`歌单的卡片尺寸按收听次数分档，最高档调整为 1000 次，歌曲编辑器补齐“歌名”和“取消”文案及安全回退。
-
-AnimeWatchSession 与 MediaGameSession 会通过 `LifeFactRecorder` 各自维护唯一的 `ANIME_WATCHED` / `GAME_PLAYED` LifeEvent；编辑原位更新、删除同步清理，`occurredAt` 使用真实观看或游玩时间。加入、编辑与移除任意作品档案也会分别留下 `MEDIA_ADDED` / `MEDIA_UPDATED` / `MEDIA_REMOVED` 活动。Journal 新增“媒体”筛选。Media 不自动扣 Energy、不增加 EXP，也不改动「现在。」；旧 `/api/entertainment` 与 `GameController` 保持原语义。
-
-## v0.6.2 · Ritual / 仪式交互重构
-
-v0.6.2 把 Ritual 从流程编排器重新带回“状态入口”：默认页只呈现轻量仪式卡片；新建与编辑按需展开，用户侧统一使用“仪式片段”，片段默认只显示自然语言提示，高级类型、补充内容、计时、链接与确认要求均折叠收纳，并支持增删与上下调整顺序。开始仪式后会进入弱化普通导航的沉浸执行态，经过开场、逐片段推进和明确落幕，再回到 Life HUD。后端 Ritual / Step / Execution 数据结构与旧存档保持兼容。
-
-本版本同时完成三项界面收尾：根页面始终保留纵向滚动槽，避免滚动条出现时触发壁纸横向错位；Ritual 沉浸页在宽屏下脱离普通 12 列布局，开场、执行与落幕保持完整居中；「现在。」歌单扩展为 26 个不规则挂点，重新排版会同步改变卡片挂点、微偏移与旋转，空槽也随当前布局重新散开，形成更像随手贴墙的呼吸感。
-
-Life HUD 的 Java 21 / Spring Boot 3 版本。v0.4 完成了成长循环：Focus / Task 赚取 Energy（每 3 有效分钟 +1），娱乐消费（SPEND）按实际消耗沉淀 EXP（每 10 点 +1）并推进 Level。v0.5「Direction」让 Life HUD 开始知道你为什么往前走：`/dreams` 承载 Dream → Goal → DreamMilestone 三层方向；`/tasks` 是行动台——每日任务紧凑卡片、特别行动舒展卡片，完成即弱化并折叠，方向以「✦ 梦想」的意义展示而非外键字段；`/rituals` 用"仪式 + 步骤 + 执行记录"进入一种状态；`/now` 是陈列页——「现在。」歌单是一面横板沉浸记忆墙：真实 MP3 / FLAC 上传（自动读取元数据与内嵌封面），十首歌以不等大的卡片挂在可设背景的舞台上，听歌次数决定卡片大小，每首歌挂着一句阶段备注，布局持久化、刷新不乱跳；阶段快照把背景、歌曲、次数、备注与布局完整封存。这些模块只产生事实 LifeEvent，成长结算仍由 GrowthEngine 唯一负责。
-
-v0.6.1 让「现在。」的变化留下具体足迹：图片逐张记录路径并可在 Journal 查看缩略图，歌曲替换保留旧歌与新歌，背景、阶段条目、方向和快照事件保存对应对象信息；Journal 增加独立的 `「现在。」` 来源分区，并兼容读取 v0.5.5 已落盘为 SYSTEM 的旧 Now 事件。时间线按日期和日内时间统一倒序，越往下离现在越远；普通 LifeEvent 可在确认后单独删除，Now 页面中的移除操作同样统一复用确认弹窗。
-
-Life 的状态、饮食、睡眠、运动和通用记录均支持一次选择多张图片、保存前即时预览，以及编辑时保留、逐张删除或追加旧图；图片随业务记录持久化并同步进入时间线媒体。Life 页主面板使用固定纵向间距，避免卡片边缘重叠。
-
-Ritual 修正了新建表单按钮文案与新建/编辑状态串用问题；仪式卡片改为稳定的正文与操作区布局，无步骤仪式会引导先编辑而不会进入空执行页，步骤编辑器在窄屏下改为单列且不再撑宽页面。
-
-## v0.6 · Life 与时间线
-
-v0.6 让 Life HUD 开始记录「人是怎么生活的」。`/life` 是今天生活的输入面板：最近一次 Check-in 状态卡、五个快速记录入口（状态 / 饮食 / 睡眠 / 运动 / 通用记录），全部走短表单 Modal，时间可改、默认合理，保存即反馈；「今日生活」列出当天的生活条目，点卡片即可编辑、点删除即同步清理。`/journal` 是统一生活时间线：后端 `GET /api/timeline` 按天聚合 Focus、任务、仪式、成长、睡眠、饮食、运动、Check-in、通用记录与日记，支持日期 / 来源组 / 类型过滤与分页；页首是手动日记 Composer（长文本 + 标签 + 照片）。业务记录是唯一事实源：每个记录拥有且只拥有一个 RECORDED LifeEvent——编辑原位重写事件（version+1），删除连事件一起消失，时间线上没有幽灵。睡眠时长由后端按时间戳计算，跨午夜与补录天然正确；事件时间语义用 occurredAt（何时发生）而非 createdAt（何时补录）。通用记录（喝水 / 咖啡因 / 酒精 / 晒太阳 / 社交 / 身体状态 / 外出）共用同一模型与 API，小众需求走 CUSTOM 标签，不再开新 Controller。数据仍为 `data/` 下的 JSON 存档（sleep-records / meal-records / exercise-records / check-ins / life-records / journal-entries），图片走统一 `/api/images` 上传存储。
-
-## 运行
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-浏览器访问 <http://localhost:8025>。首次启动会把随包默认 JSON 复制到工作目录的 `data/`，之后从该目录读写存档。也可用配置项 `lifehud.data-dir` 或环境变量 `LIFEHUD_DATA_DIR` 指定数据目录；为兼容旧存档工作流，同时识别 `OTAKU_ENERGY_DATA_DIR`。
-
-## Focus System
-
-`/focus` 提供铁幕、番茄和自由专注三种节奏，它们共享同一个 `FocusSession` 状态机：`RUNNING ↔ PAUSED → COMPLETED`，运行或暂停状态也可标记为 `INTERRUPTED`。后端保存当前活动片段与已累计有效秒数，因此刷新页面、切换标签页和暂停都不会破坏实际时长。
-
-铁幕模式具有独立的数字仪式感：进入时短暂显示开幕提示，运行期间将当前或自定义壁纸转为低亮、低饱和、轻模糊的铁幕态，并弱化导航、统计和历史；暂停会保留铁幕环境，完成后显示克制的落幕反馈。它不切换独立主题，也不会锁定页面。
-
-铁幕过程由持久化的 `FOCUS`、`BREAK`、`INTERRUPTION` Segment 构成，可切换事项、恢复当前段、汇总多任务并由 FOCUS 段推导有效专注。History、落幕总结和手动补录共用这套模型；番茄支持自定义休息、跳过休息与轻量连续轮次。
-
-番茄配置将“自定义专注”和“休息时长”作为两个独立、对齐的输入字段；运行页只保留底部主结束入口，避免重复操作。若前端资源与尚未重启的旧后端不匹配，Segment 请求会提示重启服务，而非只显示泛化 404。
-
-Focus API 提供 Current Focus、Today Summary 和 History；Today 统计按 Session 的开始日期归属，跨日 Session 保持完整，不拆分或重复统计。Dashboard 只展示当前 Focus 或今日摘要，并可返回工作台。
-
-## Growth System
-
-`/growth` 包含 Overview、Achievements、Milestones 与 Titles。Overview 显示 Level / EXP、近期 Energy、当前称号、成长日志和 7 天轻量趋势，并提供"＋ 记录娱乐"快速入口：选择类型（游戏 / 看番 / 电影 / 视频 / 社交 / 外出娱乐 / 其他）、填写做了什么与 Energy 消耗，提交后经统一 Energy Ledger 真实扣减并结算 EXP。Overview 同时展示最近娱乐与 Energy History（时间 / 变化 / 类型 / 原因）。Milestone 支持创建、编辑、删除和 Pin；Title 支持装备与自定义。Today 的 Energy（今日 +获得 / −消耗）、EXP 和 Level 卡片会直接进入 Growth。
-
-Growth 使用 `growth-events.json` 保存每个 LifeEvent 的处理回执，以 eventId 防止刷新、重试或重算带来重复成长；`energy-history.json` 解释 Energy 的每次变化（EARN / SPEND / DECAY / ADJUST 及请求量）；`growth-snapshots.json` 每日幂等更新当前快照。数值参数全部外置在 `data/growth.json`，EXP 转换余数保存在 `save.json` 的 `exp_conversion_remainder`，小额消费不会被吃掉；新的一天 Energy 会向基准值回归（基准值与倍率在 `data/content/energy-drift.json`）。旧存档中的 Energy、EXP、Achievement 和 Title 会继续保留，旧 Shop / Coin 字段只为兼容读取而存在，不再进入 UI 或命令主流程。
-
-API、规则、持久化与迁移细节见 [GROWTH_V0.4.md](docs/GROWTH_V0.4.md)。
-
-## 测试
+运行测试：
 
 ```powershell
 .\mvnw.cmd test
 ```
 
-旧 Python 实现保留在相邻的 `宅宅能量条` 仓库中，未被修改。
+服务默认绑定 `127.0.0.1:8025`。首次启动会把随包默认 JSON 复制到工作目录下的 `data/`，后续直接读写该目录。
 
-## 代码状态与交接
+## 数据目录
 
-当前实现、已完成边界、尚未完成的重构项、主要调用链及验证命令见 [CODEBASE_STATUS.md](docs/CODEBASE_STATUS.md)。开始新的开发任务前请先阅读该文件。
+```text
+data/
+├─ *.json       # 业务事实、索引、成长回执与快照
+├─ content/     # 可配置规则与展示内容
+└─ uploads/     # 图片、封面、壁纸、音频与内嵌封面
+```
+
+可以通过 Spring 配置项 `lifehud.data-dir` 或环境变量 `LIFEHUD_DATA_DIR` 指定其他目录；旧环境变量 `OTAKU_ENERGY_DATA_DIR` 仍兼容读取。
+
+升级、迁移或恢复时应整体备份数据目录，不能只复制部分 JSON。详见 [备份与恢复](docs/BACKUP_AND_RESTORE.md)。仓库中的 `data/` 是本地运行数据，不应提交真实个人记录或媒体文件。
+
+## 当前状态
+
+**v1.0.0 是首个稳定版本。** 核心业务域、Agent Interface、数据兼容与恢复、响应式页面和正式版 Release Gate 已完成。
+
+当前产品边界：本地单用户、JSON 持久化、生活数据以手动输入为主；没有账户系统、云同步、内置 Agent 或第三方媒体同步。这些是 v1.0 的明确取舍，不是 README 中隐藏的待实现承诺。
+
+- [v1.0 Release Note](docs/RELEASE_V1.0.md)
+- [代码状态与交接](docs/CODEBASE_STATUS.md)
+- [版本历史](CHANGELOG.md)
+
+## Roadmap
+
+- 在 1.x 中继续提高数据安全、恢复体验、API 契约测试和文档质量。
+- 基于真实使用需求扩展现有生活域，不为版本号新增孤立模块。
+- 探索独立的 Agent 工具适配层；Life HUD 继续保持事实系统与 Agent Runtime 的架构边界。

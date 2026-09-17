@@ -1,12 +1,14 @@
 {
     "last_update_date": "2026-08-10",
+    "reward_schema": "exp-v1",
     "active_task_id": "sage_moment",
     "tasks": [
         {
             "id": "deep_casting",
             "name": "进入心流状态1小时",
+            "note": "",
             "coin": 30,
-            "exp": 20,
+            "exp": 5,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -14,8 +16,9 @@
         {
             "id": "magic_research",
             "name": "连续编程90分钟",
+            "note": "",
             "coin": 40,
-            "exp": 25,
+            "exp": 6,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -23,8 +26,9 @@
         {
             "id": "sage_moment",
             "name": "读书两章节",
+            "note": "",
             "coin": 20,
-            "exp": 15,
+            "exp": 3,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 1,
             "done": false
@@ -32,8 +36,9 @@
         {
             "id": "wind_traveler",
             "name": "去没去过的地方散步",
+            "note": "",
             "coin": 30,
-            "exp": 15,
+            "exp": 3,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -41,8 +46,9 @@
         {
             "id": "city_roaming",
             "name": "骑行10km",
+            "note": "",
             "coin": 40,
-            "exp": 20,
+            "exp": 5,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -50,8 +56,9 @@
         {
             "id": "canteen_explorer",
             "name": "尝试从未吃过的店",
+            "note": "",
             "coin": 15,
-            "exp": 10,
+            "exp": 2,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -59,8 +66,9 @@
         {
             "id": "human_observer",
             "name": "主动和朋友聊30分钟",
+            "note": "",
             "coin": 20,
-            "exp": 10,
+            "exp": 2,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -68,8 +76,9 @@
         {
             "id": "summer_night_walk",
             "name": "找朋友外出散步",
+            "note": "",
             "coin": 35,
-            "exp": 15,
+            "exp": 3,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -77,8 +86,9 @@
         {
             "id": "record_this_moment",
             "name": "写100字日记",
+            "note": "",
             "coin": 15,
-            "exp": 10,
+            "exp": 2,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -86,8 +96,9 @@
         {
             "id": "leave_a_trace",
             "name": "发布一篇内容",
+            "note": "",
             "coin": 20,
-            "exp": 15,
+            "exp": 3,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -95,8 +106,9 @@
         {
             "id": "spark_of_inspiration",
             "name": "记录一个新点子",
+            "note": "",
             "coin": 10,
-            "exp": 5,
+            "exp": 1,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -104,8 +116,9 @@
         {
             "id": "sleep_early_challenge",
             "name": "1点前睡觉",
+            "note": "",
             "coin": 30,
-            "exp": 15,
+            "exp": 3,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -113,8 +126,9 @@
         {
             "id": "hair_defense",
             "name": "正确吹头发",
+            "note": "",
             "coin": 10,
-            "exp": 5,
+            "exp": 1,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -122,8 +136,9 @@
         {
             "id": "face_inner_self",
             "name": "独自散步1小时",
+            "note": "",
             "coin": 60,
-            "exp": 30,
+            "exp": 7,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -131,8 +146,9 @@
         {
             "id": "offline_training",
             "name": "4小时不刷任何信息流",
+            "note": "",
             "coin": 80,
-            "exp": 40,
+            "exp": 10,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 3,
             "done": false
@@ -140,8 +156,9 @@
         {
             "id": "stargazer",
             "name": "晚上抬头看10分钟天空",
+            "note": "",
             "coin": 30,
-            "exp": 10,
+            "exp": 2,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 0,
             "done": false
@@ -149,11 +166,138 @@
         {
             "id": "past_self",
             "name": "重做一件高中时期喜欢的事",
+            "note": "",
             "coin": 50,
-            "exp": 25,
+            "exp": 6,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 1,
             "done": false
+        },
+        {
+            "id": "solve_algorithm_without_answer", "name": "完成一道没看答案的算法题", "note": "靠自己的思路走到 AC，哪怕中间绕了点远路。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "study_90_minutes", "name": "连续学习90分钟", "note": "完成一次真正沉进去的长学习，不把时间切成碎片。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "complete_small_feature", "name": "完成一个完整的小功能", "note": "从想法到可用，把一个功能真正收口。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "fix_longstanding_problem", "name": "修掉一个困扰很久的问题", "note": "终于把那个反复出现、一直碍眼的问题解决掉。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "learn_new_technical_point", "name": "学会一个全新的技术点", "note": "学到一个之前不会的东西，并且已经能自己讲清楚。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "refactor_project", "name": "给项目做一次重构", "note": "让某块代码比之前更清楚、更稳、更像它本来该有的样子。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "release_project", "name": "完成一次项目正式发布", "note": "打版本、发 Release、部署或正式交付都算。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "open_source_issue_or_pr", "name": "给开源项目提一次 Issue 或 PR", "note": "第一次或又一次，真正参与到别人的项目世界里。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "write_technical_summary", "name": "写一篇技术总结", "note": "把一个技术问题从“会用”整理到“说得清”。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "complete_mock_interview", "name": "完成一次模拟面试", "note": "真正按面试节奏走一轮，而不是随便看看题。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "complete_formal_interview", "name": "完成一次正式面试", "note": "无论结果如何，完整走完一次真实面试就是一次事件。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "apply_dream_job", "name": "投递一个非常想去的岗位", "note": "不是海投，是认真看过之后依然想去的那个岗位。", "coin": 0, "exp": 2, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "cycle_20km", "name": "骑行20km", "note": "骑到明显超过日常通勤距离，让这次出门有点远。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "hike_5km", "name": "徒步5km", "note": "靠双脚走完一段真正的路。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "complete_workout", "name": "做一次完整健身训练", "note": "不是随手动两下，而是从热身到结束完整做完一轮。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "cook_new_dish", "name": "自己做一道新菜", "note": "尝试一道以前没做过的菜，成功和翻车都算经验。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "redeem_failed_dish", "name": "做一道以前翻车过的菜并成功", "note": "对旧日事故现场发动一次漂亮的复仇。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "visit_wishlist_shop", "name": "去一家一直想去的店", "note": "把收藏夹里的“改天去”变成“今天去了”。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "visit_unknown_place_alone", "name": "独自去一个陌生地方", "note": "一个人走进一个此前没去过的地方。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "random_transit_trip", "name": "随机坐几站公交或地铁再回来", "note": "暂时不追求目的地，给城市一点随机事件。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "watch_full_movie", "name": "看一场完整电影", "note": "从片头看到片尾，不倍速，也不边看边刷别的。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "finish_short_work", "name": "一口气看完一本短篇作品", "note": "小说、漫画或其他短篇都可以，一次完整读完。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "focused_game_hour", "name": "完整玩一小时游戏且不干别的", "note": "把这一小时只交给游戏，不把快乐切成多线程。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "revisit_favorite_work", "name": "重温一部很喜欢的旧作品", "note": "回到一个熟悉的故事里，看看现在的自己会看到什么。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "curate_now_playlist", "name": "整理一次「现在。」歌单", "note": "重新审视一次「现在。」里哪些歌还属于此刻。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "discover_favorite_song", "name": "发现一首很喜欢的新歌", "note": "今天遇到了一首值得留下来的新歌。", "coin": 0, "exp": 2, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "take_favorite_photo", "name": "拍一张今天很喜欢的照片", "note": "不求专业，只要这张照片以后看见还会想起今天。", "coin": 0, "exp": 2, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "write_500_words", "name": "写500字自由记录", "note": "不管主题，连续写下足够多的此刻想法。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "deep_late_night_talk", "name": "完成一次深夜长谈", "note": "和某个人、朝汐、澄夏，或者自己，把话聊深一点。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "contact_old_friend", "name": "主动联系一个很久没联系的人", "note": "主动敲开一扇已经安静了一阵子的聊天窗口。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "meet_friend", "name": "和朋友见一次面", "note": "真正见面待一会儿，不要求有多正式的安排。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "finish_week_old_task", "name": "做一件拖了超过一周的事", "note": "把一个挂在后台太久的任务彻底关掉。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "clear_backlog_area", "name": "清空一个长期积压的小区域", "note": "可以是桌角、抽屉、文件夹，清掉一个积压点即可。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "deep_clean_room", "name": "完成一次彻底房间整理", "note": "让房间明显恢复到一个“重新开始也舒服”的状态。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "social_media_free_afternoon", "name": "一下午不看社交媒体", "note": "给一个下午留出不被信息流切碎的空间。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "go_out_without_purpose", "name": "完成一次没有目的的出门", "note": "不为办事，不为任务，只是出去走走。", "coin": 0, "exp": 2, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "message_future_self", "name": "给未来的自己留一句话", "note": "留一句以后重新看到时会有回应的话。", "coin": 0, "exp": 2, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "build_spontaneous_idea", "name": "实现一个突然冒出来的小点子", "note": "不只是记下来，而是真的把这个念头做出来一点。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "advance_dream_list", "name": "完成一次梦想清单行动", "note": "让某个写在 Dreams 里的东西真正向现实移动一步。", "coin": 0, "exp": 6, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "make_memorable_moment", "name": "今天做了一件以后大概会记得的事", "note": "不要求宏大，只要它有机会成为未来会想起的片段。", "coin": 0, "exp": 5, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "joy_without_productivity", "name": "做了一件没有任何生产力的快乐事", "note": "不追求成长、不追求效率，只是因为开心而去做。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
+        },
+        {
+            "id": "worthwhile_plan_change", "name": "突然改变原计划并觉得值得", "note": "计划被打乱了，但新的方向让这一天反而更有意思。", "coin": 0, "exp": 3, "created_time": "2026-09-08 00:00:00", "completed_count": 0, "done": false, "enabled": true
         }
     ],
     "active_task_ids": [

@@ -23,33 +23,37 @@ public final class GrowthRules {
     }
 
     public Change evaluate(LifeEvent event) {
-        if (Boolean.TRUE.equals(event.metadata().get("test"))) return new Change(EnergyChangeType.ADJUST, 0, copy.testExcludedReason());
+        if (Boolean.TRUE.equals(event.metadata().get("test"))) return new Change(EnergyChangeType.ADJUST, 0, 0, copy.testExcludedReason());
         return switch (event.type()) {
             case FOCUS_FINISHED -> focus(event);
             case TASK_COMPLETED -> task(event);
             case ENERGY_SPENT -> spend(event);
             case ENERGY_CHANGED -> byMetadata(event);
-            default -> new Change(EnergyChangeType.ADJUST, 0, copy.lifeEventRecordedReason());
+            default -> new Change(EnergyChangeType.ADJUST, 0, 0, copy.lifeEventRecordedReason());
         };
     }
 
     /** Focus no longer yields EXP directly; only effective minutes convert into Energy at the externalized rate. */
     private Change focus(LifeEvent event) {
         long minutes = Math.max(0, number(event, "effectiveSeconds") / 60);
-        return new Change(EnergyChangeType.EARN, economy.focusEnergy(minutes), copy.focusEnergyReason(minutes));
+        return new Change(EnergyChangeType.EARN, economy.focusEnergy(minutes), 0, copy.focusEnergyReason(minutes));
     }
 
-    /** Tasks earn Energy only; the legacy baseExp field is deprecated and never read. */
+    /** Daily tasks earn Energy; special tasks grant their explicit EXP reward directly. */
     private Change task(LifeEvent event) {
+        if ("special".equalsIgnoreCase(String.valueOf(event.metadata().get("taskSource")))) {
+            int exp = Math.max(0, (int) number(event, "baseExp"));
+            return new Change(EnergyChangeType.ADJUST, 0, exp, copy.specialTaskExpReason());
+        }
         int energy = clamp((int) number(event, "baseEnergy"), 0, economy.taskEnergyCap());
-        return new Change(EnergyChangeType.EARN, energy, copy.taskEnergyReason());
+        return new Change(EnergyChangeType.EARN, energy, 0, copy.taskEnergyReason());
     }
 
     private Change spend(LifeEvent event) {
         int requested = (int) Math.max(0, number(event, "requestedEnergy"));
         // The event title names the real activity (e.g. the entertainment title) in logs and history.
         String reason = event.title() == null || event.title().isBlank() ? copy.spendReason() : event.title();
-        return new Change(EnergyChangeType.SPEND, -requested, reason);
+        return new Change(EnergyChangeType.SPEND, -requested, 0, reason);
     }
 
     private Change byMetadata(LifeEvent event) {
@@ -59,10 +63,10 @@ public final class GrowthRules {
         // The event title (e.g. the day-boundary drift reason) names the change in logs and history.
         String reason = event.title() == null || event.title().isBlank() ? defaultReason(type) : event.title();
         return switch (type) {
-            case EARN -> new Change(EnergyChangeType.EARN, Math.max(0, delta), reason);
-            case SPEND -> new Change(EnergyChangeType.SPEND, -Math.abs(delta), reason);
-            case DECAY -> new Change(EnergyChangeType.DECAY, -Math.abs(delta), reason);
-            case ADJUST -> new Change(EnergyChangeType.ADJUST, delta, reason);
+            case EARN -> new Change(EnergyChangeType.EARN, Math.max(0, delta), 0, reason);
+            case SPEND -> new Change(EnergyChangeType.SPEND, -Math.abs(delta), 0, reason);
+            case DECAY -> new Change(EnergyChangeType.DECAY, -Math.abs(delta), 0, reason);
+            case ADJUST -> new Change(EnergyChangeType.ADJUST, delta, 0, reason);
         };
     }
 
@@ -85,5 +89,5 @@ public final class GrowthRules {
         return value instanceof Number number ? number.longValue() : 0;
     }
     private int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); }
-    public record Change(EnergyChangeType type, int energy, String reason) { }
+    public record Change(EnergyChangeType type, int energy, int exp, String reason) { }
 }

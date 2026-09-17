@@ -9,7 +9,7 @@ import { dreams } from './pages/dreams.js?v=1.0.0';
 import { rituals } from './pages/rituals.js?v=1.0.0';
 import { now } from './pages/now.js?v=1.0.0';
 import { life } from './pages/life.js?v=1.0.0';
-import { tasks } from './pages/tasks.js?v=1.0.0';
+import { tasks } from './pages/tasks.js?v=1.0.2';
 import { media } from './pages/media.js?v=1.0.0';
 import { appearance } from './modules/appearance.js';
 import { enableImagePaste } from './modules/image-paste.js?v=1.0.0';

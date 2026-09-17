@@ -31,7 +31,7 @@
 
 ## 任务与方向关联
 
-任务定义位于 `/api/task-pool`。`GET` 返回 `{daily,special}`；创建和更新请求体使用 `{name,energy,exp}`，其中特殊任务忽略 `energy`。启用接口接受 `{enabled:true|false}`。
+任务定义位于 `/api/task-pool`。`GET` 返回 `{daily,special}`；创建和更新请求体使用 `{name,note,energy,exp}`，`note` 是最长 160 字符的可选小注释。Daily 使用 `energy` 奖励并每日抽取 6 个；Special 使用 `exp` 奖励并抽取 2 个、忽略 `energy`。启用接口接受 `{enabled:true|false}`。
 
 | 操作 | 方法与路径 | 权限 | 说明 |
 | --- | --- | --- | --- |

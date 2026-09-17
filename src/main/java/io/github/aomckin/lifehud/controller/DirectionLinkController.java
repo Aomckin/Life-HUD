@@ -30,10 +30,10 @@ public final class DirectionLinkController {
     public Map<String,Object> all() {
         Map<String,Object> map = new LinkedHashMap<>();
         List<Map<String,Object>> daily = new ArrayList<>();
-        dailyTasks.tasks().forEach(task -> daily.add(view("daily", task.id, task.name, task.done,
+        dailyTasks.tasks().forEach(task -> daily.add(view("daily", task.id, task.name, task.note, task.reward, 0, task.done,
                 links.infoOf("daily", task.id))));
         List<Map<String,Object>> special = new ArrayList<>();
-        specialTasks.tasks().forEach(task -> special.add(view("special", task.id, task.name, task.done,
+        specialTasks.tasks().forEach(task -> special.add(view("special", task.id, task.name, task.note, 0, task.exp, task.done,
                 links.infoOf("special", task.id))));
         map.put("daily", daily);
         map.put("special", special);
@@ -56,9 +56,10 @@ public final class DirectionLinkController {
         return links.unlink(source, taskId);
     }
 
-    private Map<String,Object> view(String source, String id, String name, boolean done, DirectionInfo info) {
+    private Map<String,Object> view(String source, String id, String name, String note, int energy, int exp, boolean done, DirectionInfo info) {
         Map<String,Object> map = new LinkedHashMap<>();
-        map.put("source", source); map.put("taskId", id); map.put("name", name); map.put("done", done);
+        map.put("source", source); map.put("taskId", id); map.put("name", name); map.put("note", note);
+        map.put("energy", energy); map.put("exp", exp); map.put("done", done);
         map.put("direction", info);
         return map;
     }

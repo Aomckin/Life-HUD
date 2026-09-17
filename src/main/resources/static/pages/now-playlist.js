@@ -14,6 +14,13 @@ const minutes = seconds => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 };
 
+const BACKGROUND_BLUR_KEY = "lifehud.now.playlistBackgroundBlur";
+const DEFAULT_BACKGROUND_BLUR = 3;
+const backgroundBlur = () => {
+  const stored = Number.parseInt(localStorage.getItem(BACKGROUND_BLUR_KEY) ?? "", 10);
+  return Number.isFinite(stored) ? Math.max(0, Math.min(14, stored)) : DEFAULT_BACKGROUND_BLUR;
+};
+
 /** playCount → visual size level; boundaries are product tuning knobs. */
 export function sizeLevel(playCount) {
   if (playCount >= 1000) return "featured";
@@ -131,6 +138,7 @@ export function renderBoard(container, options) {
   }
   const featuredSlot = [...songs].sort((a, b) => (b.playCount - a.playCount) || (a.slot - b.slot))[0]?.slot;
   const decorations = ["tape", "pin", "clip"];
+  const blur = backgroundBlur();
 
   const songCard = song => {
     const level = sizeLevel(song.playCount);
@@ -167,7 +175,7 @@ export function renderBoard(container, options) {
       <span>${String(slot).padStart(2,"0")}</span>${c.addSong}</button>`;
   };
 
-  container.innerHTML = `<div class="playlist-board ${state.playlistBackgroundImage?"has-bg":""}" data-editable="${editable}">
+  container.innerHTML = `<div class="playlist-board ${state.playlistBackgroundImage?"has-bg":""}" data-editable="${editable}" style="--board-bg-blur:${blur}px">
     ${state.playlistBackgroundImage?`
       <div class="board-bg"><img src="${escapeHtml(state.playlistBackgroundImage)}" alt=""></div>
       <div class="board-veil"></div>`:""}
@@ -180,6 +188,9 @@ export function renderBoard(container, options) {
         <label class="text-link">${state.playlistBackgroundImage?c.bgReplace:c.bgAdd}
           <input type="file" id="board-bg-input" accept="image/*" hidden></label>
         ${state.playlistBackgroundImage?`<button class="text-link danger-link" id="board-bg-remove">${c.bgRemove}</button>`:""}
+        ${state.playlistBackgroundImage?`<label class="board-bg-blur" title="${c.bgBlur}">
+          <span>${c.bgBlur}</span><input type="range" id="board-bg-blur" min="0" max="14" step="1" value="${blur}">
+          <output id="board-bg-blur-value">${blur}px</output></label>`:""}
         ${editable?`<button class="text-link" id="board-relayout">${c.relayout}</button>`:""}
       </div>`:""}
     </div>
@@ -260,6 +271,13 @@ export function renderBoard(container, options) {
       if (!(await confirmDialog("取下「现在。」歌单的舞台背景？"))) return;
       try { onBackgroundChange(await api.now.clearBackground()); }
       catch (reason) { toast(reason.message, true); }
+    });
+    container.querySelector("#board-bg-blur")?.addEventListener("input", event => {
+      const value = Math.max(0, Math.min(14, Number(event.target.value) || 0));
+      container.querySelector(".playlist-board")?.style.setProperty("--board-bg-blur", `${value}px`);
+      const output = container.querySelector("#board-bg-blur-value");
+      if (output) output.value = `${value}px`;
+      localStorage.setItem(BACKGROUND_BLUR_KEY, String(value));
     });
     container.querySelector("#board-relayout")?.addEventListener("click", async () => {
       const arranged = relayout(songs, Math.floor(Date.now() / 1000));

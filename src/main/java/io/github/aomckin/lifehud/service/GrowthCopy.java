@@ -17,6 +17,7 @@ public final class GrowthCopy {
 
     public String focusEnergyReason(long minutes) { return format("reason.focusEnergy", "minutes", minutes); }
     public String taskEnergyReason() { return text("reason.task"); }
+    public String specialTaskExpReason() { return text("reason.specialTask"); }
     public String spendReason() { return text("reason.spend"); }
     public String earnRecordedReason() { return text("reason.earnRecorded"); }
     public String decayReason() { return text("reason.decay"); }

@@ -74,8 +74,11 @@ class AgentActionContractTest {
     void repeatingTaskCompletionDoesNotDuplicateFact() throws Exception {
         String id = idOf(mvc.perform(post("/api/task-pool/daily")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Agent contract task\",\"energy\":3,\"exp\":0}"))
+                        .content("{\"name\":\"Agent contract task\",\"note\":\"small next step\",\"energy\":3,\"exp\":0}"))
                 .andExpect(status().isCreated()).andReturn());
+
+        mvc.perform(get("/api/task-pool")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.daily[?(@.taskId == '%s')].note".formatted(id)).value("small next step"));
 
         mvc.perform(post("/api/task-directions/daily/{id}/complete", id)).andExpect(status().isOk());
         mvc.perform(post("/api/task-directions/daily/{id}/complete", id)).andExpect(status().isOk());

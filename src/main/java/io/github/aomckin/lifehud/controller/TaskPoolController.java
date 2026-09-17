@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController @RequestMapping("/api/task-pool")
 public final class TaskPoolController {
-    public record DefinitionRequest(String name, Integer energy, Integer exp) { }
+    public record DefinitionRequest(String name, String note, Integer energy, Integer exp) { }
     public record EnabledRequest(boolean enabled) { }
 
     private final DailyTaskManager dailyTasks;
@@ -32,10 +32,10 @@ public final class TaskPoolController {
     public Map<String,Object> pool() {
         Map<String,Object> map = new LinkedHashMap<>();
         List<Map<String,Object>> daily = new ArrayList<>();
-        dailyTasks.allTasks().forEach(t -> daily.add(definition("daily", t.id, t.name, t.reward, t.exp,
+        dailyTasks.allTasks().forEach(t -> daily.add(definition("daily", t.id, t.name, t.note, t.reward, t.exp,
                 t.enabled, links.infoOf("daily", t.id))));
         List<Map<String,Object>> special = new ArrayList<>();
-        specialTasks.allTasks().forEach(t -> special.add(definition("special", t.id, t.name, 0, t.exp,
+        specialTasks.allTasks().forEach(t -> special.add(definition("special", t.id, t.name, t.note, 0, t.exp,
                 t.enabled, links.infoOf("special", t.id))));
         map.put("daily", daily);
         map.put("special", special);
@@ -45,13 +45,13 @@ public final class TaskPoolController {
     @PostMapping("/daily") @ResponseStatus(HttpStatus.CREATED)
     public DailyTask createDaily(@RequestBody DefinitionRequest request) {
         requireName(request);
-        return dailyTasks.addDefinition(request.name().trim(), orZero(request.energy()), orZero(request.exp()));
+        return dailyTasks.addDefinition(request.name().trim(), note(request.note()), orZero(request.energy()), orZero(request.exp()));
     }
     @PutMapping("/daily/{id}")
     public DailyTask updateDaily(@PathVariable String id, @RequestBody DefinitionRequest request) {
         requireName(request);
         requireDaily(id);
-        return dailyTasks.updateDefinition(id, request.name().trim(), orZero(request.energy()), orZero(request.exp()));
+        return dailyTasks.updateDefinition(id, request.name().trim(), note(request.note()), orZero(request.energy()), orZero(request.exp()));
     }
     @DeleteMapping("/daily/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDaily(@PathVariable String id) { requireDaily(id); dailyTasks.removeDefinition(id); }
@@ -65,13 +65,13 @@ public final class TaskPoolController {
     @PostMapping("/special") @ResponseStatus(HttpStatus.CREATED)
     public SpecialTask createSpecial(@RequestBody DefinitionRequest request) {
         requireName(request);
-        return specialTasks.addDefinition(request.name().trim(), orZero(request.exp()));
+        return specialTasks.addDefinition(request.name().trim(), note(request.note()), orZero(request.exp()));
     }
     @PutMapping("/special/{id}")
     public SpecialTask updateSpecial(@PathVariable String id, @RequestBody DefinitionRequest request) {
         requireName(request);
         requireSpecial(id);
-        return specialTasks.updateDefinition(id, request.name().trim(), orZero(request.exp()));
+        return specialTasks.updateDefinition(id, request.name().trim(), note(request.note()), orZero(request.exp()));
     }
     @DeleteMapping("/special/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSpecial(@PathVariable String id) { requireSpecial(id); specialTasks.removeDefinition(id); }
@@ -82,10 +82,10 @@ public final class TaskPoolController {
         return task;
     }
 
-    private Map<String,Object> definition(String source, String id, String name, int energy, int exp,
+    private Map<String,Object> definition(String source, String id, String name, String note, int energy, int exp,
                                           boolean enabled, DirectionInfo direction) {
         Map<String,Object> map = new LinkedHashMap<>();
-        map.put("source", source); map.put("taskId", id); map.put("name", name);
+        map.put("source", source); map.put("taskId", id); map.put("name", name); map.put("note", note);
         map.put("energy", energy); map.put("exp", exp); map.put("enabled", enabled);
         map.put("direction", direction);
         return map;
@@ -95,6 +95,12 @@ public final class TaskPoolController {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "任务名称不能为空");
     }
     private int orZero(Integer value) { return value == null ? 0 : Math.max(0, value); }
+    private String note(String value) {
+        String clean = value == null ? "" : value.trim();
+        if (clean.length() > 160) throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "任务小注释不能超过 160 个字符");
+        return clean;
+    }
     private DailyTask requireDaily(String id) {
         return dailyTasks.allTasks().stream().filter(v -> v.id.equals(id)).findFirst()
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(

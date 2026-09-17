@@ -94,6 +94,15 @@ class GrowthEngineTest {
         assertThat(context.lifeEvents.all()).anyMatch(value->value.type()==LifeEventType.ACHIEVEMENT_UNLOCKED);
     }
 
+    @Test void specialTaskGrantsDirectExpWithoutChangingEnergy(){
+        LifeEvent event=context.events.record(LifeEventType.TASK_COMPLETED,"task","完成挑战","完成",List.of("task"),
+                Map.of("taskId","challenge","taskSource","special","baseExp",7));
+        GrowthResult result=context.engine.process(event);
+        assertThat(result.expDelta()).isEqualTo(7);assertThat(result.energyDelta()).isZero();
+        assertThat(context.player.exp).isEqualTo(7);assertThat(context.player.energy).isEqualTo(50);
+        assertThat(context.records.energy()).isEmpty();
+    }
+
     /** Case J: repeated real earn→spend cycles accumulate EXP and can cross a level. */
     @Test void repeatedRealSpendCyclesCanCrossMultipleLevels(){
         for(int i=0;i<2;i++) context.engine.process(focusEvent(14400));

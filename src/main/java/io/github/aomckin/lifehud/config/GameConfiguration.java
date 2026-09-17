@@ -33,8 +33,8 @@ public class GameConfiguration {
         return players.load(config.defaultEnergy(), config.maxEnergy());
     }
     @Bean public DailyTaskManager dailyTaskManager(JsonFileStore files) { return new DailyTaskManager(files); }
-    @Bean public SpecialTaskManager specialTaskManager(JsonFileStore files, Player player) {
-        return new SpecialTaskManager(files, player.special_task_slots);
+    @Bean public SpecialTaskManager specialTaskManager(JsonFileStore files) {
+        return new SpecialTaskManager(files, 2);
     }
     @Bean public LevelService levelService(JsonFileStore files) { return new LevelService(files.read("level.json")); }
     @Bean public TitleSystem titleSystem(Player player, PlayerRepository players, JsonFileStore files,

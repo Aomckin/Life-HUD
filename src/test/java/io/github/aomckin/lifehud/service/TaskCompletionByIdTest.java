@@ -25,11 +25,15 @@ class TaskCompletionByIdTest {
     }
 
     @Test void specialCompleteByIdEmitsEventExactlyOnce(){
-        String taskId=w.specialTasks.allTasks().getFirst().id;
+        var task=w.specialTasks.allTasks().getFirst();
+        String taskId=task.id;
+        int beforeEnergy=w.player.energy,beforeExp=w.player.exp;
         w.taskService.completeSpecialById(taskId);
         w.taskService.completeSpecialById(taskId);
         assertThat(w.lifeEvents.all()).filteredOn(v->v.type()==LifeEventType.TASK_COMPLETED).hasSize(1);
         assertThat(w.player.done_special_task_count).isEqualTo(1);
+        assertThat(w.player.energy).isEqualTo(beforeEnergy);
+        assertThat(w.player.exp).isEqualTo(beforeExp+task.exp);
     }
 
     @Test void unknownTaskIsRejected(){

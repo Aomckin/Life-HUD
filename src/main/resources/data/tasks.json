@@ -9,6 +9,7 @@
         {
             "id": "study_python",
             "name": "学习Python",
+            "note": "",
             "reward": 10,
             "exp": 5,
             "created_time": "2026-06-18 23:37:55",
@@ -18,6 +19,7 @@
         {
             "id": "exercise",
             "name": "健身",
+            "note": "",
             "reward": 15,
             "exp": 5,
             "created_time": "2026-06-18 23:37:55",
@@ -27,6 +29,7 @@
         {
             "id": "read_30_minutes",
             "name": "阅读30分钟",
+            "note": "",
             "reward": 10,
             "exp": 5,
             "created_time": "2026-06-24 00:00:00",
@@ -36,6 +39,7 @@
         {
             "id": "walk_20_minutes",
             "name": "散步20分钟",
+            "note": "",
             "reward": 10,
             "exp": 5,
             "created_time": "2026-06-24 00:00:00",
@@ -45,6 +49,7 @@
         {
             "id": "clean_desk",
             "name": "整理桌面",
+            "note": "",
             "reward": 5,
             "exp": 3,
             "created_time": "2026-06-24 00:00:00",
@@ -54,6 +59,7 @@
         {
             "id": "drink_2000ml_water",
             "name": "喝够2000ml水",
+            "note": "",
             "reward": 5,
             "exp": 3,
             "created_time": "2026-06-24 00:00:00",
@@ -63,6 +69,7 @@
         {
             "id": "wake_before_11",
             "name": "早于11点起床",
+            "note": "",
             "reward": 15,
             "exp": 5,
             "created_time": "2026-06-24 00:00:00",
@@ -72,11 +79,232 @@
         {
             "id": "no_short_video_day",
             "name": "无短视频日",
+            "note": "",
             "reward": 20,
             "exp": 10,
             "created_time": "2026-06-24 00:00:00",
             "completed_count": 2,
             "done": false
+        },
+        {
+            "id": "sunlight_10_minutes",
+            "name": "晒太阳10分钟",
+            "note": "去户外或窗边认真晒会儿太阳，让身体知道现在是白天。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "stretch_10_minutes",
+            "name": "拉伸10分钟",
+            "note": "给久坐后的肩颈、腰背和腿一点维修时间。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "take_a_shower",
+            "name": "洗一次澡",
+            "note": "把自己从今日缓存里刷新一下。",
+            "reward": 3,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "eat_fruit",
+            "name": "吃一顿水果",
+            "note": "今天给身体补一点真正的水果。",
+            "reward": 3,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "vegetable_meal",
+            "name": "吃一顿蔬菜充足的饭",
+            "note": "至少有一顿饭认真把蔬菜吃够。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "air_room_20_minutes",
+            "name": "房间通风20分钟",
+            "note": "让房间换一轮空气，顺便把闷气赶出去。",
+            "reward": 3,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "take_out_trash",
+            "name": "收拾垃圾",
+            "note": "清掉桌边、地面或垃圾桶里已经该退场的东西。",
+            "reward": 3,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "organize_files_10_minutes",
+            "name": "整理文件10分钟",
+            "note": "给桌面、下载目录或某个文件夹做一次小整理。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "clean_phone_photos",
+            "name": "清理一次手机相册",
+            "note": "删掉一批废图、截图或重复照片即可。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "reply_backlog_messages",
+            "name": "回复积压消息",
+            "note": "清掉几条一直挂着没回的消息，不要求全部处理完。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "study_20_minutes",
+            "name": "学习20分钟",
+            "note": "选一个值得学的东西，认真投入至少20分钟。",
+            "reward": 8,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "solve_algorithm_problem",
+            "name": "刷一道算法题",
+            "note": "完成一道算法题，AC 或认真走完思路都算。",
+            "reward": 8,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "review_knowledge_point",
+            "name": "复习一个知识点",
+            "note": "把一个已经学过的知识点重新捡起来。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "watch_one_anime_episode",
+            "name": "看一集番",
+            "note": "完整看完一集，不把娱乐也做成后台进程。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "listen_album_or_playlist",
+            "name": "听完一张专辑或歌单",
+            "note": "从头到尾认真听完一轮，不要求做别的事。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "play_game_30_minutes",
+            "name": "玩游戏30分钟",
+            "note": "认真玩一会儿，娱乐本身也可以堂堂正正。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "write_one_sentence",
+            "name": "写下一句话",
+            "note": "记下一句今天想留下的话，长短不限。",
+            "reward": 3,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "record_one_thing_today",
+            "name": "记录今天的一件事",
+            "note": "留下今天真实发生的一件小事。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "leave_computer_20_minutes",
+            "name": "离开电脑20分钟",
+            "note": "连续离开电脑至少20分钟，去哪儿都可以。",
+            "reward": 5,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
+        },
+        {
+            "id": "sleep_before_2am",
+            "name": "今天没有熬到2点",
+            "note": "在凌晨2点前结束今天，给明天留点余量。",
+            "reward": 8,
+            "exp": 0,
+            "created_time": "2026-09-08 00:00:00",
+            "completed_count": 0,
+            "done": false,
+            "enabled": true
         }
     ]
 }

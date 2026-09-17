@@ -2,6 +2,7 @@
   "reason": {
     "focusEnergy": "有效 Focus {minutes} 分钟",
     "task": "完成任务",
+    "specialTask": "完成特殊任务",
     "spend": "消费 Energy",
     "earnRecorded": "记录 Energy 收入",
     "decay": "Energy 自然衰减",

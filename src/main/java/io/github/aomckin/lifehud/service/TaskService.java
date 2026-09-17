@@ -69,9 +69,9 @@ public final class TaskService {
     private OperationResult finishSpecial(SpecialTask task) {
         int[] reward = specialTasks.finishById(task.id);
         if (reward[0] > 0 || reward[1] > 0) {
-            // Special tasks had no Energy field; their legacy exp value becomes the Energy reward (capped by growth.json).
+            // Special tasks grant EXP directly; legacy Energy-shaped values are migrated once by SpecialTaskManager.
             events.record(LifeEventType.TASK_COMPLETED,"task",task.name,"完成特殊任务",List.of("task"),
-                    Map.of("taskId",task.id,"taskSource","special","baseEnergy",task.exp,
+                    Map.of("taskId",task.id,"taskSource","special","baseExp",task.exp,
                             "dreamId",task.dreamId,"goalId",task.goalId,"dreamMilestoneId",task.dreamMilestoneId));
             logs.action(copy.specialTaskCompletedLog(task.name), copy.growthSyncedLog(), 0);
         }

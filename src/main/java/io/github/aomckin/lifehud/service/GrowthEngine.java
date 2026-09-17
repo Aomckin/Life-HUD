@@ -30,12 +30,13 @@ public final class GrowthEngine {
         int requestedDelta=change.energy();
         if(requestedDelta!=0) playerService.addEnergy(player,requestedDelta);
         int actualDelta=player.energy-beforeEnergy;
-        int expDelta=0;
+        int expDelta=Math.max(0,change.exp());
+        if(expDelta>0) playerService.addExp(player,expDelta);
         if(change.type()==EnergyChangeType.SPEND&&actualDelta<0){
             GrowthEconomy.SpendConversion conversion=rules.convertSpentEnergy(player.exp_conversion_remainder,-actualDelta);
-            expDelta=conversion.expGained();
+            expDelta+=conversion.expGained();
             player.exp_conversion_remainder=conversion.newRemainder();
-            if(expDelta>0) playerService.addExp(player,expDelta);
+            if(conversion.expGained()>0) playerService.addExp(player,conversion.expGained());
         }
         if(event.type()==LifeEventType.TASK_COMPLETED){
             if("special".equalsIgnoreCase(String.valueOf(event.metadata().get("taskSource")))) playerService.incrementSpecialTaskDone(player);

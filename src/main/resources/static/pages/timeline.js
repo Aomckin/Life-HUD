@@ -1,5 +1,6 @@
 import { api } from "../api/client.js?v=1.0.0";
 import { confirmDialog, empty, error, escapeHtml, toast } from "../components/ui.js?v=1.0.0";
+import { editLifeRecord } from "./life.js?v=1.0.1";
 
 /**
  * /journal — the life river. One backend aggregation (/api/timeline), grouped by
@@ -21,6 +22,7 @@ const SOURCE_ICONS = {
   FOCUS: "◐", TASK: "✓", RITUAL: "◇", LEVEL: "↑", ACHIEVEMENT: "✿", TITLE: "❖", MILESTONE: "◆", DREAM: "✧", NOW: "✦", MEDIA: "▶"
 };
 const PAGE_SIZE = 50;
+const EDITABLE_LIFE_SOURCES = new Set(["SLEEP", "MEAL", "EXERCISE", "CHECK_IN", "LIFE_RECORD"]);
 
 let filter = "";
 let page = 1;
@@ -102,6 +104,7 @@ function itemCard(item) {
   const meta = item.metadata || {};
   const scales = item.source === "CHECK_IN"
     ? `<small class="timeline-meta">能量 ${meta.energy} · 心情 ${meta.mood} · 专注 ${meta.focusDesire} · 疲劳 ${meta.fatigue}</small>` : "";
+  const editableLife = EDITABLE_LIFE_SOURCES.has(item.source.toUpperCase()) && item.sourceId;
   return `<article class="timeline-event ${item.source === "JOURNAL" ? "journal" : ""}" data-item="${item.eventId}">
     <time>${clock(item.occurredAt)}</time>
     <span class="timeline-dot"></span>
@@ -110,7 +113,10 @@ function itemCard(item) {
       <h3>${escapeHtml(item.title)}</h3>
       ${summary}${thumbs}${scales}
     </div>
-    ${item.source === "JOURNAL"
+    ${editableLife ? `<div class="timeline-actions">
+      <button class="text-link" data-edit-life="${item.eventId}">编辑</button>
+      <button class="text-link danger-link" data-remove-event="${item.eventId}">删除</button>
+    </div>` : item.source === "JOURNAL"
       ? `<button class="text-link danger-link" data-remove-journal="${item.sourceId}">删除</button>`
       : `<button class="text-link danger-link" data-remove-event="${item.eventId}">删除</button>`}
   </article>`;
@@ -126,6 +132,13 @@ function bind(root) {
   }));
   root.querySelectorAll("[data-lightbox]").forEach(img => img.addEventListener("click", () => lightbox(img.dataset.lightbox)));
   root.querySelectorAll(".timeline-summary").forEach(summary => summary.addEventListener("click", () => summary.classList.toggle("expanded")));
+  root.querySelectorAll("[data-edit-life]").forEach(button => button.addEventListener("click", async event => {
+    event.stopPropagation();
+    const item = items.find(entry => entry.eventId === button.dataset.editLife);
+    if (!item) return;
+    try { await editLifeRecord(item, () => timeline(root)); }
+    catch (reason) { toast(reason.message, true); }
+  }));
   root.querySelectorAll("[data-remove-journal]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
     if (!(await confirmDialog("删除这篇日记?时间线里的对应足迹也会一并消失。"))) return;

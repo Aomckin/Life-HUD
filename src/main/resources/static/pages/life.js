@@ -14,6 +14,7 @@ const RECORD_LABELS = {WATER: "喝水", CAFFEINE: "咖啡因", ALCOHOL: "饮酒"
   BODY_STATUS: "身体状态", OUTDOOR: "外出", CUSTOM: "自定义"};
 const RECORD_UNITS = {WATER: "ml", CAFFEINE: "杯", ALCOHOL: "ml", SUNLIGHT: "min", SOCIAL: "次",
   BODY_STATUS: "级", OUTDOOR: "min", CUSTOM: ""};
+const escapeAttribute = value => escapeHtml(value).replaceAll('"', "&quot;");
 
 const localInputValue = date => {
   const pad = n => String(n).padStart(2, "0");
@@ -101,16 +102,20 @@ function bind(root) {
   root.querySelectorAll("[data-entry]").forEach(card => card.addEventListener("click", async event => {
     if (event.target.closest("[data-remove-entry]") || event.target.closest("[data-lightbox]")) return;
     const item = itemsById.get(card.dataset.entry);
-    const kind = {CHECK_IN: "check-in", MEAL: "meal", SLEEP: "sleep", EXERCISE: "exercise", LIFE_RECORD: "record"}[item.source.toUpperCase()];
-    if (!kind) return;
-    const listers = {CHECK_IN: api.life.checkIns, MEAL: api.life.meals, SLEEP: api.life.sleep,
-      EXERCISE: api.life.exercises, LIFE_RECORD: api.life.records};
-    try {
-      const record = (await listers[item.source.toUpperCase()].all()).find(entry => entry.id === item.sourceId);
-      if (record) openModal(kind, record);
-      else toast("原记录已不在了", true);
-    } catch (reason) { toast(reason.message, true); }
+    try { await editLifeRecord(item); }
+    catch (reason) { toast(reason.message, true); }
   }));
+}
+
+export async function editLifeRecord(item, onSaved = refreshLife) {
+  const source = item.source.toUpperCase();
+  const kinds = {CHECK_IN: "check-in", MEAL: "meal", SLEEP: "sleep", EXERCISE: "exercise", LIFE_RECORD: "record"};
+  const listers = {CHECK_IN: api.life.checkIns, MEAL: api.life.meals, SLEEP: api.life.sleep,
+    EXERCISE: api.life.exercises, LIFE_RECORD: api.life.records};
+  if (!kinds[source] || !item.sourceId) throw new Error("这条生活记录无法编辑");
+  const record = (await listers[source].all()).find(entry => entry.id === item.sourceId);
+  if (!record) throw new Error("原记录已不在了");
+  openModal(kinds[source], record, onSaved);
 }
 
 /* ---------- modal quick entry ---------- */
@@ -178,15 +183,17 @@ function attachImagePicker(overlay, initialImages = []) {
   }};
 }
 
-function openModal(kind, record) {
+const refreshLife = () => life(document.querySelector("#page"));
+
+function openModal(kind, record, onSaved = refreshLife) {
   const builders = {
     "check-in": checkInModal, "meal": mealModal, "sleep": sleepModal,
     "exercise": exerciseModal, "record": recordModal
   };
-  return builders[kind](record);
+  return builders[kind](record, onSaved);
 }
 
-function checkInModal(record) {
+function checkInModal(record, onSaved) {
   const value = key => record ? record[key] : 5;
   const {overlay, close} = modalShell(record ? "更新状态" : "记一次状态", `
     ${slider("energy", "能量", 10, value("energy"))}
@@ -195,7 +202,7 @@ function checkInModal(record) {
     ${slider("fatigue", "疲劳", 10, value("fatigue"))}
     ${timeField("time", "什么时候", record ? localInputValue(new Date(record.time)) : nowInput())}
     ${imageField()}
-    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeAttribute(record?.note || "")}"></label>`);
   const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelectorAll("input[type=range]").forEach(input => input.addEventListener("input",
     () => { input.closest("label").querySelector("output").textContent = input.value; }));
@@ -209,12 +216,12 @@ function checkInModal(record) {
       if (record) await api.life.checkIns.update(record.id, body);
       else await api.life.checkIns.create(body);
       close(); toast(record ? "状态已更新" : "状态已记下");
-      life(document.querySelector("#page"));
+      onSaved();
     } catch (reason) { toast(reason.message, true); }
   });
 }
 
-function mealModal(record) {
+function mealModal(record, onSaved) {
   const defaultType = record ? record.mealType : (new Date().getHours() < 10 ? "BREAKFAST"
     : new Date().getHours() < 14 ? "LUNCH" : new Date().getHours() < 20 ? "DINNER" : "SNACK");
   const {overlay, close} = modalShell(record ? "更新这一餐" : "记一餐", `
@@ -224,10 +231,10 @@ function mealModal(record) {
       ${timeField("time", "什么时候", record ? localInputValue(new Date(record.time)) : nowInput())}
     </div>
     <label class="field"><span>吃了什么</span><input name="description" maxlength="160"
-      placeholder="一句话就够" value="${escapeHtml(record?.description || "")}"></label>
+      placeholder="一句话就够" value="${escapeAttribute(record?.description || "")}"></label>
     ${slider("satisfaction", "满意度", 5, record?.satisfaction || 3)}
     ${imageField()}
-    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeAttribute(record?.note || "")}"></label>`);
   const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelector("input[type=range]").addEventListener("input",
     event => { event.target.closest("label").querySelector("output").textContent = event.target.value; });
@@ -241,12 +248,12 @@ function mealModal(record) {
       if (record) await api.life.meals.update(record.id, body);
       else await api.life.meals.create(body);
       close(); toast(record ? "这一餐已更新" : "这一餐已记下");
-      life(document.querySelector("#page"));
+      onSaved();
     } catch (reason) { toast(reason.message, true); }
   });
 }
 
-function sleepModal(record) {
+function sleepModal(record, onSaved) {
   const {overlay, close} = modalShell(record ? "更新睡眠" : "记睡眠", `
     <div class="milestone-form-grid">
       ${timeField("sleepTime", "入睡", record ? localInputValue(new Date(record.sleepTime))
@@ -260,7 +267,7 @@ function sleepModal(record) {
     </div>
     ${slider("quality", "质量", 5, record?.quality || 3)}
     ${imageField()}
-    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeAttribute(record?.note || "")}"></label>`);
   const imagePicker = attachImagePicker(overlay, record?.images);
   const form = overlay.querySelector("form");
   const durationHint = () => {
@@ -283,12 +290,12 @@ function sleepModal(record) {
       if (record) await api.life.sleep.update(record.id, body);
       else await api.life.sleep.create(body);
       close(); toast(record ? "睡眠已更新" : "睡眠已记下");
-      life(document.querySelector("#page"));
+      onSaved();
     } catch (reason) { toast(reason.message, true); }
   });
 }
 
-function exerciseModal(record) {
+function exerciseModal(record, onSaved) {
   const {overlay, close} = modalShell(record ? "更新运动" : "记运动", `
     <div class="milestone-form-grid">
       <label class="field"><span>项目</span><select name="type">${Object.entries(EXERCISE_LABELS)
@@ -302,7 +309,7 @@ function exerciseModal(record) {
       ${timeField("startTime", "开始时间", record ? localInputValue(new Date(record.startTime)) : nowInput())}
     </div>
     ${imageField()}
-    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeAttribute(record?.note || "")}"></label>`);
   const imagePicker = attachImagePicker(overlay, record?.images);
   overlay.querySelector("form").addEventListener("submit", async event => {
     event.preventDefault();
@@ -314,12 +321,12 @@ function exerciseModal(record) {
       if (record) await api.life.exercises.update(record.id, body);
       else await api.life.exercises.create(body);
       close(); toast(record ? "运动已更新" : "运动已记下");
-      life(document.querySelector("#page"));
+      onSaved();
     } catch (reason) { toast(reason.message, true); }
   });
 }
 
-function recordModal(record) {
+function recordModal(record, onSaved) {
   const {overlay, close} = modalShell(record ? "更新记录" : "其他记录", `
     <div class="milestone-form-grid">
       <label class="field"><span>类别</span><select name="type">${Object.entries(RECORD_LABELS)
@@ -327,13 +334,13 @@ function recordModal(record) {
       <label class="field"><span>数值</span><input name="value" type="number" min="0" step="any" value="${record?.value ?? 250}"></label>
     </div>
     <div class="milestone-form-grid">
-      <label class="field"><span>单位</span><input name="unit" maxlength="10" value="${escapeHtml(record?.unit || RECORD_UNITS[record?.type || "WATER"])}"></label>
+      <label class="field"><span>单位</span><input name="unit" maxlength="10" value="${escapeAttribute(record?.unit || RECORD_UNITS[record?.type || "WATER"])}"></label>
       ${timeField("time", "什么时候", record ? localInputValue(new Date(record.time)) : nowInput())}
     </div>
     <label class="field" data-custom-label hidden><span>自定义名称</span><input name="label" maxlength="20"
-      placeholder="比如:遛狗" value="${escapeHtml(record?.metadata?.label || "")}"></label>
+      placeholder="比如:遛狗" value="${escapeAttribute(record?.metadata?.label || "")}"></label>
     ${imageField()}
-    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeHtml(record?.note || "")}"></label>`);
+    <label class="field"><span>备注(可选)</span><input name="note" maxlength="120" value="${escapeAttribute(record?.note || "")}"></label>`);
   const imagePicker = attachImagePicker(overlay, record?.images);
   const form = overlay.querySelector("form");
   const syncLabel = () => { form.querySelector("[data-custom-label]").hidden = form.type.value !== "CUSTOM"; };
@@ -352,7 +359,7 @@ function recordModal(record) {
       if (record) await api.life.records.update(record.id, body);
       else await api.life.records.create(body);
       close(); toast(record ? "记录已更新" : "已记下");
-      life(document.querySelector("#page"));
+      onSaved();
     } catch (reason) { toast(reason.message, true); }
   });
 }

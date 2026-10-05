@@ -13,17 +13,19 @@ Life HUD 从最初的“宅宅能量条”成长为一套可以长期真实使�
 - Now：当前阶段、歌单、图片、方向和历史快照。
 - Growth：Energy、EXP、Level、Achievement、Title、Milestone 与幂等结算。
 
+正式版还补齐了 Today 的外部文案标题、Dashboard 中 Dream/Ritual/Media 选择的持久化、减少动态效果的适配，以及上传文件的 SHA-256 去重与历史重复副本整理。
+
 ## Agent Contract
 
 - `/api/agent/context/*`：只读语义聚合，`schemaVersion="1"`。
 - Business API：人与外部 Agent 共用的唯一事实写入口。
-- `docs/AGENT_ACTION_API.md`：权限、可逆性、幂等、时间与错误语义。
+- [Agent Action API](../api/AGENT_ACTION_API.md)：权限、可逆性、幂等、时间与错误语义。
 
 Life HUD 不包含 LLM、Prompt、Planner、Memory、Permission Engine 或 Tool Runtime。API 默认无鉴权，仅用于本机或可信私网，不能直接暴露公网。
 
 ## 数据与兼容
 
-数据默认位于工作目录的 `data/`，包含 JSON 事实与 `uploads/` 媒体。v1.0 保持旧 Save、LifeEvent、Focus、Task、Now 和 Growth 字段兼容，不要求清档。升级前应备份整个数据目录；恢复流程见 `BACKUP_AND_RESTORE.md`。损坏的 JSON 会明确报告文件，不会被静默重置。
+数据默认位于工作目录的 `data/`，包含 JSON 事实与 `uploads/` 媒体。v1.0 保持旧 Save、LifeEvent、Focus、Task、Now 和 Growth 字段兼容，不要求清档。升级前应备份整个数据目录；恢复流程见 [备份与恢复](../operations/BACKUP_AND_RESTORE.md)。损坏的 JSON 会明确报告文件，不会被静默重置。
 
 ## 验收
 

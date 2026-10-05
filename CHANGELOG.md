@@ -1,6 +1,6 @@
 # Changelog
 
-本文件记录 Life HUD 的主要版本演进。完整设计背景、任务拆分与验收细节保留在 [`docs/`](docs/)；项目主页只展示当前稳定版本。
+本文件记录 Life HUD 的主要版本演进。设计背景、任务拆分与验收细节见 [文档导航](docs/README.md)；项目主页只展示当前稳定版本。
 
 ## v1.0.0 · First Stable Release
 
@@ -9,7 +9,7 @@
 - 完成内容、交互、数据恢复、兼容性与 Release Gate 验收。
 - 明确本地单用户、无内置 Agent、无公网鉴权的产品边界。
 
-详见 [v1.0 Release Note](docs/RELEASE_V1.0.md)。
+详见 [v1.0 Release Note](docs/releases/RELEASE_V1.0.md)。
 
 ## v0.9 · Agent Interface Completion
 
@@ -69,4 +69,4 @@
 
 - 建立 Java / Spring Boot Web Shell、Summer Sky 视觉骨架与 LifeEvent 地基。
 
-更早的迁移背景见 [Migration Matrix](docs/MIGRATION_MATRIX.md)。
+更早的迁移背景见 [Migration Matrix](docs/history/MIGRATION_MATRIX.md)。

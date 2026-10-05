@@ -1,6 +1,8 @@
 # Life HUD 架构与主要调用链
 
-## 总体调用图
+> 历史架构记录：下方 GameCore、`GameController` 与 `/state`、`/command` 调用图描述项目早期架构，并非 v1.0 全部业务域的总图。后续章节按版本记录 Focus、Growth、Direction、Life 等演进。当前产品边界与模块概览见 [README](../../README.md)，Agent 接口以 [API 索引](../api/API_INDEX.md) 为准。
+
+## 早期 GameCore 调用图
 
 ```mermaid
 flowchart TD

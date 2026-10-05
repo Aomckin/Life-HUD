@@ -93,7 +93,7 @@ flowchart LR
     Context --> Domain
 ```
 
-更完整的领域边界与调用链见 [架构文档](docs/ARCHITECTURE.md)。
+更完整的领域边界与调用链见 [架构文档](docs/architecture/ARCHITECTURE.md)。
 
 ## Agent Integration
 
@@ -110,9 +110,9 @@ Life HUD **不内置** LLM、Planner、Prompt、Memory、Permission Engine 或 A
 
 文档入口：
 
-- [API 索引](docs/API_INDEX.md)
-- [Agent Context API](docs/AGENT_CONTEXT_API.md)
-- [Agent Action API](docs/AGENT_ACTION_API.md)
+- [API 索引](docs/api/API_INDEX.md)
+- [Agent Context API](docs/api/AGENT_CONTEXT_API.md)
+- [Agent Action API](docs/api/AGENT_ACTION_API.md)
 
 ## Quick Start
 
@@ -145,7 +145,7 @@ data/
 
 可以通过 Spring 配置项 `lifehud.data-dir` 或环境变量 `LIFEHUD_DATA_DIR` 指定其他目录；旧环境变量 `OTAKU_ENERGY_DATA_DIR` 仍兼容读取。
 
-升级、迁移或恢复时应整体备份数据目录，不能只复制部分 JSON。详见 [备份与恢复](docs/BACKUP_AND_RESTORE.md)。仓库中的 `data/` 是本地运行数据，不应提交真实个人记录或媒体文件。
+升级、迁移或恢复时应整体备份数据目录，不能只复制部分 JSON。详见 [备份与恢复](docs/operations/BACKUP_AND_RESTORE.md)。仓库中的 `data/` 是本地运行数据，不应提交真实个人记录或媒体文件。
 
 ## 当前状态
 
@@ -153,8 +153,8 @@ data/
 
 当前产品边界：本地单用户、JSON 持久化、生活数据以手动输入为主；没有账户系统、云同步、内置 Agent 或第三方媒体同步。这些是 v1.0 的明确取舍，不是 README 中隐藏的待实现承诺。
 
-- [v1.0 Release Note](docs/RELEASE_V1.0.md)
-- [代码状态与交接](docs/CODEBASE_STATUS.md)
+- [v1.0 Release Note](docs/releases/RELEASE_V1.0.md)
+- [文档导航](docs/README.md)
 - [版本历史](CHANGELOG.md)
 
 ## Roadmap
@@ -162,3 +162,7 @@ data/
 - 在 1.x 中继续提高数据安全、恢复体验、API 契约测试和文档质量。
 - 基于真实使用需求扩展现有生活域，不为版本号新增孤立模块。
 - 探索独立的 Agent 工具适配层；Life HUD 继续保持事实系统与 Agent Runtime 的架构边界。
+
+## License
+
+本项目采用 [MIT License](LICENSE)。
